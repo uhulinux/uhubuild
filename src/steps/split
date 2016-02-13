@@ -72,6 +72,9 @@ for pkg in $UB_PACKAGES; do
 			# *, /**/ és ? átalakítása regexppé
 
 			shopt -s extglob
+			if [ $UHUBUILD_BASH -ge 43 ]; then
+			shopt -s compat42 # bash 4.3 enélkül nem értelmezi a **-t
+			fi
 			# ? -> [^/]
 			regex="${regex//\?/[^/]}"
 			# /+ -> /

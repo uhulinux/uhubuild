@@ -1,6 +1,8 @@
 
 _myname="$(basename "$0")"
 
+UHUBUILD_BASH="$(echo ${BASH_VERSION%%[^0-9.]*} | cut -d. -f-2 | sed -e 's/\.//g')"
+
 shopt -s nullglob
 
 # színek ----------------------------------------------------------------------
@@ -57,7 +59,7 @@ warn ()
 
 # tmp -------------------------------------------------------------------------
 unset __tmp || true
-declare -a __tmp
+__tmp=() # bash 4.3, declare -a: unbound variable
 tmpfile()
 {
 	local i
@@ -91,7 +93,7 @@ tmpdir ()
 }
 
 # -----------------------------------------------------------------------------
-declare -a _exit_hooks
+_exit_hooks=() # bash 4.3, declare -a: unbound variable
 exit_hook ()
 {
 	_exit_hooks[${#_exit_hooks[@]}]="$1"

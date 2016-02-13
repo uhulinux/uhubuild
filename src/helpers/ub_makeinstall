@@ -33,7 +33,7 @@ case "${UB_MAKEINSTALL_USE_DESTDIR:-}" in
 		;;
 esac
 
-declare -a argv
+argv=() # bash 4.3, declare -a: unbound variable
 if [ "$UB_MAKEINSTALL_USE_DESTDIR" = "yes" ]; then
 	argv[${#argv[@]}]="DESTDIR=$UB_MAKEINSTALL_PREFIX"
 # ez meg szokott lenni:
@@ -57,7 +57,7 @@ argv[${#argv[@]}]="MAN6EXT=6"
 argv[${#argv[@]}]="MAN7EXT=7"
 argv[${#argv[@]}]="MAN8EXT=8"
 
-declare -a argv2
+argv2=() # bash 4.3, declare -a: unbound variable
 shopt -s extglob
 for i in "${argv[@]}"; do
 	pattern="$i"

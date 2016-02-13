@@ -9,8 +9,8 @@ export UB_CFLAGS="-O2 -march=$UB_MARCH -mtune=$UB_MTUNE ${CFLAGS:-}"
 
 export CFLAGS="$UB_CFLAGS"
 
-declare -a argv
-declare -a argx=(
+argv=() # bash 4.3, declare -a: unbound variable
+argx=(
 	--prefix="/usr"             \
 	--sysconfdir="/etc"         \
 	--localstatedir="/var"      \
