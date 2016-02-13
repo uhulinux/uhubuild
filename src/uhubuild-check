@@ -280,6 +280,7 @@ fi
 #
 
 # A distribution az elejére kell, mert ez még definiál cpp-változót.
+# de kell ez? -DUHU_LINUX_2_2
 
 ####################
 ### distribution ###
@@ -291,7 +292,7 @@ reformat 0 < distribution > $UHUBUILD_SRC2DIR/distribution
 	fi
 fi
 
-cppflags="$cppflags -D$(tr 'a-z' 'A-Z' < $UHUBUILD_SRC2DIR/distribution | tr -c 'A-Z0-9\n' '[_*]')"
+# cppflags="$cppflags -D$(tr 'a-z' 'A-Z' < $UHUBUILD_SRC2DIR/distribution | tr -c 'A-Z0-9\n' '[_*]')"
 
 ##############
 ### addons ###

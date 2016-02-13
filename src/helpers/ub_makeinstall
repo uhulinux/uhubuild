@@ -48,15 +48,6 @@ else
 	argv[${#argv[@]}]="sysconfdir=$UB_MAKEINSTALL_PREFIX/etc"
 fi
 
-argv[${#argv[@]}]="MAN1EXT=1"
-argv[${#argv[@]}]="MAN2EXT=2"
-argv[${#argv[@]}]="MAN3EXT=3"
-argv[${#argv[@]}]="MAN4EXT=4"
-argv[${#argv[@]}]="MAN5EXT=5"
-argv[${#argv[@]}]="MAN6EXT=6"
-argv[${#argv[@]}]="MAN7EXT=7"
-argv[${#argv[@]}]="MAN8EXT=8"
-
 argv2=() # bash 4.3, declare -a: unbound variable
 shopt -s extglob
 for i in "${argv[@]}"; do

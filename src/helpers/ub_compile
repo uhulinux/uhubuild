@@ -5,9 +5,6 @@ if [ -f CMakeLists.txt ]; then
 	cd build
 	cmake \
 		-DCMAKE_INSTALL_PREFIX="/usr" \
-		-DDATA_INSTALL_DIR="/usr/share" \
-		-DSYSCONF_INSTALL_DIR="/etc" \
-		-DKDE_DEFAULT_HOME=".kde4" \
 		"$@" \
 		..
 elif [ -f "configure" ]; then
@@ -46,12 +43,4 @@ if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
 		"$@"
 fi
 
-exec ub_make \
-	MAN1EXT=1 \
-	MAN2EXT=2 \
-	MAN3EXT=3 \
-	MAN4EXT=4 \
-	MAN5EXT=5 \
-	MAN6EXT=6 \
-	MAN7EXT=7 \
-	MAN8EXT=8
+exec ub_make
