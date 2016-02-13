@@ -1,0 +1,99 @@
+#!/bin/bash -eu
+
+#
+# Ellenőriz egy-két dolgot, hogy az FHS szabványnak megfelel-e a csomag
+# (például nem tartalmaz /usr/local alatti fájlt).
+#
+# Meg egyebeket is, például a fájlneveknek UTF-8-nak kell lenniük.
+#
+# Konfig fájlból letiltható ez a lépés, hiszen például valamelyik alap
+# csomagnak (jelen példánál maradva uhu-base) igencsak illik létrehoznia a
+# /usr/local alatti könyvtárakat.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_PACKAGEDIR"
+
+function forbidden() {
+	error "FHS által tiltva: $1"
+}
+
+shopt -s dotglob
+
+for pkg in $UB_PACKAGES; do
+	if grep -qx skip-fhs "$UB_SRCDIR/packages/$pkg/options"; then
+		echo " $pkg: kihagyva"
+		continue
+	fi
+	if [ -d "$pkg/usr/build" ]; then
+		error "Az FHS nem engedi meg a $pkg/usr/build könyvtárat! (libtool bug?)"
+	fi
+	
+	for i in "$pkg"/*; do
+		case "$i" in
+			*/bin)  ;;
+			*/boot) ;;
+			*/dev)  ;;
+			*/etc)  ;;
+			*/home) ;;
+			*/lib)  ;;
+			*/opt)  ;;
+			*/sbin) ;;
+			*/srv)  ;;
+			*/usr)  ;;
+			*/var)  ;;
+			*/DEBIAN) ;;
+			*)
+				forbidden "$i"
+				;;
+		esac
+	done
+	
+	for i in "$pkg"/usr/*; do
+		case "$i" in
+			*/bin)     ;;
+			*/games)   ;;
+			*/include) ;;
+			*/lib)     ;;
+			*/libexec) ;;
+			*/local)   ;;
+			*/sbin)    ;;
+			*/share)   ;;
+			*/src)     ;;
+			*)
+				forbidden "$i"
+				;;
+		esac
+	done
+	# Ezeket nem mind az FHS tiltja, némelyiket csak a józan ész, meg mi :-)
+	for dir in \
+	  /etc/etc \
+	  /lib/lib \
+	  /share \
+	  /usr/doc \
+	  /usr/etc \
+	  /usr/lib/lib \
+	  /usr/local \
+	  /usr/locale \
+	  /usr/man \
+	  /usr/share/doc/doc \
+	  /usr/share/share \
+	  /usr/usr \
+	  /usr/var \
+	  /var/local \
+	  /var/var; do
+		if [ -d "$pkg/$dir" ]; then
+			error "$dir könyvtár? Ejnye! Ilyet nem szabad!"
+		fi
+	done
+	while read file; do
+		error "${file#$pkg/}? Ejnye! Ilyet nem szabad!"
+	done < <(find "$pkg" -mindepth 1 -maxdepth 1 -type f)
+
+	if ! find "$pkg" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+		echo '  Nem érvényes UTF-8 fájlnév'
+		find "$pkg" | iconv -f UTF-8 -t UTF-8 2>&1 | LANG=C grep illegal -B1
+		exit 1
+	fi
+done

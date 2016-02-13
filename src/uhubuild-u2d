@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ -f "u2d" ]; then
+	. /usr/lib/uhubuild/uhubuild-u2d.sh
+	. u2d
+fi

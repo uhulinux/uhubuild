@@ -1,0 +1,25 @@
+#!/bin/sh -eu
+
+if [ "$#" != "2" ]; then
+	echo "usage: ub_cp <from> <where>" >&2
+	exit 1
+fi
+
+if [ ! -d "$2" ]; then
+	echo "no such directory: $2" >&2
+fi
+
+TO="$(readlink -f "$2")"
+
+if [ ! -d "$TO" ]; then
+	echo "no such directory: $TO" >&2
+fi
+
+cd "$1"
+ub_list | while read f; do
+	if [ -d "$f" ]; then
+		mkdir -p "$TO/${f#./}"
+	else
+		cp -dp --parents --target-directory="$TO" -- "$f"
+	fi
+done

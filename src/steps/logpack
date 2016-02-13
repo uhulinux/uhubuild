@@ -1,0 +1,31 @@
+#!/bin/bash -eu
+
+#
+# LogPack...
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -z "${UB_LOGPACKDIR:-}" ]; then
+	echo " (kihagyva)"
+	exit 0
+fi
+
+mkdir -p "$UB_ADMINDIR/config.logs"
+cd "$UB_WORKDIR"
+for i in $(find compile* object* -name config.log) $(find compile*/CMakeFiles object*/CMakeFiles -name "CMake*.log"); do
+	cp -a --parents "$i" "$UB_ADMINDIR/config.logs/"
+done
+
+mkdir -p "$UB_LOGPACKDIR"
+mkdir "$UB_TMPDIR/logpack"
+for i in log ccache.log config.logs/. {compile,install,pack}-{host,with}; do
+	if [ -e "$UB_ADMINDIR/$i" ]; then
+		cp -al "$UB_ADMINDIR/$i" "$UB_TMPDIR/logpack/"
+	fi
+done
+
+cd "$UB_TMPDIR/logpack"
+pretendroot tar czf "${UB_LOGPACKDIR}/${UB_SOURCENAME}_log.tar.gz" *
+
+rm -rf "$UB_TMPDIR/logpack"

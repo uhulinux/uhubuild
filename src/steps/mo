@@ -1,0 +1,78 @@
+#!/bin/bash -eu
+
+#
+# .mo fájlok átalakítása UTF-8 kódolásúra.
+#
+# A .mo fájlok megnevezik saját karakterkészletüket, és a gettext motor
+# automatikusan konvertál mindig. Ez a változtatás tehát transzparens
+# az alkalmazások számára. Két előnye van: UTF-8 környezetben futva nincs
+# szükség gconv modul betöltésére és konvertálásra, illetve könnyebbé válik
+# ékezetes szövegre grepelni /usr/share/locale alatt.
+#
+# A karakterkészlet nevét is tartalmazó könyvtárakat kigyomláljuk, mivel
+# nyilvánvalóan nincs értelmük.
+#
+# XXX TODO FIXME: talán az fr_FR -> fr típusú könyvtárcseréket is meg kéne
+# ejteni.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+for pkg in $UB_PACKAGES; do
+	for dir in usr/share/locale; do
+		if [ ! -d "$UB_PACKAGEDIR/$pkg/$dir" ]; then
+			continue
+		fi
+		cd "$UB_PACKAGEDIR/$pkg/$dir"
+
+		# helyrepofozzuk a jogosultságokat
+		find .         | xargs -r pretendroot chown -h 0.0
+		find . -type f | xargs -r pretendroot chmod 644
+		find . -type d | xargs -r pretendroot chmod 755
+
+		# karakterkészlet konverzió
+		for f in $(find . -type f -name '*.mo'); do
+			msgunfmt -o "${f%.mo}.po" "$f" 2>/dev/null
+			if [ ! -f "${f%.mo}.po" ]; then
+				continue
+			fi
+			# békén hagyjuk, ha már UTF-8
+			if grep '^"Content-Type:' "${f%.mo}.po" | head -n 1 | grep charset=UTF-8 >/dev/null; then
+				pretendroot rm "${f%.mo}.po"
+				continue
+			fi
+			# átalakítjuk
+			msgconv	-t UTF-8 "${f%.mo}.po" | msgfmt -o "$f.new" -
+			if [ ! -s "$f.new" ]; then
+				pretendroot rm -f "$f.new" "${f%.mo}.po"
+				# XXX lehet hogy el kéne szállni az ilyen hibákon
+				continue
+			fi
+			touch -r "$f" "$f.new"
+			pretendroot mv "$f.new" "$f"
+			pretendroot rm "${f%.mo}.po"
+		done
+
+		# karakterkészletet megnevező könyvtárak javítása
+		for f in *.*/*/*.mo; do
+			basename="${f##*/}"
+			olddir="${f%/*}"
+			category="${olddir##*/}"
+			locale="${f%%/*}"
+			lang="${locale%%.*}"
+			codeset="${locale%*.}"
+			territory=""
+			if [ "${codeset#*@}" != "$codeset" ]; then
+				territory="@${codeset#*@}"
+			fi
+			newdir="$lang$territory/$category"
+			if [ -e "$newdir/$basename" ]; then
+				pretendroot rm "$f"
+			else
+				mkdir -p "$newdir"
+				pretendroot mv "$f" "$newdir/"
+			fi
+			pretendroot rmdir -p --ignore-fail-on-non-empty "$olddir"
+		done
+	done
+done

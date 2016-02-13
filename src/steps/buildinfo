@@ -1,0 +1,59 @@
+#!/bin/bash -eu
+
+#
+# Saját extra buildinfo fájl készítése. Szépen lassan majd kitaláljuk, hogy
+# miket írunk ide. Egyelőre a fordításhoz használt csomagok listája.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_PACKAGEDIR"
+
+listpackages "$UB_ADMINDIR/pack-with"
+_hostname  > "$UB_ADMINDIR/pack-host"
+logdate "Build-Finished"
+
+for pkg in $UB_PACKAGES; do
+	{
+	if cmp -s "$UB_ADMINDIR/compile-host" "$UB_ADMINDIR/install-host"; then
+		if cmp -s "$UB_ADMINDIR/install-host" "$UB_ADMINDIR/pack-host"; then
+			echo "Build-Host:                $(cat "$UB_ADMINDIR/compile-host")"
+		else
+			echo "Compile-Install-Host:      $(cat "$UB_ADMINDIR/compile-host")"
+			echo "Pack-Host:                 $(cat "$UB_ADMINDIR/pack-host")"
+		fi
+	else
+		echo "Compile-Host:              $(cat "$UB_ADMINDIR/compile-host")"
+		if cmp -s "$UB_ADMINDIR/install-host" "$UB_ADMINDIR/pack-host"; then
+			echo "Install-Pack-Host:         $(cat "$UB_ADMINDIR/install-host")"
+		else
+			echo "Install-Host:              $(cat "$UB_ADMINDIR/install-host")"
+			echo "Pack-Host:                 $(cat "$UB_ADMINDIR/pack-host")"
+		fi
+	fi
+	cat "$UB_ADMINDIR/timestamps"
+	if cmp -s "$UB_ADMINDIR/compile-with" "$UB_ADMINDIR/install-with"; then
+		if cmp -s "$UB_ADMINDIR/install-with" "$UB_ADMINDIR/pack-with"; then
+			echo "Built-With:"
+			sed 's/^/ /' < "$UB_ADMINDIR/compile-with"
+		else
+			echo "Compiled-Installed-With:"
+			sed 's/^/ /' < "$UB_ADMINDIR/compile-with"
+			echo "Packed-With:"
+			sed 's/^/ /' < "$UB_ADMINDIR/pack-with"
+		fi
+	else
+		echo "Compiled-With:"
+		sed 's/^/ /' < "$UB_ADMINDIR/compile-with"
+		if cmp -s "$UB_ADMINDIR/install-with" "$UB_ADMINDIR/pack-with"; then
+			echo "Installed-Packed-With:"
+			sed 's/^/ /' < "$UB_ADMINDIR/install-with"
+		else
+			echo "Installed-With:"
+			sed 's/^/ /' < "$UB_ADMINDIR/install-with"
+			echo "Packed-With:"
+			sed 's/^/ /' < "$UB_ADMINDIR/pack-with"
+		fi
+	fi
+	} > "$pkg/DEBIAN/buildinfo"
+done

@@ -1,0 +1,19 @@
+#!/bin/bash -eu
+
+#
+# Átmásoljuk a changelog fájlt, ha van. Komoly munka...
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_PACKAGEDIR"
+
+for pkg in $UB_PACKAGES; do
+	if [ -f "$UB_SRCDIR/changelog" ]; then
+		cp "$UB_SRCDIR/changelog" "$pkg/DEBIAN/"
+		if ! iconv -f UTF-8 -t UTF-8 <"$pkg/DEBIAN/changelog" >/dev/null 2>&1; then
+			echo "  changelog file is not valid UTF-8"
+			exit 1
+		fi
+	fi
+done

@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+
+cd "$UB_WORKDIR"
+
+mv compile compile.moved
+mv object  object.moved

@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ $# != 1 ]; then
+	die 'uhubuild-extract: Szükségem van argumentumra!'
+fi
+
+if [ "$UID" != "0" ]; then
+	echo 'Figyelem! Nem root vagy!' >&2
+	echo 'A kicsomagolás során elvész a fájlok tulajdonosa és csoportja.' >&2
+	echo 'Ha újra össze szeretnéd csomagolni a fájlokat egy uhu csomaggá,' >&2
+	echo 'válts át root felhasználóvá, vagy sima felhasználóként használd' >&2
+	echo 'a pretendroot program által nyújtott virtuális root környezetet.' >&2
+fi
+
+dpkg-deb --control "$1"
+dpkg-deb --extract "$1" .
+

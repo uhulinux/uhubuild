@@ -1,0 +1,82 @@
+#!/bin/bash -eu
+
+#
+# Forráskód kipakolása, patchelése.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+shopt -s extglob
+
+cd "$UB_COMPILEDIR"
+
+if [ -f "$UB_SRCDIR/acquire" ]; then
+	"$UB_SRCDIR/acquire" -u -a "$UB_SRCDIR/sources" -x "$UB_COMPILEDIR"
+	# Az acquire szkript kiránthatja alólunk a cwd-t
+	# (ha letörli és újra létrehozza)
+	cd "$UB_COMPILEDIR"
+fi
+
+# Standard 644/755 beállítása
+chmod -R a+rX,u+w,go-w "$UB_COMPILEDIR"
+
+# Patchek alkalmazása
+if [ -d "$UB_SRCDIR/patches" ]; then
+	while read name; do
+		(case "${name%.@(gz|Z|bz2)}" in
+			*.dif|*.diff|*.patch)
+				echo "+++ Applying patch: $name"
+				if ! patch -p1; then
+					die "FAILED applying patch: $name"
+				fi
+				;;
+			*.patch0)
+				echo "+++ Applying patch: $name"
+				if ! patch -p0; then
+					die "FAILED applying patch: $name"
+				fi
+				;;
+			*.patchR)
+				echo "+++ Applying reverse patch: $name"
+				if ! patch -p1 -R; then
+					die "FAILED applying (reverse) patch: $name"
+				fi
+				;;
+			*.tar)
+				echo "+++ Extracting: $name"
+				tar xvf -
+				;;
+			*.sh)
+				echo "+++ Executing: $name"
+				sh
+				;;
+			*.skip)
+				echo "+++ Skipping: $name"
+				;;
+			*.desc|*.txt)
+				;;
+			*)
+				die "unknown file (extension): $name. (hint: use *.patch)"
+				;;
+		esac < <(sh -c "case '$name' in
+			*.gz|*.Z) zcat ;;
+			*.bz2)    bzcat;;
+			*)        cat  ;;
+		esac")) < "$name" || die "error while reading patch"
+	done < <(ub_list "$UB_SRCDIR/patches" -type f -print | sort)
+fi
+
+# Letöröljük a patchelés által generált szemetet
+find "$UB_COMPILEDIR"/ -name "*~"     -print0 | xargs -r0 rm -rvf --
+find "$UB_COMPILEDIR"/ -name "*.orig" -print0 | xargs -r0 rm -rvf --
+
+# További takarítások
+find "$UB_COMPILEDIR"/ '(' \
+		-name CVS        -o \
+		-name RCS        -o \
+		-name SCCS       -o \
+		-name .cvsignore -o \
+		-name .gitignore -o \
+		-name "#*#"      -o \
+		-name .svn       -o \
+		-name .git          \
+		')' -print0 | xargs -r0 rm -rvf --

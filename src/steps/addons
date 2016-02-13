@@ -1,0 +1,11 @@
+#!/bin/bash -eu
+
+#
+# Addon fájlok bemásolása.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -d "$UB_SRCDIR/addons" ]; then
+	ub_cp "$UB_SRCDIR/addons/." "$UB_INSTALLDIR/"
+fi

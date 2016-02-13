@@ -1,0 +1,21 @@
+#!/bin/bash -eu
+
+#
+# Átmásoljuk a suid_wrapper fájlt, ha van.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_PACKAGEDIR"
+
+for pkg in $UB_PACKAGES; do
+	if [ -f "$UB_SRCDIR/packages/$pkg/suid_wrapper" ]; then
+		while read file; do
+			if [ ! -f "$pkg/$file" ]; then
+				error "$file szerepel a suid_wrapper fájlban, de a csomagban nem!"
+				break
+			fi
+		done < "$UB_SRCDIR/packages/$pkg/suid_wrapper"
+		cp "$UB_SRCDIR/packages/$pkg/suid_wrapper" "$pkg/DEBIAN/"
+	fi
+done

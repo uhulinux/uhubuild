@@ -1,0 +1,28 @@
+#!/bin/bash -eu
+
+if [ -f CMakeLists.txt -a -f build/Makefile ]; then
+	cd build
+fi
+
+if [ -f Build.PL ]; then
+	exec ./Build install destdir="$UB_INSTALLDIR"
+fi
+
+if [ -f setup.py -a ! -f Makefile ]; then
+	exec python setup.py install --root="$UB_INSTALLDIR"
+fi
+
+if [ -f install.rdf -a -d chrome ]; then
+	exec ub_xpiinstall
+fi
+
+if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
+	exec scons install --install-sandbox="$UB_INSTALLDIR" "$@"
+fi
+
+RPM_BUILD_ROOT="$UB_INSTALLDIR" \
+MONO_SHARED_DIR="/tmp" \
+ub_makeinstall "$@"
+
+ub_fixperlpacklists
+ub_removeperllocalpod

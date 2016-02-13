@@ -1,0 +1,3 @@
+#!/bin/bash -eu
+
+find "$UB_INSTALLDIR" -name .xvpics -print0 | xargs -r0 rm -rfv --

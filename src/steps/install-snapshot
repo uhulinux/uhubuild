@@ -1,0 +1,32 @@
+#!/bin/bash -eu
+
+#
+# Snapshot készítése az install utáni állapotról.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -z "${UB_INSTALLSNAPSHOTDIR:-}" ]; then
+	echo " (kihagyva)"
+	exit 0
+fi
+
+logdate "Install-Snapshot-Created"
+
+cd "$UB_SRCDIR"
+for i in acquire compile install; do
+	if [ -f "$i" ]; then
+		echo "$i"
+	fi
+done | xargs -r | md5sum -- > "$UB_WORKDIR/md5sums"
+for dir in sources patches; do
+	if [ -d "$dir" ]; then
+		ub_list "$dir/" -type f -print0 | sort -z | xargs -r0 md5sum -- >> "$UB_WORKDIR/md5sums"
+	fi
+done
+echo "installed" > "$UB_WORKDIR/snapshot-type"
+cd "$UB_WORKDIR"
+mkdir -p "${UB_INSTALLSNAPSHOTDIR}"
+pretendroot tar czf "${UB_INSTALLSNAPSHOTDIR}/${UB_SOURCENAME}_installed.tar.gz" \
+	snapshot-type md5sums admin install
+rm "$UB_WORKDIR"/{snapshot-type,md5sums}

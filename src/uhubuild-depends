@@ -1,0 +1,70 @@
+#!/bin/bash -e
+
+#
+# Chroot környezethez szükséges csomagok felsorolása.
+#
+# Felsorolja, hogy mely csomagokra van szükség az adott program
+# lefordításához.
+#
+# A forrást az első argumentumban adjuk meg. Ennek hiánya esetén az
+# $UHUBUILD_SRCDIR változó értéke számít. Ha ez sincs beállítva, akkor az
+# aktuális munkakönyvtárral dolgozunk.
+#
+# A forrás alól mindössze két fájlt használ. A triviálisabbik a
+# "build-depends" nevű, hiszen ebben soroljuk fel igényeinket. A kevésbé
+# triviális az "uhu" nevű. Az alap csomagok listája ugyanis függhet az UHU
+# verziótól.
+#
+# Az eredményként adott lista nem feltétlenül teljes: a függőségek még
+# nincsenek feloldva. Ezt az uhubuild-prepare-chroot fogja megtenni.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ $# -gt 1 ]; then
+	die "Használat: uhubuild-depends [forrás-könyvtár]"
+fi
+
+# A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
+if [ -z "${UHUBUILD_SRCDIR:-}" ]; then
+	export UHUBUILD_SRCDIR="$(cd "${1:-.}" && pwd -P)"
+fi
+
+expand_macro ()
+{
+	if echo "$packages" | grep "^$1\$" >/dev/null; then
+		shift
+		packages=$( { echo "$packages"; echo $*; } | tr ' ' '\n' | grep -v '^$' | sort -u )
+	fi
+}
+
+fix_packages ()
+{
+	packages=$( { echo "$packages"; echo $*; } | tr ' ' '\n' | grep -v '^$' | sort -u )
+	oldpkg="moo"
+	while [ "$packages" != "$oldpkg" ]; do
+		oldpkg="$packages"
+		while read line; do
+			if [ "$line" != "" ]; then
+				eval expand_macro $line
+			fi
+		done < $UHUBUILD_CHROOTDIR/usr/share/uhubuild/config/macros
+	done
+	packages=$( echo "$packages" | grep -v '^%' | sort -u )
+}
+
+packages="%_"
+
+if [ -f "$UHUBUILD_SRCDIR/build-depends" ]; then
+	packages="$packages $( grep -v '^-' "$UHUBUILD_SRCDIR/build-depends" || true )"
+fi
+
+fix_packages
+
+if [ -f "$UHUBUILD_SRCDIR/build-depends" ]; then
+	for pkg in $( grep '^-' "$UHUBUILD_SRCDIR/build-depends" | sort -u ); do
+		packages=$( echo "$packages" | grep -v "^${pkg#-}\$" || true )
+	done
+fi
+
+echo "$packages"

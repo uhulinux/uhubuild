@@ -1,0 +1,623 @@
+#!/bin/bash -eu
+
+#
+# Függőségek. Kemény dió.
+#
+# Először automatikusan kiderítjük, hogy mikre van szüksége a programnak.
+#
+# Először a bináris fájlokra objdump-ot futtatunk. Ennek kimenetében
+# a NEEDED mezőben felsorolt libeket megkeressük, figyelembe véve az
+# RPATH és RUNPATH mezőket.
+#
+# A szkriptekből kiszedjük az interpreterüket. Nemcsak a csomag igazi
+# fájljait nézzük meg, hanem a postinst-jellegű szkripteket is.
+#
+# Ezt követi a .pc és .la fájlok megemésztése, valamint a szimlinkek követése.
+#
+# Az előző fázisokban kapott fájlneveket okosan csomagnevekké alakítjuk,
+# számítva természetesen arra, hogy egyik-másik fájl lehet éppenséggel egy
+# most készülő csomag része.
+#
+# Végül az opcionális "packages/*/depends" konfig fájl alapján bővítjük vagy
+# szűkítjük a listát.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+file_to_package ()
+{
+	local file package dirname basename
+	file="$1"
+
+# Ha a fájlnév teljes útvonallal $UB_PACKAGEDIR alá vezet minket, akkor a
+# fájlnévből egyszerűen kinyerhető a csomag neve. Az objdump körüli
+# szkriptrészlet ad ilyen formátumú fájlnevet, ha a keresett libraryt
+# az egyik most készülő csomag tartalmazza.
+
+	if [ "${file#$UB_PACKAGEDIR/}" != "$file" ]; then
+		package="${file#$UB_PACKAGEDIR/}"
+		package="${package%%/*}"
+		echo "$package"
+		return 0
+	fi
+
+# Ha a fájlnév normálisnak néz ki (nem $UB_PACKAGEDIR a kezdete), akkor is
+# először a most készülő csomagok között nézünk körül, hogy ott van-e.
+
+	for package in $UB_PACKAGES; do
+		if [ -f "$UB_PACKAGEDIR/$package/$file" -o -L "$UB_PACKAGEDIR/$package/$file" ]; then
+			echo "$package"
+			return 0
+		fi
+	done
+
+# Ha itt sem találjuk, akkor nézzük meg a dpkg adatbázisban.
+
+	if [ ! -e "$file" ]; then
+		error "$file: Nincs ilyen fájl!"
+	fi
+	# Az útvonalban követjük a szimlinkeket,
+	# a fájlnévben már nem, mert az lehet, hogy
+	# más csomagba visz át minket.
+	# /./ komponenst is kiszűrjük, ha kell.
+	dirname="${file%/*}"
+	basename="${file##*/}"
+	dirname="$(readlink -f "$dirname")"
+	if [ "$dirname" != "" ]; then
+		file="$dirname/$basename"
+	else
+		file="${file//\/.\///}"
+	fi
+	package="$(dpkg -S "$file")"
+	package="${package%%:*}"
+	echo "$package"
+	return 0
+}
+
+for pkg in $UB_PACKAGES; do
+
+	#echo "pkg=[$pkg]"
+
+	cd "$UB_PACKAGEDIR/$pkg"
+
+	LP=""
+	PCP=""
+	for p in $UB_PACKAGES; do
+		for dir in /lib /usr/lib $(cat $UB_SRCDIR/packages/$pkg/libpath); do
+			if [ -d "$UB_PACKAGEDIR/$p/$dir" ]; then
+				realpath="$(readlink -f "$UB_PACKAGEDIR/$p/$dir")"
+				LP="$LP $realpath"
+			fi
+		done
+		PCP="$PCP:$UB_PACKAGEDIR/$p/usr/lib/pkgconfig:$UB_PACKAGEDIR/$p/usr/share/pkgconfig"
+	done
+	for dir in /lib /usr/lib $(cat $UB_SRCDIR/packages/$pkg/libpath); do
+		if [ -d "$dir" ]; then
+			realpath="$(readlink -f "$dir")"
+			LP="$LP $realpath"
+		fi
+	done
+	LP="${LP# }"
+	PCP="${PCP#:}"
+
+	#if [ -n "$LP" ]; then
+	#	echo -e "LP=\t${LP// / \n\t}"
+	#fi
+	#if [ -n "$PCP" ]; then
+	#	echo -e "PCP=\t${PCP//:/:\n\t}"
+	#fi
+
+	rm -f "$UB_TMPDIR/file-atleast" "$UB_TMPDIR/file-noversion"
+
+	if ! grep -qx skip-autodepend "$UB_SRCDIR/packages/$pkg/options"; then
+
+	touch "$UB_TMPDIR/file-atleast" "$UB_TMPDIR/file-noversion"
+
+	for file in \
+		$(find -mindepth 1 -path ./DEBIAN -prune -o -type f -print) \
+		DEBIAN/{postinst,postrm,prerm}{,-custom}; do
+
+		if [ -x "$file" ]; then
+			case "$(file -b "$file")" in
+			# ELF file (bevezető * a setuidos cuccok miatt)
+			  *ELF*dynamically*|*ELF*shared*)
+				#echo "  file=[$file]"
+				#if objdump -p "$file" 2>/dev/null | grep '^[ \t]*RPATH[ \t]' >/dev/null; then
+				#	warn "a $file tartalmaz RPATH bejegyzést!"
+				#fi
+				#if objdump -p "$file" 2>/dev/null | grep '^[ \t]*RUNPATH[ \t]' >/dev/null; then
+				#	warn "a $file tartalmaz RUNPATH bejegyzést!"
+				#fi
+				LP2=""
+				for rpath in $(objdump -p "$file" 2>/dev/null | grep '^[ \t]*RPATH[ \t]' | tr -s ' ' | cut -d" " -f3 | tr ':' ' '); do
+					if [ "$rpath" = '$ORIGIN' ]; then
+						rpath="${file%/*}"
+					fi
+					for p in $UB_PACKAGES; do
+						if [ -d "$UB_PACKAGEDIR/$p/$rpath" ]; then
+							realpath="$(readlink -f "$UB_PACKAGEDIR/$p/$rpath")"
+							LP2="$LP2 $realpath"
+						fi
+					done
+					if [ -d "$rpath" ]; then
+						realpath="$(readlink -f "$rpath")"
+						LP2="$LP2 $realpath"
+					fi
+				done
+				LP2="$LP2 $LP"
+				LP2="${LP2% }"
+				for runpath in $(objdump -p "$file" 2>/dev/null | grep '^[ \t]*RUNPATH[ \t]' | tr -s ' ' | cut -d" " -f3 | tr ':' ' '); do
+					if [ "$runpath" = '$ORIGIN' ]; then
+						runpath="${file%/*}"
+					fi
+					for p in $UB_PACKAGES; do
+						if [ -d "$UB_PACKAGEDIR/$p/$runpath" ]; then
+							realpath="$(readlink -f "$UB_PACKAGEDIR/$p/$runpath")"
+							LP2="$LP2 $realpath"
+						fi
+					done
+					if [ -d "$runpath" ]; then
+						realpath="$(readlink -f "$runpath")"
+						LP2="$LP2 $realpath"
+					fi
+				done
+				LP2="${LP2# }"
+				#if [ "$LP" != "$LP2" ]; then
+				#	echo -e "LP2=\t${LP2// / \n\t}"
+				#fi
+
+				for lib in $(objdump -p "$file" 2>/dev/null | grep '^[ \t]*NEEDED[ \t]' | tr -s ' ' | cut -d" " -f3); do
+					if [ "${lib#\$\{ORIGIN\}\/}" != "$lib" ]; then # ha ugy kezdodik hogy ${ORIGIN}/
+						dir="$(dirname $(readlink -f "$file"))"
+						name="${lib#\$\{ORIGIN\}\/}"
+						echo "$dir/$name" >> "$UB_TMPDIR/file-atleast"
+						continue 2
+					else 
+						for p in $LP2; do
+							if [ -e "$p/$lib" ]; then
+								echo "$p/$lib" >> "$UB_TMPDIR/file-atleast"
+								continue 2
+							fi
+						done
+					fi
+
+					error "Nincs meg ez a lib: $lib (igényli: ${file#.})"
+				done
+				;;
+			  *)
+				# script
+				if [ "$(head -c 2 "$file")" = "#!" ]; then
+					intp="$(head -n 1 "$file")"
+					intp="${intp#\#!}"
+					while [ "${intp:0:1}" = " " ]; do
+						intp="${intp# }"
+					done
+					if [ "$intp" != "$(echo -n "$intp"|tr -d '\r')" ]; then
+						error "a $file interpretere CRLF-re végződik!"
+						continue
+					fi
+					args="$intp"
+					intp="${intp%% *}"
+					args="${args#$intp}"
+					while [ "${args:0:1}" = " " ]; do
+						args="${args# }"
+					done
+					if [ "${intp:0:1}" != "/" ]; then
+						error "a $file interpretere nem / jellel kezdődik!"
+						continue
+					fi
+					# Ha az interpreter a /usr/bin/env, akkor megnezzuk
+					# az argumentomot is, mert az is kell a futtatashoz
+					if [ "$intp" == "/usr/bin/env" -o "$intp" == "/bin/env" ]; then
+						shopt -s extglob
+						args="${args%%+( )}"
+						shopt -u extglob
+						if [ "${args:0:1}" == "/" ]; then
+							# Ha abszolut uttal adott, akkor egyszeru
+							echo "$args" >> "$UB_TMPDIR/file-noversion"
+						else
+							# Ha nem, akkor meg kell keresnunk
+							found="no"
+							for r in $UB_PACKAGES; do
+								for i in "$UB_PACKAGEDIR/$r"/{,/usr}/{,s}bin/"$args"; do
+									if [ -f "$i" ]; then
+										echo "$i" >> "$UB_TMPDIR/file-noversion"
+										found="yes"
+										break 2
+									fi
+								done
+							done
+							if [ "$found" == "no" ]; then
+								for i in {,/usr}/{,s}bin/"$args"; do
+									if [ -f "$i" ]; then
+										echo "$i" >> "$UB_TMPDIR/file-noversion"
+										found="yes"
+										break
+									fi
+								done
+							fi
+							# relativ utvonalon is keresunk
+							if [ -f "$(dirname $(readlink -f "$file"))"/"$args" ]; then
+								echo "$(dirname $(readlink -f "$file"))"/"$args" >> "$UB_TMPDIR/file-noversion"
+								found="yes"
+								break
+							fi
+
+							if [ "$found" == "no" ]; then
+								error "a $file interpretere nincs meg: [$args]"
+							fi
+							unset found
+						fi
+					fi
+					echo "$intp" >> "$UB_TMPDIR/file-noversion"
+				fi
+				;;
+			esac
+		fi
+
+		case "$file" in
+		  ./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
+			# .pc fájlok:
+			# Kétféle függőséget is figyelünk. Az egyik a Libs sorban lévő,
+			# ezt szépen kiírja a pkg-config, először a -L kapcsolókat, ami
+			# alapján majd megtudjuk, hogy mely könyvtárakban kell utána a
+			# -l kapcsolók libjeit keresni, ...
+			if ! PKG_CONFIG_PATH="$PCP" pkg-config --exists "$file"; then
+				error "Unmet dependencies in $file"
+				continue
+			fi
+			libpath="/lib /usr/lib"
+			for L in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-L "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-L "$file"); do
+				if [ "$L" = "${L#-L/}" ]; then
+					error "invalid pkg-config output"
+					continue
+				fi
+				L="${L#-L}"
+				libpath="$libpath $L"
+			done
+			need_libc=0
+			for l in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-l "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-l "$file"); do
+				if [ "$l" = "${l#-l}" ]; then
+					error "invalid pkg-config output"
+					continue
+				fi
+				l="${l#-l}"
+				need_libc=1
+				found=0
+				if [ "$l" = "gcc" ]; then
+					# -lgcc uses /usr/lib/gcc-lib/*/*/libgcc.a
+					echo /usr/lib/gcc*/*/*/libgcc.a >> "$UB_TMPDIR/file-noversion"
+					found=1
+				fi
+				for libdir in $libpath; do
+					for p in $UB_PACKAGES; do
+						if [ -e "$UB_PACKAGEDIR/$p$libdir/lib$l.so" -o -L "$UB_PACKAGEDIR/$p/$libdir/lib$l.so" ]; then
+							echo "$libdir/lib$l.so" >> "$UB_TMPDIR/file-noversion"
+							found=1
+						fi
+					done
+					if [ -e "$libdir/lib$l.so" -o -L "$libdir/lib$l.so" ]; then
+						echo "$libdir/lib$l.so" >> "$UB_TMPDIR/file-noversion"
+						found=1
+					fi
+				done
+				if [ $found = 0 ]; then
+					for libdir in $libpath; do
+						for p in $UB_PACKAGES; do
+							if [ -e "$UB_PACKAGEDIR/$p$libdir/lib$l.a" -o -L "$UB_PACKAGEDIR/$p/$libdir/lib$l.a" ]; then
+								echo "$libdir/lib$l.a" >> "$UB_TMPDIR/file-noversion"
+								found=1
+							fi
+						done
+						if [ -e "$libdir/lib$l.a" -o -L "$libdir/lib$l.a" ]; then
+							echo "$libdir/lib$l.a" >> "$UB_TMPDIR/file-noversion"
+							found=1
+						fi
+					done
+				fi
+				if [ $found = 0 ]; then
+					error "lib$l.so or lib$l.a is required by $file but not found"
+				fi
+			done
+			if [ $need_libc = 1 ]; then
+				echo "/usr/lib/libc.so" >> "$UB_TMPDIR/file-noversion"
+			fi
+
+			# ... a másik pedig a Requires sorban megemlített további .pc fájlok,
+			# ezeket kézzel kell kibányászni, mivel a pkg-config nem tudja kiírni
+			# őket szépen, de szerencsére rekurzióra nincs szükség.
+			reqs="$(egrep '^Requires(\.private)?:' "$file" | cut -d: -f2- | tr ',\n' '  ')"
+			# változók behelyettesítése
+			while [ "$reqs" != "${reqs%%\$\{*\}*}" ]; do
+				part1="${reqs%%\$\{*}"
+				tmp="${reqs#*\$\{}"
+				varname="${tmp%%\}*}"
+				part2="${tmp#*\}}"
+				varvalue="$(PKG_CONFIG_PATH="$PCP" pkg-config --variable="$varname" "$file")"
+				reqs="$part1$varvalue$part2"
+			done
+			skipnext=0
+			for req in $reqs; do
+				if [ $skipnext = 1 ]; then
+					skipnext=0
+					continue
+				fi
+				if [ "$req" = "=" -o "$req" = "<" -o "$req" = ">" -o "$req" = ">=" -o "$req" = "<=" ]; then
+					skipnext=1
+					continue
+				fi
+				found=0
+				for p in $UB_PACKAGES; do
+					if [ -f "$UB_PACKAGEDIR/$p/lib/pkgconfig/$req.pc" ]; then
+						echo "/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
+						found=1
+					fi
+					if [ -f "$UB_PACKAGEDIR/$p/usr/lib/pkgconfig/$req.pc" ]; then
+						echo "/usr/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
+						found=1
+					fi
+					if [ -f "$UB_PACKAGEDIR/$p/usr/share/pkgconfig/$req.pc" ]; then
+						echo "/usr/share/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
+						found=1
+					fi
+				done
+				if [ -f "/lib/pkgconfig/$req.pc" ]; then
+					echo "/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
+					found=1
+				fi
+				if [ -f "/usr/lib/pkgconfig/$req.pc" ]; then
+					echo "/usr/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
+					found=1
+				fi
+				if [ -f "/usr/share/pkgconfig/$req.pc" ]; then
+					echo "/usr/share/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
+					found=1
+				fi
+				if [ $found = 0 ]; then
+					error "$req.pc is required by $file but not found"
+				fi
+			done
+			;;
+		  *.la)
+if false; then
+			# .la fájlok:
+			# A $dependency_libs tartalmaz vegyesen -Lfoo, -lfoo és /usr/lib/libfoo.a típusú
+			# bejegyzéseket is (meg egyebeket is, de azzal nem foglalkozunk).
+			# A -L mellett a $libdir is hasznos útvonal, ami mentén keresgélnünk kell.
+			if ! grep -q ^dependency_libs= "$file"; then
+				continue
+			fi
+			libdir="$(grep ^libdir= "$file" | cut -d= -f2- | tr -d \')"
+			libpath="/lib /usr/lib $libdir"
+			deplibs="$(grep ^dependency_libs= "$file" | cut -d= -f2- | tr -d \')"
+			for L in $deplibs; do
+				if [ "$L" = "${L#-L/}" ]; then
+					continue
+				fi
+				L="${L#-L}"
+				libpath="$libpath $L"
+			done
+			for l in $deplibs; do
+				if [ "$l" != "${l#/}" ]; then
+					found=0
+					for p in $UB_PACKAGES; do
+						if [ -e "$UB_PACKAGEDIR/$p$l" -o -L "$UB_PACKAGEDIR/$p$l" ]; then
+							echo "$l" >> "$UB_TMPDIR/file-noversion"
+							found=1
+						fi
+					done
+					if [ -e "$l" -o -L "$l" ]; then
+						echo "$l" >> "$UB_TMPDIR/file-noversion"
+						found=1
+					fi
+					if [ $found = 0 ]; then
+						error "$l is required by $file but not found"
+					fi
+				fi
+				if [ "$l" = "${l#-l}" ]; then
+					continue
+				fi
+				l="${l#-l}"
+				found=0
+				if [ "$l" = "gcc" ]; then
+					# -lgcc uses /usr/lib/gcc-lib/*/*/libgcc.a
+					echo /usr/lib/gcc*/*/*/libgcc.a >> "$UB_TMPDIR/file-noversion"
+					found=1
+				fi
+				for libdir in $libpath; do
+					for p in $UB_PACKAGES; do
+						if [ -e "$UB_PACKAGEDIR/$p$libdir/lib$l.so" -o -L "$UB_PACKAGEDIR/$p/$libdir/lib$l.so" ]; then
+							echo "$libdir/lib$l.so" >> "$UB_TMPDIR/file-noversion"
+							found=1
+						fi
+					done
+					if [ -e "$libdir/lib$l.so" -o -L "$libdir/lib$l.so" ]; then
+						echo "$libdir/lib$l.so" >> "$UB_TMPDIR/file-noversion"
+						found=1
+					fi
+				done
+				if [ $found = 0 ]; then
+					for libdir in $libpath; do
+						for p in $UB_PACKAGES; do
+							if [ -e "$UB_PACKAGEDIR/$p$libdir/lib$l.a" -o -L "$UB_PACKAGEDIR/$p/$libdir/lib$l.a" ]; then
+								echo "$libdir/lib$l.a" >> "$UB_TMPDIR/file-noversion"
+								found=1
+							fi
+						done
+						if [ -e "$libdir/lib$l.a" -o -L "$libdir/lib$l.a" ]; then
+							echo "$libdir/lib$l.a" >> "$UB_TMPDIR/file-noversion"
+							found=1
+						fi
+					done
+				fi
+				if [ $found = 0 ]; then
+					error "lib$l.so or lib$l.a is required by $file but not found"
+				fi
+			done
+fi
+			;;
+		esac
+
+	done
+
+	# A szimlinkek célja is függőség ám.
+	for link in $(find -mindepth 1 -path ./DEBIAN -prune -o -type l -print); do
+		dest="$(readlink "$link")"
+		# kipofozás
+		while [ "$dest" != "${dest%//*}" ]; do
+			dest="${dest//\/\///}";
+		done
+		while [ "$dest" != "${dest%/./*}" ]; do
+			dest="${dest//\/.\///}"
+		done
+		while [ "$dest" != "${dest%/.}" ]; do
+			dest="${dest%/.}"
+		done
+		while [ "$dest" != "${dest#./}" ]; do
+			dest="${dest#./}"
+		done
+		dest="${dest%/}"
+		if [ "$dest" = "." ]; then
+			dest=""
+		fi
+		# na hajrá
+		dir="${link%/*}" # e.g. for /bin/sh it is now "./bin"
+		while [ "$dest" != "${dest#../}" -o "$dest" = ".." ]; do
+			dest="${dest#..}"
+			dest="${dest#/}"
+			if [ "$dir" != "." ]; then
+				dir="${dir%/*}"
+			fi
+		done
+		# TODO: handle brain-damaged symlink with /../ component in the middle
+		if [ "$dest" = "" ]; then
+			realpath="$dir"
+		elif [ "$dest" = "${dest#/}" ]; then
+			realpath="$dir/$dest"
+		else
+			realpath="$dest"
+		fi
+		realpath="${realpath#.}"
+		if [ "$realpath" = "" ]; then
+			# root directory; nothing to do
+			continue
+		fi
+		if [ "${realpath:0:5}" = "/dev/" -o "${realpath:0:6}" = "/proc/" -o "${realpath:0:5}" = "/sys/" ]; then
+			# virtual fs
+			continue
+		fi
+		# okay, now realpath is really what we needed
+		found=0
+		for p in $UB_PACKAGES; do
+			if [ -e "$UB_PACKAGEDIR/$p$realpath" -o -L "$UB_PACKAGEDIR/$p$realpath" ]; then
+				if [ ! -d "$UB_PACKAGEDIR/$p$realpath" -o -L "$UB_PACKAGEDIR/$p$realpath" ]; then
+					echo "$realpath" >> "$UB_TMPDIR/file-noversion"
+				fi
+				found=1
+			fi
+		done
+		if [ -e "$realpath" -o -L "$realpath" ]; then
+			if [ ! -d "$realpath" -o -L "$realpath" ]; then
+				echo "$realpath" >> "$UB_TMPDIR/file-noversion"
+			fi
+			found=1
+		fi
+		if [ $found = 0 ]; then
+			warn "$realpath is missing (target of symlink $link)"
+		fi
+	done
+
+
+# Most a file-* fájlokban fájlnevek vannak. Ebből kell csinálni csomagneveket.
+
+	sort -u < "$UB_TMPDIR/file-atleast" > "$UB_TMPDIR/file-atleast.tmp"
+	while read file; do
+		file_to_package "$file"
+	done < "$UB_TMPDIR/file-atleast.tmp" > "$UB_TMPDIR/pkg-atleast"
+	sort -u < "$UB_TMPDIR/file-noversion" > "$UB_TMPDIR/file-noversion.tmp"
+	while read file; do
+		file_to_package "$file"
+	done < "$UB_TMPDIR/file-noversion.tmp" > "$UB_TMPDIR/pkg-noversion"
+	rm -f "$UB_TMPDIR/file-atleast"   "$UB_TMPDIR/file-atleast.tmp"
+	rm -f "$UB_TMPDIR/file-noversion" "$UB_TMPDIR/file-noversion.tmp"
+
+	else # skip-autodepend
+		touch "$UB_TMPDIR/pkg-atleast" "$UB_TMPDIR/pkg-noversion"
+		echo " $pkg: automatikus dependencia keresés fázis kihagyva"
+	fi # skip-autodepend
+
+# Az uhu-pkg majnem mindenkinek kell a postinst szkript miatt.
+	if ! grep -qx skip-postinst "$UB_SRCDIR/packages/$pkg/options" || \
+	   ! grep -qx skip-prerm    "$UB_SRCDIR/packages/$pkg/options" || \
+	   ! grep -qx skip-postrm   "$UB_SRCDIR/packages/$pkg/options"; then
+		echo "uhu-pkg" >> "$UB_TMPDIR/pkg-noversion"
+	fi
+
+# Megvannak a csomagnevek. Sorba rendezzük őket.
+	sort -u < "$UB_TMPDIR/pkg-atleast"   > "$UB_TMPDIR/pkg-atleast.tmp"
+	sort -u < "$UB_TMPDIR/pkg-noversion" | comm -23 - "$UB_TMPDIR/pkg-atleast.tmp" \
+	  > "$UB_TMPDIR/pkg-noversion.tmp"
+	rm "$UB_TMPDIR/pkg-atleast" "$UB_TMPDIR/pkg-noversion"
+
+# Kiszedjük azokat, amik említésre kerülnek a depends fileban.
+	while read package op version; do echo "$package"; done \
+		< "$UB_SRCDIR/packages/$pkg/depends" \
+		| comm -13 - "$UB_TMPDIR/pkg-atleast.tmp" > "$UB_TMPDIR/pkg-atleast.tmp2"
+	while read package op version; do echo "$package"; done \
+		< "$UB_SRCDIR/packages/$pkg/depends" \
+		| comm -13 - "$UB_TMPDIR/pkg-noversion.tmp" > "$UB_TMPDIR/pkg-noversion.tmp2"
+	rm "$UB_TMPDIR/pkg-atleast.tmp" "$UB_TMPDIR/pkg-noversion.tmp"
+
+# Megjegyezzük a verziókat hozzájuk. Persze most is
+# külön figyelnünk kell, ha éppen most készülő csomagról van szó.
+	while read package; do
+		if [ "$package" == "$pkg" ]; then
+			continue
+		fi
+		# FIXME: pfujj, gany, ez kodduplikalas, lasd par sorral lejjebb
+		if [ -d "$UB_SRCDIR/packages/$package" ]; then
+			version="$UB_VERSION"
+		else
+			version="$(dpkg -s "$package" | grep '^Version: ')"
+			version="${version#Version: }"
+			version="${version%-*}"
+		fi
+		echo "$package (>= $version)"
+	done < "$UB_TMPDIR/pkg-atleast.tmp2" > "$UB_TMPDIR/pkg-atleast.tmp3"
+	rm "$UB_TMPDIR/pkg-atleast.tmp2"
+
+# Feldolgozzuk a "kézi" függőségeket
+	while read package op version; do
+		if [ "$op" == "-" ]; then
+			continue
+		fi
+		# kicsit hekkelni kell, mert a [ progi behulyul ha az op =
+		if [ -n "${op:+x}" -a -z "$version" ]; then
+		# FIXME: pfujj, gany, ez (kicsit) kodduplikalas, lasd par sorral feljebb
+			if [ -d "$UB_SRCDIR/packages/$package" ]; then
+				version="$UB_VERSION"
+				release="$UB_RELEASE$UB_EXTRARELEASE"
+			else
+				version="$(dpkg -s "$package" | grep '^Version: ')"
+				version="${version#Version: }"
+				release="${version##*-}"
+				version="${version%-*}"
+			fi
+		fi
+		if [ "x$op" == "x=" -a -n "${release:-}" ]; then
+			version="$version-$release"
+		fi
+		if [ -z "$op" ]; then
+			echo "$package"
+		else
+			echo "$package ($op $version)"
+		fi
+	done < "$UB_SRCDIR/packages/$pkg/depends" > "$UB_TMPDIR/pkg-manual"
+
+# Összefűzzük a listákat, kiszedjük az ön-függőséget
+	cat "$UB_TMPDIR"/pkg-{atleast.tmp3,noversion.tmp2,manual} | \
+	  grep -v "^$pkg$" | grep -v "^$pkg " | sort > \
+	  "$UB_ADMINDIR/depends-$pkg"
+	rm "$UB_TMPDIR"/pkg-{atleast.tmp3,noversion.tmp2,manual}
+
+done # for pkg in $UB_PACKAGES

@@ -1,0 +1,280 @@
+pkgbuild: megnezni az UB_COMPILEDIR alatti access timeokat compile utan
+
+megnezni ezeket tovabbi otletek szempontjabol:
+- debian devscripts
+- debhelpers
+- debsums
+
+uhu-pkg (altal meghivott programok):
+- install-info ne warningozzon ha nincs mit eltavolitania
+- useradd ne sirjon a CREATE_HOME miatt
+
+uhu-policy, esetleg uhubuild support kitalalasa:
+- env
+- daemon
+- cron
+- at
+- logrotate
+- xinetd
+
+policy kerdesek:
+- ahol csak van, a compile vegen legyen "make check" vagy "make test"
+
+ellenorizze hogy nem szerepel-e a /var/uhubuild/work/compile konyvtar egyetlen
+fileban sem (grep -r)
+
+ellenorizze hogy szimlink nem mutat-e ilyen helyre.
+[az abszolut symlinkek mar kiszurve -pozsy]
+
+ellenorizze hogy "/var/spool/mail" sztring ne szerepeljen egyetlen fajlban
+sem, hiszen "/var/mail"-t kell az alkalmazasoknak hasznalniuk.
+
+chroot-bol kilepes utan ellenorizze hogy nem maradt-e a chroot alatt futo
+process.
+ezt kb igy lehetne:
+find /proc -name root -type l | while read root; do
+	if [ "$(readlink $root)" == "$CHROOT" ]; then
+		PANIK
+	fi
+done
+(ez egyreszt nekunk self-teszt, masreszt backdoorok ellen jo)
+
+a /etc alatt minden filet magatol vegyen fel a conffiles-ba, ami esetleg nem
+kell, azt lehessen '-' elotaggal jelezni hogy nem kell.
+
+a kiadott csomagjainkat jo lenne digitalisan hitelesiteni.
+Ezt ki kellene dolgozni.
+
+dirs-ben is jo volna valahogy megkulonboztetni a "hozd letre ot" tipusu
+bejegyzest a "ha eppen letezik, akkor legyen a csomag resze" tipusuaktol,
+utobbi eseten shell wildcard is jatszhatna.
+
+uhubuild-check a dirs fileban szedje le a konyvtarnevek vegerol a / jelet
+
+doc-ba es perms-be is kellene ilyen. perms-be talan rekurziv kapcsolo is.
+
+Nehany fajlra automatikusan lepjen eletbe valamilyen jog. Peldaul
+/etc/init.d/daemons alattin automatikusan legyen x bit, ne kelljen ezt
+kezzel megadni a perms-ben. [ez vegulis a fentebb emlitett dh_fixpers-utanzat
+dolga kene legyen, es nem nehany, hanem minden filera. -pozsy]
+
+A doc-makro megcsinalhatna, hogy ha tipikus licencszoveget tartalmazo fajl
+van megadva, akkor helyette szimlinket csinal egy common-licences konyvtaron
+belulre. A fajlokat md5 alapjan azonosithatna, mert ugyanannak a licencnek
+is sok-sok kulonbozo valtozata kering (pl. GPL-ben megvaltozott a postacim,
+az "Appendix" szo kornyeken egy picit atirtak valamit, DOS-tipusu newline
+helyenkent, stb). Ezekbol mind egyetlen kozos fajlra (ami az uhu-base resze
+lehetne peldaul) mutatnanak szimlinkek. [igazabol az egesz license/copyright
+kerdest kene valahogy globalisan rendezni. -pozsy]
+
+Irni progit, ami a .md5sums es .stat fajlok alapjan leellenorzi, hogy a
+csomag fajljainak telepitese rendben van-e, illetve igeny eseten beallitja
+jora a jogokat. Vszleg ezt erdemesebb C-ben irni es nem shell szkriptben.
+Sot: jo lenne mindenek elott korulnezni, hogy valami letezo program (pl.
+aide) nem foghato-e be erre a celra sokkal ertelmesebben, mint amilyen egy
+sajat program lenne. (Bezzeg ha dpkg helyett valami csomagkezelot
+hasznalnank, nem lenne ilyen gond :-))
+
+Az osszes fajta output (log, snapshot stb.) szerintem kene hogy
+tartalmazza a progi version-release erteket is. A snapshotra ezen felul
+fuggo kerdes, hogy md5 is legyen-e a fajlnevben.
+
+Ertelmes daemon-kezeles: allitsa le mielott removeolja. Sot, altalaban
+nem artana ha remove elott ellenorizne hogy az adott fileokat hasznalja-e
+valaki (mint exe vagy mint fd). Ugyanez akar konyvtarakra is, mint cwd.
+
+build elott/utan toroljon minden az 'uhubuild' user altal irhato filet.
+Gyk ugy hogy semmi eselye ne legyen informacioatvitelnek 2 build kozott.
+
+depends:
+- ha foo=>bar, es letezik foo-dev es bar-dev csomag, akkor foo-dev=>bar-dev
+- ha egy foo csomagban levo symlink egy bar csomagban levo filera mutat, akkor
+  foo=>bar?
+- Nezzen bele a .la es .pc fileokba, es az alapjan (is) dependaljon
+  -> kideriteni mi a kapcsolat a *-config es a .la fileok kozott.
+     ha esetleg semmi, akkor a *-config progikat is lekerdezni
+  -> foo.pc fileokat a 'pkg-config --libs-only-l foo' paranccsal kene
+     lekerdezni, figyelve a kornyezeti valtozokra
+- "perl-depends" es "python-depends". Aztan "ruby-depends" is. (majd...)
+  (tcl-depends is)
+- a (/bin,/sbin,/lib)-bol nem mutasson ki fuggoseg.
+- kulon szoljon ha van fuggoseg a /var/uhubuild/work/compile ala
+- #! script eseten ellenorizze, hogy az elso sor legfeljebb 128 karakter
+  hosszu lehet
+
+#!script eseten ne lehessen CRLF a vege.
+
+doc lepest esetleg a depends-hez hasonlo modon makrozni, legyen egy %x makro
+ami a szokasos fileokat rantja be, ebbol "-" prefixxel lehet kivenni fileokat,
+illetve ertelemszeruen ujabb sorokba ujabb fileokat felvenni.
++ abiwordnel pl jol johet, ha a makro prefixezheto, pl "abi/%x", es akkor
+a %x altal meghatarozott fileokat az "abi/" konyvtar alatt keresi
+
+doc makrot at kene gondolni: pl az esound csomagbol keszul egy 'esound'
+es egy 'esound-lib' is. Most akkor melyikbe keruljon a doc?
+Ha az 'esound'-ba kerul, akkor nem jo, mert ha valakinek csak az 'esound-lib'
+kell, akkor nem lesz meg a doksija. Viszont pl a paranccsori progikkal
+kapcsolatos dolgok nyilvan csak az 'esound' csomagba valoak, az nem kell
+annak aki csak az 'esound-lib'-et hasznalja.
+
+doc makrot csomagonkent kellene
+
+Automatikus "-dev", "-lib", "-static" keszites.
+- figyeljen arra, hogy ha egy *.so file symlink egy masik *.so filera, akkor
+  az a "-lib"-be kell.
+- meg kene gondolni esetleg egy "-hdr" ("-header") csomagot is.
+  Igazabol ekkor a "-dev"-et "-dynamic"-ra illene atnevezni, es innentol
+  a forditashoz mindig kell a -header + a -dynamic vagy a -static attol fugg
+  mit akar az ember, a -dynamic-nak pedig kell a -lib ertelemszeruen,
+  illetve a -lib altalaban mas progiknak.
+
+csomagkeszites kozben ellenorizzen mindent amit csak bir. Nem art at tuzetesen
+atnezni:
+- FHS
+- LSB
+- lintian (debian)
+- rpmlint (mandrake)
+- Ellenorizze le a telepitendo .la es .pc fileokat
+
+chrpath segitsegevel szedje ki az ures RPATH szekciokat, illetve a standard
+konyvtarakat. Ugyanez RUNPATH-ra is.
+
+ha egy progi symlink egy masikra (pl /usr/bin/abiword -> AbiWord), akkor
+csinalja meg magatol a man-symlinket, ha letezik a "celprogi"-hoz man oldal.
+sot, anyazzon ha a man alatt nem symlink van.
+
+automatikus uj verzio-kereses. Ezt a dl-el kene osszedolgozni, illetve
+a leendo build daemonnal. Ha talalna uj verziot, akkor leszedi, megprobalja
+leforditani es a vegeredmenyrol beszamol a maintainernek. Pl kuld melle
+filelista-diff-et stb.
+Uj verziokra ugy lehetne pl keresni, hogy az ${UB_VERSION} helyere *-ot ir,
+megnezi miket talal, es ha talalt valamit, akkor a dpkg --compare-versions
+alapjan eldonti ujabb-e.
+Nyilvan csomagonkent letilthatonak kell lennie, pl kernel csomagnal nincs
+ertelme.
+
+figyelmeztessen erosen ha egy postinst vagy hasonlo script ugy kezdodik hogy
+"#!/bin/sh", es nincs hozza -e. (persze a tobbi hasonlot is fogadja el).
+Jo kerdes, hogy ez kinek a feladata: a build rendszere (pl az RPATH-al
+egyenerteku dolog), az uhubuild-check-e, vagy esetleg valami uhu-lint progie.
+
+egy erdekes csomi-teszt lenne, ha megnezne a fileokat hogy a kiterjesztesuk
+megfelel-e a tartalmuknak, pl hogy egy .png file az tenyleg png file-e.
+Persze lehet, hogy nincs sok ertelme, egyszer felirtam valamiert :) [pozsy]
+
+depends: ha egy libet csak a rendszerben talalunk meg, tehat az eppen keszulo
+'foo*' csomagok egyike sem fogja magaval hozni, de ez a rendszeren levo
+lib eppen a rendszeren levo valamelyik 'foo*' csomag altal kerult telepitesre,
+akkor az broki. az ilyet ne fogadja el.
+(mert ugye ekkor a csomag szepen elkeszul, de ha telepiti az ember akkor
+ nem fogja megtalalni a libet amit a csomagolaskor meg megtalalt.)
+(sot, igazabol ezt ugy kellene megoldani, hogy ha kell egy /foo/bar file,
+akkor ha az egy "eppen keszulo" csomagbol van fent, akkor az hiba, mert mar
+elobb kellett volna megtalalnia az $UB_INSTALLDIR alatt)
+(sot igazabol a rendszeren levo, azonos "Source:"-bol csomagokra kellene
+figyelni)
+[egmont:] Szerintem ezt ugy a legegyszerubb megoldani, hogy feature freeze
+utan legalabb 2x ujrabuildelsz minden csomagot. Akkor kibukik az ilyen hiba.
+
+depends kereses soran az ldd lepest legjobb lenne "kezzel" elvegezni.
+Addig is, azt mindenkepp meg kellene csinalni, hogy mielott egy libet
+le-ldd-zunk, az rpath szekciokat kiszedni belole. (igy rpath alapjan
+is hamarabb talalja meg az $UB_INSTALLDIR alatt, ami akkor szamithat ha
+egy lib epp most kerul at egyik keszulo csomagbol a masikba)
+
+valahogy ellenorizni, hogy a progik a helyes locale path-t egettek-e magukba,
+lasd ".mo kereses tapasztalat" level by egmont az uhu-dev listan.
+
+Utananezni, hogy szabad-e .a fileba nem-.o filet becsomagolni.
+- ha szabad, akkor a stripet erre raszoktatni (patch)
+- ha nem szabad, akkor errol az evolution-1.2-t leszoktatni (patch)
+
+tetex csomag: /usr/share/texmf/fonts/tfm/bh/lucsans/hlsr8c.tfm fajlt
+megprobalja stripelni, a 'file' parancs szerint o egy "mc68k executable
+(shared) not stripped", es persze nincs rajta x jog.
+
+rogzitsuk hogy egy filenevben milyen karakterek szerepelhetnek, es install
+utan ellenorizzuk is le rogton, hogy mindegyik megfelelo!
+Javaslat [pozsy]: '[a-z][A-Z][0-9]+-., '. Ez igy elsore eleg szuk, meg
+meglatjuk. A space-t vegyuk bele, barmennyire is nem jo, es ezt kezeljuk is
+mindenhol!!
+
+hostname parancs a chroot kornyezetbe?
+
+doc makronal lehessen megadni celfilenevet is. jo lenne esetleg ha rogton
+path-al egyutt masolna.
+
+updatelibtool: utanajarni hogy miert nem jo dolog libtoolt frissiteni kde
+illetve pcmm eseteben. Optimalis esetben meggyogyitani, vagy ha ez nem megy
+akkor legalabb detektalni es nem frissiteni.
+
+jo lenne ha rogton az uhubuild-check --copy soran eszrevenne ha nem jok a
+permissionok, nem csak acquire/patcheles kozben
+
+uhubuild-check: ellenorizze, hogy minden patch sorszama ugyan annyi szamjegyu
+  legyen, es ne legyen ket azonos sorszamu.
+
+A forditas soran futo kernel verziojat (uname -r) jegyezze fel a buildinfo
+fajlba, mert elvileg egy-ket "checking for ..." configure-lepes eredmenye
+fugghet a futo kernel verziojatol.
+
+uhubuild-check: nagybetuvel kezdodjon a summary es a desc, a summary vegen
+ ne legyen pont
+
+addons: szalljon el az elso permission denied utan rogton, ugy konnyebb
+  eszrevenni mi volt a hiba, es nem is masol tovabb feleslegesen
+
+a sources alatt csak azokat a fileokat md5sum-olja le, akik tenylegesen
+felhasznalasra is kerulnek.
+
+files-dev:
+ /usr/lib/*Config.sh (es nem csak *Conf.sh)
+ /lib/*.o
+ /usr/lib/**/*.o
+
+konyvtarrol ne lehessen leszedni az X jogot ha van r.
+
+bug: a perms-ben nem pofozza helyre a kezdo / jelet. ott nem kell trailing
+ slash
+
+.pc es .la fileok ellenorzese hogy ne legyen bennuk $UB_INSTALLDIR !!!
+
+===============================================================================
+0.2/rc3:
+- A steps/ alatti lepesek ne kulon programkent, hanem besourceolva hivodjanak
+  meg. Igy sokkal jobban lehet szamolni a warningokat es errorokat, meg raadasul
+  egy icipicit gyorsabb is. Raadasul az UB_PACKAGES sem kell hogy exportalt
+  valtozo legyen, lehet belso array. [szeretnem igy, na :) -pozsy]
+
+- File jogosultsagok gatyaba razasa. Sok felvetett kerdes, pl:
+  - a %docdir alatt legyen-e forcolt jog vagy ne? (lasd samba, aki pelda kodot
+    hoz magaval, configure scripttel)
+  - a {,/usr}/{,s}bin alatti fileokra +x jog
+  - ugyanez /etc/init.d eseten
+  stbstb
+  Persze mindezt a perms lepes elott, vagy annak reszekent. Ld meg: dh_fixperms
+
+- Alaposabb FHS ellenorzes.
+  - eloszor legalabb a konyvtarszerkezetre ellenorizzen,
+  - aztan pl a /usr/share/ stb alatti tartalomra is.
+    (pl ne legyen *.h file a /usr/lib alatt)
+
+- depends atalakitasa:
+  - split elott fileonkent kulon-kulon tarolja le a dependencyket
+  - split utan a csomagban levo fileokhoz tartozo listakat osszesitse es
+    konvertalja csomagnevre.
+  Igy lehetove valik hogy megmondjuk egy konkret filera hogy neki megse vagy
+  megis kell egy masik. (pl: ~/usr/bin/akarmi:/bin/sh)
+
+- for i in $(foo); do ...; done -> while read i; do ...; done < <(foo)
+
+- "suggests", "enhances" mezok tamogatasa es hasznalata
+
+- "replaces" mezo hasznalatat meggondolni. Ez valoszinu Nem Jo (tm) dolog.
+
+- code cleanup:
+  - idezojelek
+  - --
+  - -print0 ahol lehet
+  - kulso programok hivasat csokkenteni ahol lehet
+  - kulso programok meghivasanak szamat csokkenteni ahol lehet (xargs, -R stb)

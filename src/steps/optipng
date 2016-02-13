@@ -1,0 +1,11 @@
+#!/bin/bash -eu
+
+if grep -qx skip-optipng "$UB_SRCDIR/options"; then
+	echo " kihagyva"
+	exit 0
+fi
+
+find "$UB_INSTALLDIR" -name '*.png' -print0 | \
+	xargs -I '{}' -0 -P "$UB_MAKE_PROCS" -n 1 \
+		bash -c \
+			'optipng -q "{}" && echo "  {} OK" || echo "  {} WARNING: BAD PNG: "$(file -b "{}")""'

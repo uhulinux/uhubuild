@@ -1,0 +1,96 @@
+#!/bin/bash -eu
+
+#
+# Huhh, ez egy húzós darab...
+#
+# A dpkg igen gyengén (mondhatni: sehogyan sem) kezeli a könyvtárak
+# tulajdonosát, csoportját (a továbbiakban tulajdonos alatt tulajdonos plusz
+# csoport értendő) és hozzáférési módját.
+#
+# A deb fájl a fájlrendszerbe kerülő cuccokat egy tar.gz fájlban tárolja, és
+# ennek az a tulajdonsága, hogy minden egyes fájlhoz minden odavezető
+# alkönyvtárat szükségszerűen tartalmaz. (Ez persze nem igaz, mert elvileg
+# lehet úgy tarolni, hogy hiányozzon belőle odavezető könyvtár, de ezt
+# nagyon nem szokás így csinálni, mitöbb, a "dpkg --build" fázison keresztül
+# nem lehet.)
+#
+# A tar fájl pedig ezáltal nemcsak a fájlokra, hanem minden könyvtárra is
+# tartalmaz tulaj és mód értékeket is. Csak míg sima fájlokra ezt a dpkg
+# (vagy a tar?) gyönyörűen figyelembe veszi, addig könyvtárra csak az
+# esetben érvényesülnek ezek, ha most jön létre frissen a könyvtár.
+#
+# Példa: tegyük fel, hogy csak két csomag, A és B pakol az /etc/foobar
+# könyvtár alá. Az A csomagban szokásos root.root 755, a B csomagban mondjuk
+# bin.nobody 1777 az /etc/foobar könyvtár tulaja és módja. Ha előbb A-t,
+# utána B-t rakod fel, akkor root.root 755 lesz a könyvtár, míg ha előbb
+# B-t, utána A-t, akkor bin.nobody 1777 lesz, feltéve, hogy előtte tényleg
+# nem létezett az /etc/foobar könyvtár (nem hoztad létre mondjuk kézzel).
+#
+# Az rpm ezt az egész problémát sokkal szebben oldja meg, és ezt a
+# megközelítést igyekszünk megcélozni az UHU-ban is. Egy csomagnak vagy
+# része egy könyvtár, vagy nem, tehát például az /etc/foobar könyvtárat
+# tartalmazó csomagnak nem feltétlenül része az /etc könyvtár. Habár az rpm
+# nem parázik sem attól, ha egy könyvtárnak nincs gazdája, sem pedig attól,
+# ha egy könyvtárat több csomag is birtokol, mégis a disztribek igyekeznek
+# belőni azt, hogy minden könyvtár pontosan egy csomaghoz tartozzon, és ez
+# általában elég jól sikerül is. Ennek a megközelítésnek legalább két előnye
+# is van, melyeket mi átültetünk az UHU disztribbe. Az egyik az, hogy ha már
+# korábban létezett a könyvtár, akkor is a könyvtárat igaziból tartalmazó
+# csomag a tulajt és jogokat beállíthatja megfelelőre. A másik az, hogy egy
+# csomaggal az ő tulajdonában lévő könyvtárak meta-adatai (tulaj, mód) is
+# megjegyződnek, és ezt utólag le lehet ellenőrizni, és megfogni a hibát, ha
+# esetleg valami megváltozott volna. (Csomag utólagos ellenőrzéséhez
+# egyébként sem igazán nyújt segítséget a dpkg, de mi megoldjuk, és akkor
+# már nem feledkezünk meg a fájlok mellett könyvtárakról sem.)
+#
+# Na, egy picit más irányból is ránézve az egészre: a split lépés a fájlokat
+# több alcsomagra osztja szét, és ez a lépés szinte elkerülhetetlen, hogy
+# hagyjon üres könyvtárakat egyik-másik alcsomag alatt (például üres
+# /usr/include könyvtárat egy csomag alatt, miután a *.h fájlokat
+# átköltöztetted a -dev csomagba). Tehát gyakorlatilag elkerülhetetlen lépés
+# a csomag szétrobbantása (split) után az üres könyvtárak törlése. (Ennek a
+# lépésnek egyébként még egy előnye van: a telepítési könyvtárban a
+# telepítési lépés előtt nyugodtan létrehozhatunk egy standard
+# könyvtárstruktúrát, hogy kevesebb progi taknyoljon el például a usr/bin
+# könyvtár hiánya miatt, illetve kevesebb mkdir-t kelljen kézzel írni.)
+#
+# Mindezek alapján az alábbi megoldást választottuk:
+#
+# A csomagok szétrobbantása után valóban minden alcsomagban töröljük az
+# üresen maradt könyvtárakat. Ez a "split" szkript feladata. Ezt követi a
+# "dirs" fájl értelmezése. Az itt felsorolt könyvtárakat a csomag részének
+# fogjuk tekinteni, és ha még nem léteznek, akkor most létrehozzuk őket,
+# hogy a tar.gz fájlnak részei legyenek (immár nem baj, ha üresen maradnak,
+# de persze fájlokat tartalmazó könyvtárakat is megadhatunk itt).
+#
+# XXX TODO: Valahogy meg kellene teremteni a lehetőségét annak, hogy adott
+# könyvtár megadása esetén ne csak az a könyvtár, hanem az összes rekurzíven
+# alatta lévő könyvtár is része legyen a csomagnak. Vagy lehet akár ez a
+# default?
+#
+# Ezek a könyvtárak megjelennek majd a "stat" fájlban is, a kívánt tulajjal
+# és móddal. Mivel azonban a tar.gz fájlban lévő meta-adatuk nem igazán
+# játszik sehol, ezért a tar.gz fájlban az összes könyvtár root.root
+# 755-ként jelenik meg.
+#
+# Végül pedig a csomaghoz tartozó "postinst" szkript a "stat" fájl alapján a
+# könyvtárak tulaját és módját bebillenti olyanra, amilyenre kell.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_PACKAGEDIR"
+
+for pkg in $UB_PACKAGES; do
+	# XXX: kicsit hulyen nez ki a kod, hogy ez a cd parancs gyk az mkdir miatt
+	# van itt [-pozsy]
+	cd "$UB_PACKAGEDIR/$pkg"
+	# XXX: miert is van itt ez? Nem egeszen ide illik [-pozsy]
+	mkdir -p "DEBIAN"
+	if [ -f "$UB_SRCDIR/packages/$pkg/dirs" ]; then
+		while read -r dir; do
+			# figyelni kell ra, hogy a $dir abszolut konyvtar
+			pretendroot mkdir -p "$UB_PACKAGEDIR/$pkg/$dir"
+		done < "$UB_SRCDIR/packages/$pkg/dirs"
+	fi
+done

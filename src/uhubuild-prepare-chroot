@@ -1,0 +1,233 @@
+#!/bin/bash -eu
+
+#
+# Chroot környezet felépítése.
+#
+# Root-ként kell indítani.
+#
+# A chroot környezet kezdő könyvtárát az $UHUBUILD_CHROOTDIR környezeti
+# változó adja meg. Ennek a változónak kötelező léteznie.
+#
+# A chroot rendszer felépítéséhez szükséges csomagokat az apt-get program
+# szedi le. Amennyiben az alap értelmezett /etc/apt/sources.list fájl
+# helyett egy másik konfigurációs fájlt kívánunk használni, azt az
+# UHUBUILD_APT_SOURCES változóban nevezhetjük meg.
+#
+# Parancssori argumentumként kell megadni azon csomagok nevét, melyeknek
+# szerepelniük kell a chroot környezetben. Ez kiegészül a dependencia
+# okokból szükségessé váló csomagokkal. Minden más csomagot, ha esetleg már
+# korábban ott volt, letörlünk.
+#
+# Ez a szkript nem végez csatolást (például /proc, /dev a chroot rendszer
+# alá), ez a tényleges csomagfordító szkript dolga.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cleanup_chroot () {
+	find "$UHUBUILD_CHROOTDIR" -maxdepth 1 -mindepth 1 ! -name '.UHUBUILD-LOCK*' ! -wholename "$UHUBUILD_CHROOTDIR/dev" ! -wholename "$UHUBUILD_CHROOTDIR/proc" -print0 | xargs -0 rm -rf --one-file-system
+}
+
+if [ $(id -u) != 0 ]; then
+	die "Root-ként indíts!"
+fi
+
+if [ -z "${UHUBUILD_CHROOTDIR:-}" ]; then
+	die 'Nincs megadva az UHUBUILD_CHROOTDIR könyvtár!'
+fi
+
+if [ -f "$UHUBUILD_CHROOTDIR"/.DIRTY ]; then
+	cleanup_chroot
+fi
+
+#
+# Annak kitalálása, hogy mely csomagok kellenek, egy trükkel történik:
+# /var/lib/dpkg-empty alatt létrehozunk egy üres dpkg adatbázist, és ezt
+# adjuk meg az apt-get proginak egy "száraz" futás erejéig. Ennél jobb vagy
+# egyszerűbb módszert nem találtam.
+#
+
+# parancssori opciók összegyűjtése
+
+if [ -n "${UHUBUILD_APT_SOURCES:-}" ]; then
+	apt_sourcelist="-o Dir::Etc::SourceList=$UHUBUILD_APT_SOURCES"
+else
+	apt_sourcelist=""
+fi
+if [ -n "${UHUBUILD_APT_PREFERENCES:-}" ]; then
+	apt_preferences="-o Dir::Etc::Preferences=$UHUBUILD_APT_PREFERENCES"
+else
+	apt_preferences=""
+fi
+apt_statusdir="-o Dir::State::status=$UHUBUILD_CHROOTDIR/var/lib/dpkg/status"
+apt_empty_statusdir="-o Dir::State::status=$UHUBUILD_CHROOTDIR/var/lib/dpkg-empty/status"
+apt_chrootdir="-o DPkg::Options::=--root=$UHUBUILD_CHROOTDIR"
+apt_statedir="-o Dir::State=$UHUBUILD_CHROOTDIR/var/state/apt"
+apt_cachedir="-o Dir::Cache=$UHUBUILD_CHROOTDIR/var/cache/apt"
+apt_noimmconf="-o APT::Immediate-Configure=false"
+apt_pkgproblemresolver="-o Debug::pkgProblemResolver=yes"
+
+apt_options="$apt_sourcelist $apt_preferences $apt_statusdir $apt_chrootdir $apt_statedir $apt_cachedir $apt_noimmconf $apt_pkgproblemresolver"
+apt_empty_options="$apt_sourcelist $apt_preferences $apt_empty_statusdir $apt_chrootdir $apt_statedir $apt_cachedir $apt_noimmconf $apt_pkgproblemresolver"
+
+dpkg_options="--root=$UHUBUILD_CHROOTDIR"
+
+# Nyitó könyvtár létrehozása.
+
+mkdir -p "$UHUBUILD_CHROOTDIR"
+
+# dpkg adatbázis megjavítása, ha szétesett
+
+if [ -f $UHUBUILD_CHROOTDIR/var/lib/dpkg/status ]; then
+	if dpkg --root=$UHUBUILD_CHROOTDIR --configure -a; then
+		# kiraly
+		:
+	else
+		# takaritani kell
+		if [ "${TRIES:-undefined}" == "undefined" ]; then
+			blueecho "chroot takarítás szükséges..."
+			touch "$UHUBUILD_CHROOTDIR"/.DIRTY
+			test ${UHUBUILD_SKIP_CHROOT_CLEAN:-undefined} == "undefined" && cleanup_chroot || exit 1
+			rm -f "$UHUBUILD_CHROOTDIR"/.DIRTY
+			blueecho "újra próbáljuk..."
+			TRIES=1 exec uhubuild-prepare-chroot "$@"
+		 else 
+		 	redecho "A chroot helyreállíthatatlan!"
+		 	exit 1
+		 	
+		 fi
+	fi
+fi
+
+# Igazi és üres dpkg adatbázis létrehozása -- előbbi csak ha még nem létezik.
+
+rm -rf $UHUBUILD_CHROOTDIR/var/lib/dpkg-empty
+for dir in /var/lib/dpkg{,-empty}/{info,updates} /var/state/apt/lists/partial /var/cache/apt/archives/partial; do
+	mkdir -p $UHUBUILD_CHROOTDIR/$dir
+done
+for file in /var/lib/dpkg{,-empty}/{available,status}; do
+	touch $UHUBUILD_CHROOTDIR/$file
+done
+
+# apt-get update
+
+apt-get $apt_empty_options update
+
+# uhubuild-config telepítése és kilépés, ha az első körben vagyunk.
+
+if [ $# = 0 ]; then
+	if apt-get $apt_options --yes --force-yes install uhubuild-config; then
+		# kiraly
+		exit
+	else
+		if [ "${TRIES:-undefined}" == "undefined" ]; then
+			blueecho "chroot takarítás szükséges..."
+			touch "$UHUBUILD_CHROOTDIR"/.DIRTY
+			test ${UHUBUILD_SKIP_CHROOT_CLEAN:-undefined} == "undefined" && cleanup_chroot || exit 1
+			rm -f "$UHUBUILD_CHROOTDIR"/.DIRTY
+			blueecho "újra próbáljuk..."
+			TRIES=1 exec uhubuild-prepare-chroot "$@"
+		else
+			# nem lehet helyrehozni
+			redecho "A chroot helyreállíthatatlan!"
+			exit 1
+		fi
+	fi
+fi
+
+# Mely csomagok fognak kelleni.
+
+tmpfile apt_output
+
+if ! apt-get $apt_empty_options --no-act install uhubuild-config "$@" >"$apt_output" 2>&1; then
+	cat "$apt_output" >&2
+	die
+fi
+
+pkgs="$(grep '^Inst ' <"$apt_output" | cut -d' ' -f2)"
+
+export UHU_PKG_SKIP=yes
+
+# Minden telepített csomag "purge" állapotra billentése.
+
+for pkg in $(dpkg $dpkg_options --get-selections | cut -f1); do
+	echo "$pkg purge"
+done | dpkg $dpkg_options --set-selections
+
+# A szükséges csomagok "install" állapotra billentése. Amely csomag még
+# nincs telepítve, ott hatástalan ez a lépés, de ott később úgyis "install"
+# lesz az állapot.
+
+for pkg in $pkgs; do
+	echo "$pkg install"
+done | dpkg $dpkg_options --set-selections
+
+# Purge mindenkit, aki útban van.
+
+if dpkg $dpkg_options --force-remove-essential --purge --pending; then
+	# kiraly
+	:
+else
+	if [ "${TRIES:-undefined}" == "undefined" ]; then
+		blueecho "chroot takarítás szükséges..."
+		touch "$UHUBUILD_CHROOTDIR"/.DIRTY
+		test ${UHUBUILD_SKIP_CHROOT_CLEAN:-undefined} == "undefined" && cleanup_chroot || exit 1
+		rm -f "$UHUBUILD_CHROOTDIR"/.DIRTY
+		blueecho "újra próbáljuk..."
+		TRIES=1 exec uhubuild-prepare-chroot "$@"
+	else
+		# nem lehet helyrehozni
+		redecho "A chroot helyreállíthatatlan!"
+		exit 1
+	fi
+fi
+
+# Na, most telepítünk és konfigurálunk mindenkit, aki kell.
+if apt-get $apt_options --yes --force-yes install $pkgs; then
+	# kiraly
+	:
+else
+	if [ "${TRIES:-undefined}" == "undefined" ]; then
+		blueecho "chroot takarítás szükséges..."
+		touch "$UHUBUILD_CHROOTDIR"/.DIRTY
+		test ${UHUBUILD_SKIP_CHROOT_CLEAN:-undefined} == "undefined" && cleanup_chroot || exit 1
+		rm -f "$UHUBUILD_CHROOTDIR"/.DIRTY
+		blueecho "újra próbáljuk..."
+		TRIES=1 exec uhubuild-prepare-chroot "$@"
+	else
+		# nem lehet helyrehozni
+		redecho "A chroot helyreállíthatatlan!"
+		exit 1
+	fi
+fi
+
+echo "Running \`/sbin/uhu-pkg postinst +' ..."
+unset UHU_PKG_SKIP || true
+chroot $UHUBUILD_CHROOTDIR /sbin/uhu-pkg postinst +
+
+# Végső simítások.
+
+rm -rf $UHUBUILD_CHROOTDIR/var/lib/dpkg-empty
+dpkg $dpkg_options --clear-avail
+dpkg $dpkg_options --forget-old-unavail
+
+# /etc/hosts
+
+host="$(</proc/sys/kernel/hostname)"
+if ! grep -Fqx "127.0.0.1	$host" $UHUBUILD_CHROOTDIR/etc/hosts; then
+	echo "127.0.0.1	$host" >>$UHUBUILD_CHROOTDIR/etc/hosts
+fi
+
+# Takarítás.
+
+echo "Takarítás..."
+find $UHUBUILD_CHROOTDIR/tmp/ -mindepth 1 -maxdepth 1 \
+  ! \( -name .X11-unix -uid 0 \) \
+  ! \( -name .ICE-unix -uid 0 \) \
+  -print0 | xargs -r0 rm -rf --
+find $UHUBUILD_CHROOTDIR/tmp/.{X11,ICE}-unix -mindepth 1 -maxdepth 1 \
+  -print0 | xargs -r0 rm -rf --
+find $UHUBUILD_CHROOTDIR/var/tmp/ -mindepth 1 -maxdepth 1 \
+  -print0 | xargs -r0 rm -rf --
+find $UHUBUILD_CHROOTDIR/var/uhubuild/ -mindepth 1 -maxdepth 1 \
+  -print0 | xargs -r0 rm -rf --

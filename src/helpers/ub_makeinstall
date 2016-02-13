@@ -1,0 +1,92 @@
+#!/bin/bash -eu
+
+. /usr/lib/uhubuild/common
+
+UB_MAKEINSTALL_PREFIX="${UB_MAKEINSTALL_PREFIX:-$UB_INSTALLDIR}"
+
+case "${UB_MAKEINSTALL_USE_DESTDIR:-}" in
+	""|yes|no)
+		# Azert nem a -q kapcsolot hasznaljuk, mert akkor broken pipe
+		# lesz ami nem szep.
+		if make -pn | grep -E '\$(\(DESTDIR\)|{DESTDIR})' >/dev/null || test -f ../CMakeLists.txt; then
+			echo "DESTDIR-aware Makefile found."
+			if [ "${UB_MAKEINSTALL_USE_DESTDIR:-}" == "yes" ]; then
+				warn "foloslegesen adtad meg az UB_MAKEINSTALL_USE_DESTDIR=yes erteket!"
+			else
+				if [ "${UB_MAKEINSTALL_USE_DESTDIR:-}" != "no" ]; then
+					UB_MAKEINSTALL_USE_DESTDIR="yes"
+				fi
+			fi
+		else
+			echo "DESTDIR-aware Makefile NOT found."
+			if [ "${UB_MAKEINSTALL_USE_DESTDIR:-}" == "no" ]; then
+				warn "foloslegesen adtad meg az UB_MAKEINSTALL_USE_DESTDIR=no erteket!"
+			else
+				if [ "${UB_MAKEINSTALL_USE_DESTDIR:-}" != "yes" ]; then
+					UB_MAKEINSTALL_USE_DESTDIR="no"
+				fi
+			fi
+		fi
+		;;
+	*)
+		die "Érvénytelen UB_MAKEINSTALL_USE_DESTDIR érték!"
+		;;
+esac
+
+declare -a argv
+if [ "$UB_MAKEINSTALL_USE_DESTDIR" = "yes" ]; then
+	argv[${#argv[@]}]="DESTDIR=$UB_MAKEINSTALL_PREFIX"
+# ez meg szokott lenni:
+# ROOTDIR, INSTROOT, INSTPREFIX, install_prefix, INSTALLROOT, ROOT
+# BASEDIR, FAKEROOT
+else
+	argv[${#argv[@]}]="PERL_INSTALL_ROOT=$UB_MAKEINSTALL_PREFIX"
+	argv[${#argv[@]}]="prefix=$UB_MAKEINSTALL_PREFIX/usr"
+	argv[${#argv[@]}]="mandir=$UB_MAKEINSTALL_PREFIX/usr/share/man"
+	argv[${#argv[@]}]="infodir=$UB_MAKEINSTALL_PREFIX/usr/share/info"
+	argv[${#argv[@]}]="localstatedir=$UB_MAKEINSTALL_PREFIX/var"
+	argv[${#argv[@]}]="sysconfdir=$UB_MAKEINSTALL_PREFIX/etc"
+fi
+
+argv[${#argv[@]}]="MAN1EXT=1"
+argv[${#argv[@]}]="MAN2EXT=2"
+argv[${#argv[@]}]="MAN3EXT=3"
+argv[${#argv[@]}]="MAN4EXT=4"
+argv[${#argv[@]}]="MAN5EXT=5"
+argv[${#argv[@]}]="MAN6EXT=6"
+argv[${#argv[@]}]="MAN7EXT=7"
+argv[${#argv[@]}]="MAN8EXT=8"
+
+declare -a argv2
+shopt -s extglob
+for i in "${argv[@]}"; do
+	pattern="$i"
+	pattern="${pattern/%=*/=*}"
+	overridden="no"
+	for arg in "$@"; do
+		if [ "$i" == "$arg" ]; then
+			warn "foloslegesen megadott parameter: [$arg]"
+		fi
+		case "$arg" in
+			$pattern)
+				overridden="yes"
+				;;
+		esac
+	done
+	if [ "$overridden" == "no" ]; then
+		argv2[${#argv2[@]}]="$i"
+	fi
+done
+
+# be verbose :)
+if [ -f Makefile.PL ]; then
+	target="install" #could be "install_vendor", but it is buggy sometimes
+else
+	target="install"
+fi
+echo "make"
+for i in "$@" "${argv2[@]}"; do
+	echo -e "\t$i"
+done
+echo -e "\t$target"
+make "$@" "${argv2[@]}" "$target"

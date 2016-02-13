@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ $# != 1 ]; then
+	die 'uhubuild-expand: Szükségem van argumentumra!'
+fi
+
+dpkg-deb --control "$1"
+ar x "$1" data.tar.gz
+

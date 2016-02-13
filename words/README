@@ -1,0 +1,3 @@
+Ide lehet felvenni azokat a szavakat amiket az ispell nem ismer, de mi
+használunk.
+"KEEP LC_ALL=hu_HU.UTF-8 SORTED!", különben nem működik...

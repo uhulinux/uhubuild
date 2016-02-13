@@ -1,0 +1,270 @@
+#!/bin/bash -eu
+
+#
+# Csomagot fordít le chroot rendszerben.
+#
+# Feltételezi, hogy root-ként lett indítva. Felépíti a chroot környezetet az
+# UHUBUILD_CHROOTDIR könyvtár alatt, az aktuális könyvtár tartalmát teljes
+# egészében bemásolja ez alá, csatolja a chroot rendszer alá a /proc és /dev
+# fájlrendszereket, majd chroot-on keresztül hívja meg az uhubuild-build
+# szkriptet.
+#
+# Az aktuális könyvtárhoz nem szükséges írási joggal rendelkeznie.
+#
+
+. /usr/lib/uhubuild/uhubuild-commonenvironment
+. /usr/lib/uhubuild/uhubuild-common
+
+dieifuser
+
+if [ $# -gt 1 ]; then
+	die "Használat: uhubuild-chrootbuild [forrás-könyvtár]"
+fi
+
+if [ -z "${UHUBUILD_CHROOTDIR:-}" ]; then
+	die "Nincs beállítva az UHUBUILD_CHROOTDIR változó!"
+fi
+	
+# A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
+if [ -z "${UHUBUILD_SRCDIR:-}" ]; then
+	export UHUBUILD_SRCDIR="$(cd "${1:-.}" && pwd -P)"
+fi
+
+check_uhubuild_variables
+
+if [ -f "$UHUBUILD_SRCDIR"/acquire ]; then
+	if [ -z "${UHUBUILD_DO_NOT_DOWNLOAD:-}" ]; then
+		greenecho "Források letöltése..."
+		ub_download "$UHUBUILD_SRCDIR"
+	else
+		greenecho "Források ellenőrzése..."
+		ub_download --check "$UHUBUILD_SRCDIR"
+	fi
+fi
+
+greenecho "Chroot rendszer felépítése..."
+
+found_chrootdir=no
+for chrootdir in ${UHUBUILD_CHROOTDIR//:/ }; do
+	# Lockolás.
+	mkdir -p "$chrootdir"
+	rm -rf "$chrootdir/.UHUBUILD-LOCK-$$"
+	cat >"$chrootdir/.UHUBUILD-LOCK-$$" << EOF
+PID:     $$
+Package: $(<"$UHUBUILD_SRCDIR"/sourcename)
+Start:   $(date)
+EOF
+	if ! ln "$chrootdir/.UHUBUILD-LOCK-$$" "$chrootdir/.UHUBUILD-LOCK" 2>/dev/null; then
+		rm "$chrootdir/.UHUBUILD-LOCK-$$"
+	else
+		rm "$chrootdir/.UHUBUILD-LOCK-$$"
+		found_chrootdir=yes
+		break
+	fi
+done
+if [ $found_chrootdir != yes ]; then
+	die "Nem találtam szabad chroot környezetet!"
+fi
+echo "Chroot könyvtár: $chrootdir"
+export UHUBUILD_CHROOTDIR="$chrootdir"
+unset chrootdir found_chrootdir
+
+_delete_lockfile() { rm -f "$UHUBUILD_CHROOTDIR/.UHUBUILD-LOCK"; }
+exit_hook _delete_lockfile
+
+if [ -z "${UHUBUILD_APT_SOURCES:-}" ]; then
+	die "Nincs beállítva az UHUBUILD_APT_SOURCES környezeti változó!"
+fi
+
+# Jujj. Itt most generalunk egy preferences filet. A kod nem tul szep, de jo.
+tmpfile UHUBUILD_APT_PREFERENCES
+export  UHUBUILD_APT_PREFERENCES
+distribution="$(<"$UHUBUILD_SRCDIR/distribution")"
+prio=1000
+declare -a versions=()
+for version in $(echo "${distribution##* }"|tr ':' ' '); do
+	versions[${#versions[@]}]="$version"
+	prio="$(($prio + 1))"
+	IFS=":" cat >>"$UHUBUILD_APT_PREFERENCES" <<EOF
+Package: *
+Pin: release v=${versions[*]},l=${distribution% *}
+Pin-Priority: $prio
+
+EOF
+done
+cat >>"$UHUBUILD_APT_PREFERENCES" <<EOF
+Package: *
+Pin: release *
+Pin-Priority: -1
+EOF
+
+# Változók kinti értékének átmenekítése az aláhúzással kezdődő változókba.
+_UHUBUILD_SRCDIR="${UHUBUILD_SRCDIR}"
+_UHUBUILD_SNAPSHOTFILE="${UHUBUILD_SNAPSHOTFILE:-}"
+_UHUBUILD_CCACHE_DIR="${UHUBUILD_CCACHE_DIR:-}"
+_UHUBUILD_COMPILESNAPSHOTDIR="${UHUBUILD_COMPILESNAPSHOTDIR:-}"
+_UHUBUILD_INSTALLSNAPSHOTDIR="${UHUBUILD_INSTALLSNAPSHOTDIR:-}"
+_UHUBUILD_RESULTDIR="${UHUBUILD_RESULTDIR:-}"
+_UHUBUILD_LOGPACKDIR="${UHUBUILD_LOGPACKDIR:-}"
+
+# Változók chroot alatti értékek beállítása.
+export UHUBUILD_SRCDIR="/mnt/src"
+export UHUBUILD_SNAPSHOTFILE="${UHUBUILD_SNAPSHOTFILE:+/mnt/snapshot}"
+export UHUBUILD_CCACHE_DIR="${UHUBUILD_CCACHE_DIR:+/mnt/ccache}"
+export UHUBUILD_WORKDIR="/var/uhubuild/work"
+export UHUBUILD_COMPILESNAPSHOTDIR="${UHUBUILD_COMPILESNAPSHOTDIR:+$UHUBUILD_WORKDIR/snapshot-compile}"
+export UHUBUILD_INSTALLSNAPSHOTDIR="${UHUBUILD_INSTALLSNAPSHOTDIR:+$UHUBUILD_WORKDIR/snapshot-install}"
+export UHUBUILD_RESULTDIR="${UHUBUILD_RESULTDIR:+$UHUBUILD_WORKDIR/result}"
+export UHUBUILD_LOGPACKDIR="${UHUBUILD_LOGPACKDIR:+$UHUBUILD_WORKDIR/logpack}"
+
+umount_chroot ()
+{
+	mounted=no
+
+	greenecho -n 'Fájlrendszerek leválasztása: '
+
+	echo -n 'dev '
+	umount -lf "$UHUBUILD_CHROOTDIR/dev"
+
+	echo -n $'\b, proc '
+	umount -lf "$UHUBUILD_CHROOTDIR/proc"
+
+	if [ -n "${UHUBUILD_CCACHE_DIR:-}" ]; then
+		echo -n $'\b, ccache '
+		umount -lf "$UHUBUILD_CHROOTDIR/$UHUBUILD_CCACHE_DIR"
+		rmdir      "$UHUBUILD_CHROOTDIR/$UHUBUILD_CCACHE_DIR"
+	fi
+
+	if [ -n "${UHUBUILD_SNAPSHOTFILE:-}" ]; then
+		echo -n $'\b, snapshot '
+		umount -lf "$UHUBUILD_CHROOTDIR/$UHUBUILD_SNAPSHOTFILE"
+		rm         "$UHUBUILD_CHROOTDIR/$UHUBUILD_SNAPSHOTFILE"
+	fi
+
+	echo -n $'\b, forrás '
+	umount -lf "$UHUBUILD_CHROOTDIR/$UHUBUILD_SRCDIR"
+	rmdir      "$UHUBUILD_CHROOTDIR/$UHUBUILD_SRCDIR"
+
+	greenecho 'OK'
+}
+
+copy_snapshot ()
+{
+	snapshot_copied=yes
+	if [ -n "${UHUBUILD_COMPILESNAPSHOTDIR:-}" -a \
+	  -d "${UHUBUILD_CHROOTDIR}/${UHUBUILD_COMPILESNAPSHOTDIR}" ]; then
+		greenecho -n "Compile snapshot kimásolása ${_UHUBUILD_COMPILESNAPSHOTDIR} alá... "
+		cp -a "${UHUBUILD_CHROOTDIR}/${UHUBUILD_COMPILESNAPSHOTDIR}/." \
+		  "${_UHUBUILD_COMPILESNAPSHOTDIR}/"
+		greenecho "OK"
+	fi
+	if [ -n "${UHUBUILD_INSTALLSNAPSHOTDIR}" -a \
+	  -d "${UHUBUILD_CHROOTDIR}/${UHUBUILD_INSTALLSNAPSHOTDIR}" ]; then
+		greenecho -n "Install snapshot kimásolása ${_UHUBUILD_INSTALLSNAPSHOTDIR} alá... "
+		cp -a "${UHUBUILD_CHROOTDIR}/${UHUBUILD_INSTALLSNAPSHOTDIR}/." \
+		  "${_UHUBUILD_INSTALLSNAPSHOTDIR}/"
+		greenecho "OK"
+	fi
+	if [ -n "${UHUBUILD_LOGPACKDIR}" -a \
+	  -d "${UHUBUILD_CHROOTDIR}/${UHUBUILD_LOGPACKDIR}" ]; then
+		greenecho -n "LogPack kimásolása ${_UHUBUILD_LOGPACKDIR} alá... "
+		cp -a "${UHUBUILD_CHROOTDIR}/${UHUBUILD_LOGPACKDIR}/." \
+		  "${_UHUBUILD_LOGPACKDIR}/"
+		greenecho "OK"
+	fi
+}
+
+success=no
+mounted=yes
+snapshot_copied=no
+
+my_exit_hook ()
+{
+  trap "" INT
+  if [ "$mounted" = yes ]; then
+    umount_chroot
+  fi
+  if [ "$snapshot_copied" = no ]; then
+    copy_snapshot
+  fi
+  rm -f "$UHUBUILD_CHROOTDIR/.UHUBUILD-LOCK"
+  if [ "$success" = "yes" ]; then
+    greenecho "Kész :-)"
+  else
+    redecho "****************"
+    redecho "*** HIBA !!! ***"
+    redecho "****************"
+  fi
+}
+exit_hook my_exit_hook
+
+greenecho -n 'Fájlrendszerek csatolása: '
+
+for i in 1 2 3; do
+	umount -lf "$UHUBUILD_CHROOTDIR/dev" 2>/dev/null || true
+	umount -lf "$UHUBUILD_CHROOTDIR/proc" 2>/dev/null || true
+	umount -lf "$UHUBUILD_CHROOTDIR/mnt/ccache" 2>/dev/null || true
+	umount -lf "$UHUBUILD_CHROOTDIR/mnt/snapshot" 2>/dev/null || true
+	umount -lf "$UHUBUILD_CHROOTDIR/$UHUBUILD_SRCDIR" 2>/dev/null || true
+done
+
+echo -n 'dev '
+mkdir -p "$UHUBUILD_CHROOTDIR/dev"
+mount --bind /dev  "$UHUBUILD_CHROOTDIR/dev"
+
+echo -n $'\b, proc '
+mkdir -p "$UHUBUILD_CHROOTDIR/proc"
+mount --bind /proc "$UHUBUILD_CHROOTDIR/proc"
+
+uhubuild-prepare-chroot
+uhubuild-prepare-chroot $(UHUBUILD_SRCDIR=${_UHUBUILD_SRCDIR} uhubuild-depends)
+
+greenecho "Chroot rendszer OK"
+echo
+
+if [ -n "${UHUBUILD_CCACHE_DIR:-}" ]; then
+	echo -n $'\b, ccache '
+	mkdir -p "$UHUBUILD_CHROOTDIR/$UHUBUILD_CCACHE_DIR"
+	mount --bind "${_UHUBUILD_CCACHE_DIR}" "$UHUBUILD_CHROOTDIR/$UHUBUILD_CCACHE_DIR"
+fi
+
+if [ -n "${UHUBUILD_SNAPSHOTFILE:-}" ]; then
+	echo -n $'\b, snapshot '
+	touch "$UHUBUILD_CHROOTDIR/$UHUBUILD_SNAPSHOTFILE"
+	mount --bind "${_UHUBUILD_SNAPSHOTFILE}" "$UHUBUILD_CHROOTDIR/$UHUBUILD_SNAPSHOTFILE"
+fi
+
+echo -n $'\b, forrás '
+mkdir -p "$UHUBUILD_CHROOTDIR/$UHUBUILD_SRCDIR"
+mount --bind "${_UHUBUILD_SRCDIR}" "$UHUBUILD_CHROOTDIR/$UHUBUILD_SRCDIR"
+
+greenecho 'OK'
+echo
+
+# Ennek a változónak semmi lényegi szerepe nincs. Nagyjából annyi, hogy
+# egyrészt ne írjuk ki még egyszer ugyanazokat a warningokat, másrészt
+# a csomagba bele lehessen írni, hogy chrooton belül készült-e. Utóbbit
+# rootként ki lehet deríteni (például readlink /proc/1/root sikerül-e),
+# de sima userként nem tudom, hogyan lehet. Másik lehetséges megközelítés
+# volna, ha a chroot felépítő szkript helyezne el valami extra fájlt.
+# De így egyszerűbb.
+export UHUBUILD_I_AM_UNDER_CHROOT="moo"
+
+# Indulhat a móka...
+echo 'Megyünk a chroot alá, uhubuild-build indul.'
+chroot "$UHUBUILD_CHROOTDIR" su uhubuild -c /usr/lib/uhubuild/uhubuild-build
+echo 'uhubuild-build véget ért, kimásztunk a chroot alól.'
+
+umount_chroot
+
+copy_snapshot
+
+if [ -n "${UHUBUILD_RESULTDIR}" -a \
+  -d "${UHUBUILD_CHROOTDIR}/${UHUBUILD_RESULTDIR}" ]; then
+	greenecho -n "Elkészült csomagok kimásolása ${_UHUBUILD_RESULTDIR} alá... "
+	cp -a "${UHUBUILD_CHROOTDIR}/${UHUBUILD_RESULTDIR}/." \
+		"${_UHUBUILD_RESULTDIR}/"
+	greenecho "OK"
+fi
+
+success=yes

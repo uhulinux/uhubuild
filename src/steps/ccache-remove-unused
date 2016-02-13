@@ -1,0 +1,15 @@
+#!/bin/bash -eu
+
+#
+# Remove unused ccache files...
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -z "${UB_CCACHE_DIR:-}" ]; then
+	echo " (kihagyva)"
+	exit 0
+fi
+
+find "$UB_CCACHE_DIR" -type f ! -name '*.stderr' ! -anewer "$UB_ADMINDIR/.ccache_exctacted" \
+  -printf '%p\000%p.stderr\000' | xargs -0 -r rm -f

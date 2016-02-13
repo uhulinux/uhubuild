@@ -1,0 +1,38 @@
+#!/bin/bash -eu
+
+. /usr/lib/uhubuild/common
+
+if [ "$#" != "3" ]; then
+	die "usage: ub_replace <orig_str> <new_str> <file>"
+fi
+
+x="$1$2"
+s=""
+# bugos a bash, a # direkt hianyzik
+for i in \
+	\~ \! \@    \$ \% \^ \& \* \( \) \_ \+  \
+	\` \1 \2 \3 \4 \5 \6 \7 \8 \9 \0 \- \=  \
+	\Q \W \E \R \T \Y \U \I \O \P \{ \} \|  \
+	\q \w \e \r \t \y \u \i \o \p \[ \] \\  \
+	\A \S \D \F \G \H \J \K \L \: \"        \
+	\a \s \d \f \g \h \j \k \l \; \'        \
+	\Z \X \C \V \B \N \M \< \> \?           \
+	\z \x \c \v \b \n \m \, \. \/; do
+	if [ "${x/$i/}" == "$x" ]; then
+		s="$i"
+		break
+	fi
+done
+
+if [ "$s" == "" ]; then
+	die "cannot find any suitable separator"
+fi
+	
+tmpfile F
+
+sed -e "s${s}$1${s}$2${s}g" <"$3" >"$F"
+
+# igy megmaradnak az eredeti jogok
+cat "$F" >"$3"
+
+rm -f "$F"

@@ -1,0 +1,19 @@
+#!/bin/bash -eu
+
+#
+# Vegyes automatikusan generált fájlok törlése.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+shopt -s nullglob
+
+for pkg in $UB_PACKAGES; do
+	pretendroot rm -f  "$UB_PACKAGEDIR/$pkg/usr/share/applications/mimeinfo.cache"
+	pretendroot rm -rf "$UB_PACKAGEDIR/$pkg/var/scrollkeeper"
+	for i in "$UB_PACKAGEDIR/$pkg/usr/share/mime"/*; do
+		if [ "${i##*/}" != "packages" ]; then
+			pretendroot rm -rf "$i"
+		fi
+	done
+done

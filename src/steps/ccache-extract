@@ -1,0 +1,28 @@
+#!/bin/bash -eu
+
+#
+# Extract ccache tarball...
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -z "${UB_CCACHE_DIR:-}" ]; then
+	echo " (kihagyva)"
+	exit 0
+fi
+
+if [ -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz" ]; then
+	if ! tar xz -C "$UB_CCACHE_DIR" -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz"; then
+		warn "error while extracting ccache"
+	fi
+fi
+
+touch "$UB_ADMINDIR/.ccache_exctacted"
+
+# make sure new files are newer than this one
+touch "$UB_ADMINDIR/.timestamp.tmp"
+while [ ! "$UB_ADMINDIR/.timestamp.tmp" -nt "$UB_ADMINDIR/.ccache_exctacted" ]; do
+	sleep 0.1
+	touch "$UB_ADMINDIR/.timestamp.tmp"
+done
+rm -f "$UB_ADMINDIR/.timestamp.tmp"

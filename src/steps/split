@@ -1,0 +1,207 @@
+#!/bin/bash -eu
+
+#
+# A telepített rendszer szétrobbantása több alcsomagra.
+#
+# A telepítési fázis az "install" könyvtárba pakol. Ez a szkript ebből a
+# könyvtárból csinál N darab "package/csomagnév" könyvtárat, ahol N a
+# készülő bináris csomagok száma.
+#
+# Ha N-1 csomagnak van "files" fájlja, akkor az azokhoz tartozó fájlokat
+# kirámolja, majd az "install" könyvtárat átnevezi a maradék csomag nevének
+# megfelelően.
+#
+# Ha mind az N csomagnak van "files" fájlja, akkor mindegyiket kipakolja, és
+# anyázik, ha maradt még fájl.
+#
+# A szétrobbantás után minden alcsomagban törli az üres standard könyvtárakat
+# valamint azokat az üres könyvtárakat, melyek másik alcsomagban is
+# megtalálhatók.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_INSTALLDIR"
+
+pkg_without_files=""
+mkdir -p "$UB_PACKAGEDIR"
+if [ -e "$UB_SRCDIR/split-order" ]; then
+	echo " split sorrend felülbírálva"
+	for o in $(<$UB_SRCDIR/split-order); do
+		x=""
+		for l in $UB_PACKAGES; do
+			if [ $o != $l ]; then
+				x="$x $l"
+			fi
+		done
+		UB_PACKAGES="$x"
+	done
+	UB_PACKAGES="$(<$UB_SRCDIR/split-order) $UB_PACKAGES"
+fi
+for pkg in $UB_PACKAGES; do
+	if [ -f "$UB_SRCDIR/packages/$pkg/files" ]; then
+		echo "$pkg: "
+		srcdir="$UB_INSTALLDIR"
+		dstdir="$UB_PACKAGEDIR/$pkg"
+		cat "$UB_SRCDIR/packages/$pkg/files" > "$UB_TMPDIR/files"
+		while read -r a b; do
+			if [ "$b" = "" ]; then
+				options=""
+				name="$a"
+			else
+				options="$a"
+				name="$b"
+			fi
+			echo " pattern=[$name]"
+			findopts=""
+			if [ "${options/@/}" != "${options}" ]; then
+				findopts="-type l"
+			fi
+
+			# Most jön a neheze... A "*" és "/**/" wildcardoknak
+			# az rsync progi exclude/include listájához hasonló
+			# értelmezést adunk, vagyis a "*" tetszőleges számú
+			# nem / karaktert, a "/**/" tetszőleges számú
+			# könyvtárat jelent. Mindezt a find
+			# -regex opciójával tudjuk megtenni, bár az
+			# argumentum elkészítése szép meló.
+
+			# Escape az írásjeleket, kivéve amit nem.
+			regex="$(echo "$name" | sed 's|\([^/\*\?[:alnum:]]\)|\\\1|g')"
+
+			# *, /**/ és ? átalakítása regexppé
+
+			shopt -s extglob
+			# ? -> [^/]
+			regex="${regex//\?/[^/]}"
+			# /+ -> /
+			regex="${regex//+(\/)//}"
+			# (/**)+/ -> /**/
+			regex="${regex//+(\/\*\*)\///**/}"
+			# /**/ -> /(.+/)?
+			regex="${regex//\/\*\*\///\(.+/\)?}"
+			# * -> [^/]*
+			regex="${regex//\*/[^/]*}"
+
+#			echo " regex=[$regex]"
+			for srcfile in $(find . $findopts -regex "\\.$regex"); do
+				match="${srcfile#./}"
+				echo "  $match"
+				dstfile="$dstdir/$match"
+				pretendroot \
+				  mkdir -p -- "${dstfile%/*}"
+				pretendroot \
+				  mv -- "$srcfile" "${dstfile%/*}/"
+			done
+		done < "$UB_TMPDIR/files"
+		rm "$UB_TMPDIR/files"
+
+		# Az excludes-ben felsorolt fájlokat visszarakjuk
+		if [ -f "$UB_SRCDIR/packages/$pkg/excludes" ]; then
+			cat "$UB_SRCDIR/packages/$pkg/excludes" > "$UB_TMPDIR/excludes"
+			while read -r a; do
+				name="$a"
+				echo " excluding $name"
+				srcfile="$dstdir$name"
+				dstfile="$srcdir$name"
+				pretendroot \
+				  mkdir -p -- "${dstfile%/*}"
+				pretendroot \
+				  mv "$srcfile" "$dstfile"
+			done < "$UB_TMPDIR/excludes"
+			rm "$UB_TMPDIR/excludes"
+		fi
+	else
+		pkg_without_files="$pkg"
+	fi
+done
+if [ "$pkg_without_files" != "" ]; then
+	pretendroot \
+	  mv "$UB_INSTALLDIR" "$UB_PACKAGEDIR/$pkg_without_files"
+else
+	if find "$UB_INSTALLDIR" ! -type d | grep ''; then
+		die "Maradtak fájlok a split lépés után az \$UB_INSTALLDIR alatt! (lásd fent)"
+	fi
+fi
+
+# Létrehozzuk a csomaghoz tartozó könyvtárat ha nem létezne,
+# mert nincs benne fájl.
+for pkg in $UB_PACKAGES; do
+	mkdir -p "$UB_PACKAGEDIR/$pkg"
+done
+
+# Töröljük a rendszerszintű üres könyvtárakat, melyek biztos hogy nem köthetők
+# konkrétan egyik készülő csomaghoz sem. Ebbe beleértendők az install fázis
+# elején létrehozott standard könyvtárak.
+# Töröljük továbbá azon üres könyvtárakat is, melyek másik készülő csomagban
+# is megtalálhatók (akár üresen, akár nem).
+# Ily módon remélhetőleg csak az alkalmazás szerves részét képező üres
+# könyvtárakat tartjuk meg, amelyre az alkalmazásnak szüksége lehet.
+for pkg in $UB_PACKAGES; do
+	cd "$UB_PACKAGEDIR/$pkg"
+	for dir in usr/lib/perl5 usr/share/{applnk,locale,man}; do
+		if [ -d "$dir" ]; then
+			find "$dir" -depth -type d -print0 | \
+			  xargs -r0 pretendroot rmdir -p --ignore-fail-on-non-empty 2>/dev/null || true
+		fi
+	done
+	# Az alábbi listát tartsd szinkronban az install szkriptben lévővel!
+	pretendroot \
+	  rmdir -p --ignore-fail-on-non-empty \
+	    bin etc/{pam.d,sysconfig,init.d} lib sbin \
+	    usr/{bin,include,lib/applications,libexec,sbin} \
+	    usr/share/{applications,doc,info,locale,pixmaps} \
+	    usr/share/man/man{1,2,3,4,5,6,7,8,9,n} \
+	    usr/lib/systemd/system 2>/dev/null || true
+	# Egyéb könyvtárak, melyeket mi nem hoztunk létre ugyan, de az
+	# uhu-base részei, vagy egyéb gyakori könyvtárak, így töröljük,
+	# még ha az alkalmazás fordítása létre is hozta őket.
+	pretendroot \
+	  rmdir -p --ignore-fail-on-non-empty \
+	    etc/{init.d,rc.{d/init.d,d,boot,halt},rc{0,1,2,3,4,5,6}.d} \
+	    usr/{etc,doc,info,man,usr} \
+	    usr/lib/{games,menu} \
+	    var/{lib,log,scrollkeeper/{TOC,index}} 2>/dev/null || true
+	# Az "rmdir -p x/y" nem törli ki az "x" könyvtárat, ha "y" nem létezik.
+	# Ezért a fenti listát ki kell egészítenünk a szülőkönyvtárakkal.
+	pretendroot \
+	  rmdir -p --ignore-fail-on-non-empty \
+	    etc usr/lib usr/share/man usr/share usr \
+	    var/scrollkeeper var 2>/dev/null || true
+
+	find . -depth -mindepth 1 -type d -print0 | \
+	  while read -d $'\0' dir; do
+		# Lássuk, üres-e a könyvtár.
+		# A fenti "find" parancsnál a "-empty" opció nem lenne jó,
+		# hiszen a pipe miatt az a find jóval előrébb tart ennél a
+		# while ciklusnál, így kihagyhat könyvtárakat, melyek most
+		# válnak üressé.
+		# Viszont egy újabb find parancs az egyik legegyszerűbb
+		# megoldás annak eldöntésére, hogy üres-e a könyvtár.
+		if [ "$(find "$dir" -maxdepth 0 -empty)" != "$dir" ]; then
+			continue
+		fi
+		# Találtunk egy üres könyvtárat. Letöröljük, ha megtalálható
+		# valamelyik másik most készülő csomagban (akár üres ott,
+		# akár nem).
+		for pkg2 in $UB_PACKAGES; do
+			if [ $pkg = $pkg2 ]; then
+				continue
+			fi
+			if [ -d "$UB_PACKAGEDIR/$pkg2/$dir" ]; then
+				pretendroot rmdir "$dir"
+				break
+			fi
+		done
+	done
+
+	if type -p sortdir >/dev/null; then
+		sortdir find . -mindepth 1 -type d -empty -print0
+	else
+		        find . -mindepth 1 -type d -empty -print0
+	fi | \
+	  while read -d $'\0' dir; do
+		echo "${dir#.}" >> "$UB_ADMINDIR/dirs-$pkg"
+		echo "    Üres könyvtár: $pkg/${dir#./}"
+	done
+done

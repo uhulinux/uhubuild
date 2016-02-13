@@ -1,0 +1,32 @@
+#!/bin/bash -eu
+
+#
+# A doc-ban felsorolt fájlok kipakolása /usr/share/doc/Packages/<sourcename>
+# alá.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -f "$UB_SRCDIR/doc" ]; then
+	mkdir -p "$UB_INSTALLDIR/usr/share/doc/Packages/$UB_SOURCENAME"
+	while read -r pattern; do
+		for file in $(eval echo $UB_COMPILEDIR/$pattern); do
+			if [ ! -e "$file" -a ! -L "$file" ]; then
+				error "$pattern: nincs ilyen fájl!"
+				break
+			fi
+			pretendroot cp -a --no-preserve=ownership "$file" "$UB_INSTALLDIR/usr/share/doc/Packages/$UB_SOURCENAME/"
+		done
+	done < "$UB_SRCDIR/doc"
+fi
+if [ -d "$UB_INSTALLDIR"/usr/share/doc/Packages ]; then
+	find "$UB_INSTALLDIR"/usr/share/doc/Packages -type f | while read f; do
+		md5sum="$(md5sum "$f")"
+		md5sum="${md5sum%% *}"
+		l="$(grep -rli "$md5sum" /usr/share/doc/Licenses/md5sums || true)"
+		if [ -f "$l" ]; then
+			pretendroot rm "$f"
+			ln -s "${l/\/md5sums\///}" "$f"
+		fi
+	done
+fi

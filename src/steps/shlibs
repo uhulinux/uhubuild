@@ -1,0 +1,45 @@
+#!/bin/bash -eu
+
+#
+# A Debianénak megfelelő shlibs fájl előállítása. Hogy minek kell ez a fájl,
+# arról fogalmam sincs. Mindenesetre egy másik legyet is leütünk ezzel a
+# csapással: a csomag telepítése vagy eltávolítása után akkor kell
+# ldconfig-ot futtatni, ha létezik ilyen fájl.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+for pkg in $UB_PACKAGES; do
+	cd "$UB_PACKAGEDIR/$pkg"
+	rm -f DEBIAN/shlibs "$UB_TMPDIR/shlibs"
+	for file in $(find -mindepth 1 -path ./DEBIAN -prune -o -type f -name '*.so*' -print); do
+		if [ -x "$file" ]; then
+			case "$(file -b "$file")" in
+			  ELF*shared*)
+				soname="$(objdump -p "$file" | grep '^  SONAME ' || true)"
+				if [ "$soname" != "" ]; then
+					soname="${soname#  SONAME}"
+					soname="${soname// /}"
+					if [ "${soname%.so}" = "$soname" ]; then
+						lib="${soname%.so.*}"
+						maj="${soname#*.so.}"
+					else
+						soname="$soname%.so"
+						lib="${soname%-*}"
+						maj="${soname##*-}"
+					fi
+					if [ "$lib" != "$soname" -a "$maj" != "$soname" ]; then
+						echo "$lib $maj $pkg (>= $UB_VERSION)" >> "$UB_TMPDIR/shlibs"
+					fi
+				fi
+				;;
+			  *)
+				;;
+			esac
+		fi
+	done
+	if [ -f "$UB_TMPDIR/shlibs" ]; then
+		sort -u < "$UB_TMPDIR/shlibs" > DEBIAN/shlibs
+		rm "$UB_TMPDIR/shlibs"
+	fi
+done

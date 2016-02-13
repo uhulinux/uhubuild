@@ -1,0 +1,989 @@
+#!/bin/bash -e
+
+#
+# A fordításhoz használt fájlok terén jó adag rugalmasságot megengedünk.
+# Nyilván elképzelhetetlen, hogy mondjuk a perms fájlt kézzel szerkesztő
+# embert kötelezzük a szép tabulálás vagy az ábécérend tartására.
+#
+# Ugyanakkor úgy illendő, hogy SVN-be commit, valamint csomagfordítás előtt
+# ezeket a fájlokat áteresztjük egy ellenőrző és kipofozó fázison.
+#
+# A szkriptnek tehát egyszerre két célt is kell szolgálnia.
+#
+# Az egyik az, hogy helyben hozza egységes alakra a fájlokat. Ily módon azok
+# jobban átláthatók lesznek, ha tovább akarunk velünk dolgozni, valamint
+# készen fognak állni az SVN rendszerbe berakásra.
+#
+# A másik cél az, hogy csomagfordítás előtt egységes alakra hozza a
+# fájlokat, valamint a csomagfordító szkriptek életének megkönnyítése
+# érdekében az opcionális fájlokat létrehozza, értelemszerűen általában
+# nulla hosszúsággal. Tovább bonyolítja a helyzetet, hogy ilyenkor a forrás
+# könyvtárat csak olvashatónak kell feltételeznie.
+#
+# A felülvizsgált fájlok új tartalmával minden esetben csak akkor írja felül
+# a régit, ha a tartalom ténylegesen megváltozott. Így ha valamelyik fájl
+# tartalma változatlan maradt, akkor az időcímkéje is marad a régi.
+#
+# A név történelmi okokból "check", talán lehetne jobb nevet is találni.
+#
+# Újdonság: a preprocesszálást is ez a szkript végzi. Kissé bonyolult a
+# helyzet, mert sokmindent kell tudnia egyszerre. Helyben preprocesszálni,
+# másolás közben preprocesszálni, preprocesszált változtatot ellenőrizni a
+# lehető legszigorúbban, preprocesszálás előtt álló változatot
+# hellyel-közzel ellenőrizni... Az ellenőrzések illetve kipofozások nagy
+# részét csak akkor tudjuk elvégezni egy fájlon, ha abban már nincsen
+# preprocesszor parancs.
+#
+
+. /usr/lib/uhubuild/uhubuild-commonenvironment
+. /usr/lib/uhubuild/uhubuild-common
+
+shopt -s extglob
+
+copy=no
+preproc=no
+cppflags=''
+while true; do
+	case "$1" in
+	  --copy)
+		copy=yes
+		shift
+		continue
+		;;
+	  --preproc=*)
+		preproc=yes
+		i="${1#--preproc=}"
+		for j in $i; do
+			cppflags="$cppflags -D$j"
+		done
+		shift
+		continue
+		;;
+	  *)
+		break
+		;;
+	esac
+done
+
+if [ $# -gt 1 ]; then
+	die "Használat: uhubuild-check [--copy] [--preproc=...] [forrás-könyvtár]"
+fi
+
+# A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
+if [ -z "${UHUBUILD_SRCDIR:-}" ]; then
+	export UHUBUILD_SRCDIR="$(cd "${1:-.}" && pwd -P)"
+fi
+
+cd "$UHUBUILD_SRCDIR"
+
+if [ -z "${UHUBUILD_CHECK_TOPONLY:-}" ]; then
+	# Ha egy forráskönyvtár valamely alkönyvtárában állunk, akkor kijjebb mászunk
+	case "$UHUBUILD_SRCDIR" in
+		*/packages/*/description|*/packages/*/summary|*/packages/*/words)
+			cd ../../..
+			;;
+		*/packages/*)
+			cd ../..
+			;;
+		*/addons*|*/packages|*/patches|*/sources)
+			cd ..
+			;;
+		*)
+			;;
+	esac
+	export UHUBUILD_SRCDIR="$(pwd -P)"
+fi
+
+if [ "$copy" = yes ]; then
+	if [ -z "${UHUBUILD_SRC2DIR:-}" ]; then
+		die "Nincsen megadva az UHUBUILD_SRC2DIR könyvtár!"
+	fi
+	rm -rf "$UHUBUILD_SRC2DIR"
+	mkdir -p "$UHUBUILD_SRC2DIR"
+else
+	tmpdir UHUBUILD_SRC2DIR
+	export UHUBUILD_SRC2DIR
+fi
+
+pp ()
+{
+	if [ "$preproc" = "yes" ]; then
+		preprocess $cppflags
+	else
+		cat
+	fi
+}
+
+no_double_empty_line ()
+{
+	local line nl start
+	nl=1
+	start=1
+	# A grep betesz a végére egy newline-t, ha nem volna ott.
+	# A read ugyanis nem látja a newline nélkül záródó sort.
+	grep '' | while IFS='' read -r line; do
+		if [ "$line" = "" ]; then
+			nl=1
+			continue
+		fi
+		if [ $nl = 1 ]; then
+			if [ $start = 0 ]; then
+				printf "\n"
+			fi
+			nl=0
+			start=0
+		fi
+		printf "%s\n" "$line"
+	done
+}
+
+no_empty_line ()
+{
+	grep -v '^$' || true
+}
+
+reformat ()
+{
+	local cmd
+	if [ "$1" = 0 ]; then
+		cmd=no_empty_line
+	elif [ "$1" = 1 ]; then
+		cmd=no_double_empty_line
+	else
+		die "reformat: hibás használat!"
+	fi
+	tr -d '\r' | sed -e 's/[[:space:]]*$//' | $cmd
+}
+
+no_leading_slash ()
+{
+	sed -e 's@^/*@@'
+}
+
+leading_slash ()
+{
+	sed -e 's@^/*@/@'
+}
+
+check ()
+{
+	true
+	if [ ! -f "$1" ]; then
+		error "Hiányzó file: $1"
+		false
+	fi
+}
+
+#
+# Ismeretlen fájlnevek...
+#
+
+unknown ()
+{
+	if [ -f "$1" ]; then
+		warn "ismeretlen fájl: $1"
+	else if [ -d "$1" ]; then
+			warn "ismeretlen könyvtár: $1"
+		else
+			warn "ismeretlen izé: $1"
+		fi
+	fi
+}
+
+illegal ()
+{
+	if [ -f "$1" ]; then
+		error "nem megengedett fájl: $1"
+	else if [ -d "$1" ]; then
+			error "nem megengedett könyvtár: $1"
+		else
+			error "nem megengedett izé: $1"
+		fi
+	fi
+}
+
+must_be_dir ()
+{
+	if [ ! -d "$1" ]; then
+		error "könyvtár kell legyen: $1"
+	fi
+}
+
+must_be_file ()
+{
+	if [ ! -f "$1" ]; then
+		error "fájl kell legyen: $1"
+	fi
+}
+
+for file in *; do
+	case "$file" in
+	  acquire|compile   |build-depends|changelog|\
+	  doc    |install   |maintainer   |options  |\
+	  release|sourcename|distribution |version  |\
+	  TODO   |homepage  |vendor       |split-order|\
+	  u2d)
+		must_be_file "$file"
+		;;
+	  addons*|packages|patches|sources)
+		must_be_dir "$file"
+		;;
+	  *)
+		unknown "$file"
+		;;
+	esac
+done
+
+for file in packages/*; do
+	must_be_dir "$file"
+done
+
+for file in packages/*/*; do
+	case "${file##*/}" in
+	  categories|conffiles|depends|dirs |\
+	  excludes  |files    |groups |options|perms   |\
+	  postinst |postrm |prerm  |priority|\
+	  section  |users  |\
+	  keep-old-timestamps|suid_wrapper|libpath)
+		must_be_file "$file"
+		;;
+	  description|summary|words)
+		must_be_dir "$file"
+		;;
+	  *)
+		unknown "$file"
+		;;
+	esac
+done
+
+for file in addons*; do
+	if [ -d "$file" ]; then
+		if ub_list "$file" -type l -print | grep '' >/dev/null; then
+			error "az $file alatt nem lehet symlink!"
+		fi
+	fi
+done
+
+if [ -d patches ]; then
+	while read file; do
+		case "${file##*/}" in
+			*.@(dif|diff|patch|patch0|patchR|tar|sh|skip|desc|txt)?(.@(gz|bz2|Z)));;
+			*.preproc) ;;
+			*) illegal "$file" ;;
+		esac
+	done < <(ub_list patches -type f -print)
+fi
+
+#
+# Először kipofozva átmásoljuk a fájlokat $UHUBUILD_SRC2DIR alá.
+# Ez eléggé babra munka.
+#
+
+# A distribution az elejére kell, mert ez még definiál cpp-változót.
+
+####################
+### distribution ###
+####################
+if check distribution; then
+reformat 0 < distribution > $UHUBUILD_SRC2DIR/distribution
+	if [ $(wc -l < $UHUBUILD_SRC2DIR/distribution) -ne 1 ]; then
+		error "Hibás distribution fájl!"
+	fi
+fi
+
+cppflags="$cppflags -D$(tr 'a-z' 'A-Z' < $UHUBUILD_SRC2DIR/distribution | tr -c 'A-Z0-9\n' '[_*]')"
+
+##############
+### addons ###
+##############
+for dir in addons*; do
+	if [ -d "$dir" ]; then
+		if [ -f "$dir/preproc" ]; then
+			{ grep '' "$dir/preproc"; echo pyfgcrl; } | preprocess $cppflags 2>/dev/null | grep pyfgcrl >/dev/null || continue
+		fi
+		mkdir -p "$UHUBUILD_SRC2DIR/addons"
+		cp -a "$dir"/. "$UHUBUILD_SRC2DIR/addons/"
+	fi
+done
+rm -f "$UHUBUILD_SRC2DIR/addons/preproc"
+
+###############
+### patches ###
+###############
+if [ -d patches ]; then
+	cp -a patches $UHUBUILD_SRC2DIR
+	while read file; do
+		p="$file"
+		case "$p" in
+			*.preproc) continue;;
+			*.@(gz|bz2|Z)) p="${p%.*}";;
+		esac
+		p="${p%.*}".preproc
+		if [ -f "$p" ]; then
+			{ grep '' "$p"; echo pyfgcrl; } | preprocess $cppflags 2>/dev/null | grep pyfgcrl >/dev/null || rm "$file"
+		fi
+	done < <(ub_list $UHUBUILD_SRC2DIR/patches -type f -print)
+	while read file; do
+		case "${file##*/}" in
+			*.preproc) rm "$file";;
+		esac
+	done < <(ub_list $UHUBUILD_SRC2DIR/patches -type f -print)
+fi
+
+#################################
+### acquire, compile, install ###
+#################################
+for file in acquire compile install; do
+	if [ -f $file ]; then
+		pp < $file > $UHUBUILD_SRC2DIR/$file
+	fi
+done
+
+#####################
+### build-depends ###
+#####################
+if [ -f build-depends ]; then
+	pp < build-depends > $UHUBUILD_SRC2DIR/build-depends.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/build-depends.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/build-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/build-depends
+		rm $UHUBUILD_SRC2DIR/build-depends.tmp
+	else
+		mv $UHUBUILD_SRC2DIR/build-depends.tmp $UHUBUILD_SRC2DIR/build-depends
+	fi
+fi
+
+#################
+### changelog ###
+#################
+if [ -f changelog ]; then
+	pp < changelog > $UHUBUILD_SRC2DIR/changelog
+	touch -r changelog $UHUBUILD_SRC2DIR/changelog
+fi
+
+###########
+### doc ###
+###########
+if [ -f doc ]; then
+	pp < doc > $UHUBUILD_SRC2DIR/doc.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/doc.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/doc.tmp | no_leading_slash | sort -u > $UHUBUILD_SRC2DIR/doc
+		rm $UHUBUILD_SRC2DIR/doc.tmp
+	else
+		mv $UHUBUILD_SRC2DIR/doc.tmp $UHUBUILD_SRC2DIR/doc
+	fi
+fi
+
+################
+### homepage ###
+################
+if [ -f "homepage" ]; then
+	pp < homepage > $UHUBUILD_SRC2DIR/homepage.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/homepage.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/homepage.tmp > "$UHUBUILD_SRC2DIR/homepage"
+		rm $UHUBUILD_SRC2DIR/homepage.tmp
+		if [ "$(wc -l < "$UHUBUILD_SRC2DIR/homepage")" -ne 1 ]; then
+			error "a homepage nem egysoros!"
+		fi
+		case "$(cat homepage)" in
+			ftp://*|http://*|https://*)
+				;;
+			*)
+				error "ismeretlen URL formátum a homepage fileban."
+				;;
+		esac
+	else
+		mv $UHUBUILD_SRC2DIR/homepage.tmp $UHUBUILD_SRC2DIR/homepage
+	fi
+fi
+
+##################
+### maintainer ###
+##################
+if [ -f maintainer ]; then
+	pp < maintainer > $UHUBUILD_SRC2DIR/maintainer.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/maintainer.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/maintainer.tmp > $UHUBUILD_SRC2DIR/maintainer
+		rm $UHUBUILD_SRC2DIR/maintainer.tmp
+		if [ $(wc -l < $UHUBUILD_SRC2DIR/maintainer) -ne 1 ]; then
+			error "Hibás maintainer fájl!"
+		fi
+	else
+		mv $UHUBUILD_SRC2DIR/maintainer.tmp $UHUBUILD_SRC2DIR/maintainer
+	fi
+fi
+
+###############
+### options ###
+###############
+if [ -f options ]; then
+	pp < options
+fi > $UHUBUILD_SRC2DIR/options.tmp
+if ! has_macro $UHUBUILD_SRC2DIR/options.tmp; then
+	reformat 0 < $UHUBUILD_SRC2DIR/options.tmp | tr A-Z a-z | sort -u > $UHUBUILD_SRC2DIR/options
+	rm $UHUBUILD_SRC2DIR/options.tmp
+	while IFS='' read option; do
+		case "$option" in
+		  skip-strip)	;;
+		  skip-optipng)	;;
+		  *)
+			error "Hibás érték az options fájlban: $option!"
+			;;
+		esac
+	done < $UHUBUILD_SRC2DIR/options
+else
+	mv $UHUBUILD_SRC2DIR/options.tmp $UHUBUILD_SRC2DIR/options
+fi
+
+###############
+### release ###
+###############
+if check release; then
+	reformat 0 < release > $UHUBUILD_SRC2DIR/release
+	if [ "$(wc -l < "$UHUBUILD_SRC2DIR"/release)" -ne 1 ]; then
+		error "Hibás release fájl!"
+	fi
+	if ! grep -q '^[0-9]*$' < $UHUBUILD_SRC2DIR/release; then
+		error "Hibás release fájl!"
+	fi
+fi
+
+##################
+### sourcename ###
+##################
+if check sourcename; then
+	reformat 0 < sourcename > $UHUBUILD_SRC2DIR/sourcename
+	if [ "$(wc -l < "$UHUBUILD_SRC2DIR"/sourcename)" -ne 1 ]; then
+		error "Hibás sourcename fájl!"
+	fi
+fi
+
+###############
+### version ###
+###############
+if check version; then
+	reformat 0 < version > $UHUBUILD_SRC2DIR/version
+	if [ $(wc -l < $UHUBUILD_SRC2DIR/version) -ne 1 ]; then
+		error "Hibás version fájl!"
+	fi
+	if grep -q -- '-' < $UHUBUILD_SRC2DIR/version; then
+		error "Nem lehet '-' jel a version fájlban!"
+	fi
+fi
+
+##############
+### vendor ###
+##############
+if [ -f vendor ]; then
+	pp < vendor > $UHUBUILD_SRC2DIR/vendor.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/vendor.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/vendor.tmp > $UHUBUILD_SRC2DIR/vendor
+		rm $UHUBUILD_SRC2DIR/vendor.tmp
+		if [ $(wc -l < $UHUBUILD_SRC2DIR/vendor) -ne 1 ]; then
+			error "Hibás vendor fájl!"
+		fi
+	else
+		mv $UHUBUILD_SRC2DIR/vendor.tmp $UHUBUILD_SRC2DIR/vendor
+	fi
+fi
+
+###################
+### split-order ###
+###################
+if [ -f split-order ]; then
+	reformat 0 < split-order > $UHUBUILD_SRC2DIR/split-order
+	for i in $(<split-order); do
+		if [ ! -d "packages/$i" ]; then
+			error "Nem létező csomag a split-order-ben: packages/$i!"
+		fi
+	done
+fi
+
+
+##################
+### packages/* ###
+##################
+ub_list packages -type d -mindepth 1 -maxdepth 1 -print | grep '' >/dev/null || \
+	die "Nincs definiálva egy csomag sem!"
+nofiles=0
+for pkg in packages/*; do
+	if [ ! -d "$UHUBUILD_SRCDIR/$pkg" ]; then
+		continue
+	fi
+
+	mkdir -p "$UHUBUILD_SRC2DIR/$pkg"/{description,summary,words}
+
+	#################################################
+	### packages/*/{description,summary,words}/hu ###
+	#################################################
+	if [ -f $pkg/description/hu ]; then
+		reformat 1 < $pkg/description/hu > $UHUBUILD_SRC2DIR/$pkg/description/hu
+	else
+		touch $UHUBUILD_SRC2DIR/$pkg/description/hu
+	fi
+	if check $pkg/summary/hu; then
+		reformat 0 < $pkg/summary/hu > $UHUBUILD_SRC2DIR/$pkg/summary/hu
+		if [ "$(wc -l < "$UHUBUILD_SRC2DIR/$pkg/summary/hu")" -ne 1 ]; then
+			error "$pkg/summary/hu nem egysoros!"
+		fi
+		if cmp -s "$pkg"/{description,summary}/hu; then
+			> "$UHUBUILD_SRC2DIR"/"$pkg"/description/hu
+		fi
+	fi
+	if [ -f $pkg/words/hu ]; then
+		reformat 0 < $pkg/words/hu | \
+		  LC_ALL=hu_HU.UTF-8 awk '{ print tolower($LINE) }' | \
+		  LC_ALL=hu_HU.UTF-8 sort -u
+	fi > $UHUBUILD_SRC2DIR/$pkg/words/hu
+
+	if [ "$(type -p hunspell)" != "" ]; then
+		case "$(<distribution)" in
+			*1.[012])
+				to_utf8_filter="iconv -f Latin2 -t UTF-8"
+				from_utf8_filter="iconv -f UTF-8 -t Latin2"
+				;;
+			*)
+				to_utf8_filter="cat"
+				from_utf8_filter="cat"
+				;;
+		esac
+		tmpfile tmpfile tmpfile2
+		cat "$UHUBUILD_SRC2DIR/$pkg"/{description,summary}/hu | \
+		tr -s '[:space:]' '\n' | grep -v '^&' | \
+		  $to_utf8_filter | LC_ALL=hu_HU.UTF-8 hunspell -l | $from_utf8_filter | \
+		  LC_ALL=hu_HU.UTF-8 sort | \
+		  LC_ALL=hu_HU.UTF-8 comm -23 - /usr/share/uhubuild/words/hu >"$tmpfile"
+		LC_ALL=hu_HU.UTF-8 comm -23 "$UHUBUILD_SRC2DIR/$pkg/words/hu" "$tmpfile" >"$tmpfile2"
+		if [ -s "$tmpfile2" ]; then
+			warn "Fölösleges szavak a $pkg/words/hu fájlban:"
+			cat "$tmpfile2" | $to_utf8_filter >&2
+		fi
+		LC_ALL=hu_HU.UTF-8 comm -13 "$UHUBUILD_SRC2DIR/$pkg/words/hu" "$tmpfile" >"$tmpfile2"
+		if [ -s "$tmpfile2" ]; then
+			error "Nyomdahiba a(z) $pkg leírásában!"
+			cat "$tmpfile2" | $to_utf8_filter >&2
+			echo "(Ami esetleg mégsem nyomdahiba, azt jelöld meg egy eléírt & jellel!)" >&2
+		fi
+	fi
+
+	#############################
+	### packages/*/categories ###
+	#############################
+	if [ -f $pkg/categories ]; then
+		pp < $pkg/categories
+	fi > $UHUBUILD_SRC2DIR/$pkg/categories.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/categories.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/categories.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/categories
+		rm $UHUBUILD_SRC2DIR/$pkg/categories.tmp
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/categories.tmp $UHUBUILD_SRC2DIR/$pkg/categories
+	fi
+
+	############################
+	### packages/*/conffiles ###
+	############################
+	if [ -f $pkg/conffiles ]; then
+		pp < $pkg/conffiles > $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp; then
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp | leading_slash | sort -u \
+			  > $UHUBUILD_SRC2DIR/$pkg/conffiles
+			rm $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp $UHUBUILD_SRC2DIR/$pkg/conffiles
+		fi
+	fi
+
+	##########################
+	### packages/*/depends ###
+	##########################
+	if [ -f $pkg/depends ]; then
+		pp < $pkg/depends
+	fi > $UHUBUILD_SRC2DIR/$pkg/depends.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/depends.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/depends.tmp | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/depends
+		rm $UHUBUILD_SRC2DIR/$pkg/depends.tmp
+		while read package op version; do
+			case "$op" in
+				""|"<"|"<<"|"<="|"="|">="|">>"|">")
+					;;
+				*)
+					error "Ismeretlen verzió-operátor ($op) a $pkg/depends fileban."
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/depends
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/depends.tmp $UHUBUILD_SRC2DIR/$pkg/depends
+	fi
+
+	#######################
+	### packages/*/dirs ###
+	#######################
+	if [ -f $pkg/dirs ]; then
+		pp < $pkg/dirs
+	fi > $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/dirs.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/dirs.tmp | leading_slash | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/dirs
+		rm $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/dirs.tmp $UHUBUILD_SRC2DIR/$pkg/dirs
+	fi
+
+	########################
+	### packages/*/files ###
+	########################
+	if [ ! -f $pkg/files ]; then
+		nofiles=$((nofiles+1))
+	fi
+	if [ -f $pkg/files ]; then
+		pp < $pkg/files > $UHUBUILD_SRC2DIR/$pkg/files.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/files.tmp; then
+			# Jajj, gány... :(
+			grep '' $UHUBUILD_SRC2DIR/$pkg/files.tmp | while read a b; do
+				if [ "$b" = "" ]; then
+					echo "$a"
+				else
+					echo "$b" "$a"
+				fi
+			done > "$UHUBUILD_SRC2DIR/$pkg/files.tmp2"
+			leading_slash < "$UHUBUILD_SRC2DIR/$pkg/files.tmp2" | \
+			reformat 0 | sort -u | \
+			sed -e 's|/\+|/|g' | sed -e 's|/\(\*\*/\)\+|/**/|g' \
+			  > "$UHUBUILD_SRC2DIR/$pkg/files.tmp"
+			while read a b; do
+				echo "$b	$a"
+			done < "$UHUBUILD_SRC2DIR/$pkg/files.tmp" > "$UHUBUILD_SRC2DIR/$pkg/files"
+			rm "$UHUBUILD_SRC2DIR/$pkg/files.tmp" "$UHUBUILD_SRC2DIR/$pkg/files.tmp2"
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/files.tmp $UHUBUILD_SRC2DIR/$pkg/files
+		fi
+	fi
+
+	###########################
+	### packages/*/excludes ###
+	###########################
+	if [ -f $pkg/excludes ]; then
+		pp < $pkg/excludes > $UHUBUILD_SRC2DIR/$pkg/excludes
+	fi
+
+	######################################
+	### packages/*/keep-old-timestamps ###
+	######################################
+	if [ -f $pkg/keep-old-timestamps ]; then
+		pp < $pkg/keep-old-timestamps
+	fi > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp | leading_slash | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps
+		rm $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps
+	fi
+
+	##########################
+	### packages/*/libpath ###
+	##########################
+	if [ -f $pkg/libpath ]; then
+		pp < $pkg/libpath
+	fi > $UHUBUILD_SRC2DIR/$pkg/libpath.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/libpath.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/libpath.tmp | leading_slash | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/libpath
+		rm $UHUBUILD_SRC2DIR/$pkg/libpath.tmp
+		if grep ':' $UHUBUILD_SRC2DIR/$pkg/libpath; then
+			error "A $pkg/libpath file nem tartalmazhat kettőspontot!"
+		fi
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/libpath.tmp $UHUBUILD_SRC2DIR/$pkg/libpath
+	fi
+
+	##########################
+	### packages/*/options ###
+	##########################
+	if [ -f $pkg/options ]; then
+		pp < $pkg/options
+	fi > $UHUBUILD_SRC2DIR/$pkg/options.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/options.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/options.tmp | tr A-Z a-z | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/options
+		rm $UHUBUILD_SRC2DIR/$pkg/options.tmp
+		while IFS='' read option; do
+			case "$option" in
+			  skip-fhs|skip-autodepend)			;;
+			  skip-postinst|skip-prerm|skip-postrm)		;;
+			  *)
+				error "Hibás érték a $pkg/options fájlban: $option!"
+				;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/options
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/options.tmp $UHUBUILD_SRC2DIR/$pkg/options
+	fi
+
+	########################
+	### packages/*/perms ###
+	########################
+	if [ -f $pkg/perms ]; then
+		pp < $pkg/perms
+	fi > $UHUBUILD_SRC2DIR/$pkg/perms.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/perms.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/perms.tmp > $UHUBUILD_SRC2DIR/$pkg/perms.tmp2
+		while read -r owner group mode file rest; do
+			if [ "$owner" = "" ]; then
+				group="-"
+			fi
+			if [ "$owner" = "" ]; then
+				group="-"
+			fi
+			case "$mode" in
+				[0-7][0-7][0-7])
+					mode=" $mode";;
+				0[0-7][0-7][0-7])
+					mode=" ${mode:1:3}";;
+				""|-)
+					mode="   -";;
+			esac
+			if [ "${file:0:1}" != "/" ]; then
+				file="/$file"
+			fi
+			printf "%-8s  %-8s  %s  %s\n" "$owner" "$group" "$mode" "$file"
+		done < $UHUBUILD_SRC2DIR/$pkg/perms.tmp2 > $UHUBUILD_SRC2DIR/$pkg/perms.tmp
+		sort -u < $UHUBUILD_SRC2DIR/$pkg/perms.tmp > $UHUBUILD_SRC2DIR/$pkg/perms
+		rm $UHUBUILD_SRC2DIR/$pkg/perms.tmp{,2}
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/perms.tmp $UHUBUILD_SRC2DIR/$pkg/perms
+	fi
+
+	##########################################
+	### packages/*/{postinst,postrm,prerm} ###
+	##########################################
+	for file in postinst postrm prerm; do
+		if [ -f $pkg/$file ]; then
+			pp < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
+		fi
+	done
+
+	###########################
+	### packages/*/priority ###
+	###########################
+	if [ -f $pkg/priority ]; then
+		pp < $pkg/priority > $UHUBUILD_SRC2DIR/$pkg/priority.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/priority.tmp; then
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/priority.tmp > $UHUBUILD_SRC2DIR/$pkg/priority
+			rm $UHUBUILD_SRC2DIR/$pkg/priority.tmp
+			if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/priority) -ne 1 ]; then
+				error "Hibás $pkg/priority fájl! (nem egysoros)"
+			else
+				case $(cat $UHUBUILD_SRC2DIR/$pkg/priority) in
+					required|important|standard|optional|extra)
+						;;
+					*)
+						error "Hibás érték a $pkg/priority fájlban!"
+						;;
+				esac
+			fi
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/priority.tmp $UHUBUILD_SRC2DIR/$pkg/priority
+		fi
+	else
+		echo "optional" >"$UHUBUILD_SRC2DIR"/"$pkg"/priority
+	fi
+
+	##########################
+	### packages/*/section ###
+	##########################
+	if check $pkg/section; then
+		pp < $pkg/section > $UHUBUILD_SRC2DIR/$pkg/section.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/section.tmp; then
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/section.tmp > $UHUBUILD_SRC2DIR/$pkg/section
+			rm $UHUBUILD_SRC2DIR/$pkg/section.tmp
+			if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/section) -ne 1 ]; then
+				error "Hibás $pkg/section fájl!"
+			else
+				case $(head -c 1 $UHUBUILD_SRC2DIR/$pkg/section) in
+					P|Y|F|G|C|R|L|A|O|E|U|I|D|H|T|N|S|Q|J|K|X|B|M|W|V|Z)
+						;;
+					*)
+						error "Hibás vagy régi érték a $pkg/section fájlban!"
+						;;
+				esac
+			fi
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/section.tmp $UHUBUILD_SRC2DIR/$pkg/section
+		fi
+	fi
+
+	###############################
+	### packages/*/suid_wrapper ###
+	###############################
+	if [ -f $pkg/suid_wrapper ]; then
+		pp < $pkg/suid_wrapper > $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp; then
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp | leading_slash | sort -u \
+			  > $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
+			rm $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp
+			while read line; do
+				case "$line" in
+					/sbin/* | /usr/sbin/*)
+						;;
+					*)
+						error "Hibás fájlnév a $pkg/suid_wrapper fájlban!"
+						;;
+				esac
+			done < $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
+		fi
+	fi
+
+	#################################
+	### packages/*/{users,groups} ###
+	#################################
+	if [ -f $pkg/users ]; then
+		pp < $pkg/users > $UHUBUILD_SRC2DIR/$pkg/users.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/users.tmp; then
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users.tmp2
+			while read -r name uid gid rest; do
+				if [ "$name" = "" -o "$uid" = "" -o "$gid" = "" ]; then
+					error "Hiányos $pkg/users fájl!"
+				fi
+				printf "%-8s %4s %4s  %s\n" "$name" "$uid" "$gid" "$rest"
+			done < $UHUBUILD_SRC2DIR/$pkg/users.tmp2 > $UHUBUILD_SRC2DIR/$pkg/users.tmp
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users
+			rm $UHUBUILD_SRC2DIR/$pkg/users.tmp{,2}
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/users.tmp $UHUBUILD_SRC2DIR/$pkg/users
+		fi
+	fi
+	if [ -f $pkg/groups ]; then
+		pp < $pkg/groups > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
+		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/groups.tmp; then
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/groups.tmp > $UHUBUILD_SRC2DIR/$pkg/groups.tmp2
+			while read -r name gid rest; do
+				if [ "$name" = "" -o "$gid" = "" ]; then
+					error "Hiányos $pkg/groups fájl!"
+				fi
+				printf "%-8s %4s  %s\n" "$name" "$gid" "$rest"
+			done < $UHUBUILD_SRC2DIR/$pkg/groups.tmp2 > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
+			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/groups.tmp > $UHUBUILD_SRC2DIR/$pkg/groups
+			rm $UHUBUILD_SRC2DIR/$pkg/groups.tmp{,2}
+		else
+			mv $UHUBUILD_SRC2DIR/$pkg/groups.tmp $UHUBUILD_SRC2DIR/$pkg/groups
+		fi
+	fi
+done
+
+if [ $nofiles -gt 1 ]; then
+	error "Több mint 1 csomag van files fájl nélkül!"
+fi
+
+########################
+### run uhubuild-u2d ###
+########################
+newver="$(uhubuild-u2d)"
+if [ -n "$newver" -a "$newver" != "$(cat version)" ]; then
+	warn "new version available: $newver"
+fi
+
+#
+# Készen vagyunk a másik könyvtárba kipofozott módon átmásolással.
+#
+# Ha "--copy" argumentum meg volt adva, akkor valószínűleg egy következő
+# szkript ezt a könyvtárat használni fogja, ezért azt segítjük azzal, hogy
+# adunk x bitet a szkriptekre, valamint csinálunk szimlinket a sources
+# könyvtárra. Relatív szimlinket készítünk, mert jó fejek vagyunk,
+# és akkor ez chrooton kívül/belül egyaránt jó. Szépen néz ki mc-ben :-)
+#
+# Ha nincsen "--copy" argumentum, akkor ez a könyvtár úgyis mindjárt
+# törlődik, tehát x bitnek és szimlinkezésnek nem lenne értelme. Ekkor az a
+# feladatunk, hogy visszamásoljuk a cuccokat.
+#
+
+cd "$UHUBUILD_SRC2DIR"
+
+if [ "$copy" == "yes" ]; then
+	for i in acquire compile install; do
+		if [ -f "$i" ]; then
+			chmod +x "$i"
+		fi
+	done
+	p="$(pwd -P)"
+	if [ "$p" == "/" -o "$p" == "//" ]; then
+		p=""
+	fi
+	p="${p//[^\/]/}"
+	p="${p//\//../}"
+	if [ -d $UHUBUILD_SRCDIR/sources ]; then
+		ln -s "$p${UHUBUILD_SRCDIR#/}/sources" .
+	fi
+else
+	for file in $(find . -type f); do
+		if [ -f "$UHUBUILD_SRCDIR/$file" ]; then
+			if ! cmp -s "$file" "$UHUBUILD_SRCDIR/$file"; then
+				cp -a "$file" "$UHUBUILD_SRCDIR/$file"
+			fi
+		fi
+	done
+
+	find "$UHUBUILD_SRCDIR" -type d -print0 | xargs -r0 chmod a+rx,u+w
+	find "$UHUBUILD_SRCDIR" -type f -print0 | xargs -r0 chmod a+r,u+w,a-x
+
+	# Kis rendrakás van még hátra
+	cd "$UHUBUILD_SRCDIR"
+	shopt -s nullglob
+
+	if [ "$preproc" = "yes" ]; then
+
+		# Kiszűrt patchek törlése
+		for file in $(find patches -type f); do
+			if [ ! -f "$UHUBUILD_SRC2DIR/$file" ]; then
+				rm "$file"
+			fi
+		done
+
+		# Addons helyrerakása
+		for file in $(ub_list addons -type f -print); do
+			if [ ! -f "$UHUBUILD_SRC2DIR/$file" ]; then
+				rm "$file"
+			elif ! cmp -s "$file" "$UHUBUILD_SRC2DIR/$file"; then
+				cp -a "$UHUBUILD_SRC2DIR/$file" "$file"
+			fi
+		done
+		for file in $(ub_list "$UHUBUILD_SRC2DIR/addons" -type f -print); do
+			file="${file#$UHUBUILD_SRC2DIR/}"
+			if [ ! -f "$file" ]; then
+				mkdir -p "${file%/*}"
+				cp -a "$UHUBUILD_SRC2DIR/$file" "$file"
+			fi
+		done
+		for file in addons*; do
+			if [ "$file" != "addons" ]; then
+				rm -rf "$file"
+			fi
+		done
+		
+	fi
+
+	# optional priority törlése
+	for p in packages/*/priority; do
+		if [ "$(<$UHUBUILD_SRC2DIR/$p)" == "optional" ]; then
+			rm -f "$p"
+		fi
+	done
+
+	# Esetleges fölösleges (0 méretű) fájlok törlése
+	for f in acquire build-depends compile doc install options \
+	  packages/*/{{description,words}/hu,depends,perms,conffiles,categories,options,suid_wrapper,users,groups}; do
+		if [ -f "$f" -a ! -s "$f" ]; then
+			rm -f "$f"
+		fi
+	done
+
+	# Esetleges fölösleges könyvtárak törlése
+	# TODO: ha csak .svn van benne, akkor is törölni kéne!!!
+	for d in addons packages/*/{description,words} patches; do
+		if [ -d "$d" ]; then
+			rmdir --ignore-fail-on-non-empty "$d"
+		fi
+	done
+fi

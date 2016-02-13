@@ -1,0 +1,103 @@
+%_ autoconf automake bash bc binutils bison bzip2 bzip2-dev ccache coreutils cracklib desktop-file-utils diffutils dl dpkg file findutils flex flex-dev gawk gcc gcc-lib gettext gettext-tools glibc glibc-dev glibc-locales grep gzip kernel-headers libstdc++ libstdc++-dev libtool licenses m4 make ncurses ncurses-dev optipng pam pam-dev patch perl pkgconfig pretendroot readline readline-dev sed shadow sortdir tar texinfo uhu-base uhubuild-helpers uhubuild-here uhu-pkg uhu-utils which xz-dev zlib zlib-dev
+
+%alsa-lib	alsa-lib{,-dev}
+%db		db{,-dev}
+%db3		db3{,-dev}
+%db4		db4{,-dev}
+%expat		expat{,-dev}
+%glib		glib{,-dev}
+%glib2		glib2{,-dev}
+%apr		apr{,-dev}
+%libao		libao{,-dev}
+%libogg		libogg{,-dev}
+%libvorbis	libvorbis{,-dev}
+%libxml		libxml{,-dev}
+%libxml2	libxml2{,-dev}
+%libxslt	libxslt{,-dev}
+%openssl	openssl{,-dev}
+%neon		neon{,-dev} %openssl %libxml2
+%gmp		gmp{,-dev}
+%libcom-err libcom-err{,-dev}
+%krb5       krb5{,-dev} %libcom-err
+%sasl2      cyrus-sasl2{,-dev} %krb5
+%openldap	openldap{,-dev} %krb5 %sasl2 %ssl
+%idn            libidn{,-dev}
+%gnutls         gnutls{,-dev} libgcrypt{,-dev} libgpg-error{,-dev} liblzo{,-dev} libtasn1{,-dev} opencdk{,-dev}
+%libpcap        libpcap{,-dev}
+
+%ogg		%libogg %libvorbis
+%ssl		%openssl
+%ldap		%openldap
+%alsa		%alsa-lib
+
+%libungif	libungif{,-dev}
+%libjpeg	libjpeg{,-dev}
+%libmng		libmng{,-dev} %libjpeg
+%libpng		libpng{,-dev}
+%libtiff	libtiff{,-dev}
+
+%gif		%libungif
+%jpeg		%libjpeg
+%mng		%libmng
+%png		%libpng
+%tiff		%libtiff
+
+%freetype2	freetype2{,-dev}
+%fontconfig	%freetype2 %expat fontconfig{,-dev}
+%x		%freetype2 %fontconfig %expat imake libdmx-dev libdrm-dev libfontenc-dev libfs-dev libice-dev liboldx-dev libpng-dev libsm-dev libx11-dev libxau-dev libxaw-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxdmcp-dev libxext-dev libxfixes-dev libxfont-dev libxft-dev libxi-dev libxinerama-dev libxkbfile-dev libxkbui-dev libxmu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxscrnsaver-dev libxt-dev libxtst-dev libxv-dev libxvmc-dev libxxf86dga-dev libxxf86vm-dev mesa-dev x.org-proto-dev x.org-xtrans-dev
+%freetype	%x freetype{,-dev}
+
+%gtk		%x %glib gtk{,-dev}
+%atk		%x atk{,-dev}
+%glitz		%x glitz{,-dev}
+%cairo		%x %png %glitz cairo{,-dev}
+%pango		%x %cairo pango{,-dev}
+%gtk2		%x %glib2 %atk %pango gtk2{,-dev}
+
+%attr		attr{,-dev}
+%acl		%attr acl{,-dev}
+%audiofile	audiofile{,-dev}
+%esound		esound{,-dev}
+%imlib		imlib{,-dev}
+%popt		popt{,-dev}
+%lesstif	lesstif{,-dev}
+%gpm		gpm{,-dev}
+%python		python{,-dev}
+%gamin		gamin{,-dev} %glib2
+%fam		%gamin
+%dbus		%glib2 dbus{,-dev}
+%hal		%dbus hal{,-dev}
+%qt		%x %jpeg %png qt{,-dev}
+%cups		cups{,-dev}
+%arts		arts{,-dev}
+%pcre		pcre{,-dev}
+%kdelibs	%qt %arts %gamin %libart %idn %acl kdelibs{,-dev}
+
+%sdl		%x %audiofile %esound sdl{,-dev}
+%sdl-image	%sdl sdl-image{,-dev}
+%sdl-mixer	%sdl sdl-mixer{,-dev}
+%sdl-net	%sdl sdl-net{,-dev}
+%sdl-ttf	%sdl sdl-ttf{,-dev}
+
+%startup-notification startup-notification{,-dev}
+%scrollkeeper	scrollkeeper{,-dev}
+%rarian		rarian{,-dev}
+%libidl2	%glib2 libidl2{,-dev}
+%orbit2		%glib2 orbit2{,-dev}
+%libbonobo2	libbonobo2{,-dev}
+%gconf2		gconf2{,-dev}
+%gnome2-vfs	%ssl gnome2-vfs{,-dev}
+%libgnome2	%popt %libbonobo2 %gconf2 %gnome2-vfs libgnome2{,-dev}
+%libart		libart-lgpl{,-dev}
+%libgnomecanvas2 %libart libgnomecanvas2{,-dev}
+%libbonoboui2	%libxml2 libbonoboui2{,-dev}
+%libgnomeui2	%libgnomecanvas2 %libbonoboui2 libgnomeui2{,-dev}
+%libglade2	%libxml2 libglade2{,-dev}
+%libgnomeprint2	libgnomeprint2{,-dev}
+%libgnomeprintui2	libgnomeprintui2{,-dev}
+%gnome-doc-utils	gnome-doc-utils{,-dev}
+%gnome2		%gtk2 %orbit2 %libgnome2 %libgnomeui2 %jpeg %png %esound %audiofile %rarian %libglade2 %libgnomeprint2 %libgnomeprintui2 gnome2-desktop{,-dev} gnome2-menus{,-dev} gtk-doc %gnome-doc-utils %startup-notification perl-xml-parser dbus-glib-dev
+
+%gal2		%libglade2 %libgnomeprint2 %libgnomeprintui2 gal2{,-dev}
+%libsoup	libsoup{,-dev}
+%evolution	%gal2 %libsoup evolution{,-dev}

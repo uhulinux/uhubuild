@@ -1,0 +1,39 @@
+#!/bin/bash -eu
+
+#
+# Info fájlok kitömörítése és /usr/share/info/dir eltávolítása.
+# Átalakítás UTF-8-ra.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+convert_from() {
+	local from="$1"
+	local file="$2"
+	if iconv -f UTF-8 -t UTF-8 <"$file" >/dev/null 2>&1; then
+		return
+	fi
+	echo "  Converting ${file#./} from $from to UTF-8"
+	iconv -f "$from" -t UTF-8 <"$file" >"$file.tmp"
+	touch -r "$file" "$file.tmp"
+	pretendroot mv "$file.tmp" "$file"
+}
+
+for pkg in $UB_PACKAGES; do
+	if [ -d "$UB_PACKAGEDIR/$pkg/usr/share/info" ]; then
+		cd -- "$UB_PACKAGEDIR/$pkg/usr/share/info"
+		pretendroot rm -f dir
+
+		find . -type f -name '*.gz'  -print0 | xargs -r0 gunzip  -f --
+		find . -type f -name '*.bz2' -print0 | xargs -r0 bunzip2 -f --
+
+		find .         -print0 | xargs -r0 pretendroot chown -h 0.0
+		find . -type d -print0 | xargs -r0 pretendroot chmod 755
+		find . -type f -print0 | xargs -r0 pretendroot chmod 644
+
+		for file in $(find . -type f ! -iname '*.gif' ! -iname '*.jpeg' ! -iname '*.jpg' ! -iname '*.png'); do
+			convert_from Latin1 "$file"
+		done
+	fi
+done
+

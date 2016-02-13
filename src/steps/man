@@ -1,0 +1,159 @@
+#!/bin/bash -eu
+
+#
+# Kézikönyv oldalak kipofozása. Nem tömörítjük őket, sőt, kitömörítjük, ha
+# esetleg tömörítve lennének. Átalakítjuk őket UTF-8 kódolásúra.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+language_to_charset() {
+	local lang="$1"
+	if [ "$lang" = "ca" ]; then
+		echo "ISO-8859-1"
+		return
+	fi
+	if [ "$lang" = "ru" ]; then
+		echo "KOI8-R"
+		return
+	fi
+	if [ "$lang" = "sr" ]; then
+		echo "ISO-8859-5"
+		return
+	fi
+	local locales
+	local reply
+	local charset
+	locales="$(locale -a | egrep "^$lang(_|\$)" | fgrep -v . | fgrep -v @ | cat)"
+	reply="unknown"
+	for locale in $locales; do
+		charset="$(LC_ALL="$locale" locale charmap)"
+		if [ "$reply" = "unknown" ]; then
+			reply="$charset"
+			continue
+		fi
+		if [ "$charset" != "$reply" ]; then
+			reply="ambiguous"
+			break
+		fi
+	done
+	echo "$reply"
+}
+
+convert_from() {
+	local from="$1"
+	local file="$2"
+	if iconv -f UTF-8 -t UTF-8 <"$file" >/dev/null 2>&1; then
+		return
+	fi
+	if [ "$from" = "unknown" -o "$from" = "ambiguous" ]; then
+		error "Source charset of ${file##*/man//} is $from."
+		error "Please convert it to UTF-8 manually in the install script."
+		return 1
+	fi
+	echo "  Converting ${file##*/man//} from $from to UTF-8"
+	iconv -f "$from" -t UTF-8 <"$file" >"$file.tmp"
+	touch -r "$file" "$file.tmp"
+	pretendroot mv "$file.tmp" "$file"
+}
+
+for pkg in $UB_PACKAGES; do
+	cd "$UB_PACKAGEDIR/$pkg"
+	for dir in usr/share; do
+		if [ ! -d "$dir" ]; then
+			continue
+		fi
+		for d in "$dir"/man[0-9]; do
+			error "$d könyvtár nem lesz jó!"
+		done
+		dir="$dir/man/"
+		if [ ! -d "$dir" ]; then
+			continue
+		fi
+
+		# helyrepofozzuk a jogosultsagokat
+		find "$dir"         | xargs -r pretendroot chown -h 0.0
+		find "$dir" -type f | xargs -r pretendroot chmod 644
+		find "$dir" -type d | xargs -r pretendroot chmod 755
+		# kibontjuk a tomoritett man oldalakat
+		find "$dir" -type f -name '*.gz'  -print0 | xargs -r0 gunzip  -f --
+		find "$dir" -type f -name '*.bz2' -print0 | xargs -r0 bunzip2 -f --
+		# a symlinkeket manlinkre konvertaljuk
+		for link in $(find "$dir" -type l); do
+			pointsto="$(readlink "$link")"
+			pretendroot rm "$link"
+			echo ".so ${pointsto%.gz}" >"${link%.gz}"
+		done
+		# helyrepofozzuk a hibas manlinkeket hogy az nroffnak is jo legyen
+		for file in $(find "$dir" -type f); do
+			if [ "$(wc -l <"$file")" -le 1 ]; then
+				ub_replace "^\.so[[:space:]]\+man\(.\)/\(.\+\1\)" ".so \2" "$file"
+				ub_replace "^\.so[[:space:]]\+\(man./.\+\)" ".so ../\1" "$file"
+			fi
+		done
+		# megnezzuk nincs-e disznosag a /usr/share/man alatt
+		for d2 in "$dir"/*; do
+			if [ -f "$d2" ]; then
+				error "$d2 közönséges fájl nem lesz jó!"
+			fi
+			case "${d2##*/}" in
+			man?)
+				sect="${d2##*/man}"
+				for f3 in "$d2"/*; do
+					if [ -d "$f3" ]; then
+						error "$f3 könyvtár nem lesz jó!"
+					fi
+					case "$f3" in
+					  *.${sect}*)	;;
+					  *)		error "$f3: kiterjesztés nem oké!";;
+					esac
+				done
+				;;
+			man)
+				error "$d2 könyvtár nem lesz jó!"
+				;;
+			*)
+				for d3 in "$d2"/*; do
+					if [ -f "$d3" ]; then
+						error "$d3 közönséges fájl nem lesz jó!"
+					fi
+					case "${d3##*/}" in
+					man?)
+						sect="${d3##*/man}"
+						for f4 in "$d3"/*; do
+							if [ -d "$f4" ]; then
+								error "$f4 könyvtár nem lesz jó!"
+							fi
+							case "$f4" in
+							  *.${sect}*)	;;
+							  *)		error "$f4: kiterjesztés nem oké!";;
+							esac
+						done
+						;;
+					*)
+						error "$d3 könyvtár nem lesz jó!"
+						;;
+					esac
+				done
+				;;
+			esac
+		done
+		# átalakítás UTF-8-ra
+		for d in "$dir"/*; do
+			if [ -d "$d" ]; then
+				d="${d##*/}"
+				case "$d" in
+				  man*)
+					charset="ISO-8859-1"
+					;;
+				  *)
+					charset="$(language_to_charset "$d")"
+					;;
+				esac
+				for file in $(find "$dir/$d" -type f); do
+					convert_from "$charset" "$file"
+				done
+			fi
+		done
+	done
+done

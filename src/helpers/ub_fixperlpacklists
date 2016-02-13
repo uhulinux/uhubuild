@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+
+if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
+	find "$UB_INSTALLDIR/usr/lib/perl5" -name ".packlist" -type f -print0 | \
+		xargs -r0 filt sed -e "s@^${UB_INSTALLDIR}@@g" --
+fi

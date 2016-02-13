@@ -1,0 +1,33 @@
+#!/bin/bash -eu
+
+#
+# Menü fájlok ellenőrzése.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+for pkg in $UB_PACKAGES; do
+	cd "$UB_PACKAGEDIR/$pkg"
+	for dir in usr/share/desktop-directories usr/share/applications usr/lib/desktop-directories usr/lib/applications; do
+		if [ ! -d "$dir" ]; then
+			continue
+		fi
+		for f in "$dir"/*; do
+			if [ ! -f "$f" ]; then
+				continue
+			fi
+			iconv -f utf8 -t utf8 <"$f" >/dev/null 2>/dev/null \
+			  || error "$f nem UTF-8 kódolású!"
+			grep -vw 'Encoding=UTF-8' "$f" | grep '^Encoding=' >/dev/null \
+			  && error "$f: hibás vagy nem támogatott Encoding sor!" \
+			  || true
+			[ $(grep ^Categories= "$f" | wc -l) -le 1 ] \
+			  || error "$f: egynél több Categories sort tartalmaz!"
+			fgrep -q '${' "$f" \
+			  && error "$f: maradt benne '\${', szar a configure vagy a Makefile!" \
+			  || true
+			desktop-file-validate "$f" || warn "$f: hibás desktop fájl!" \
+			  || true
+		done
+	done
+done

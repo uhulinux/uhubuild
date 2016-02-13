@@ -1,0 +1,2505 @@
+------------------------------------------------------------------------
+r1036 | janusz@uhulinux.hu | 2014-07-09 10:45:06 +0200 (sze, 09 júl 2014) | 1 line
+Changed paths:
+   A /tags/0.2.314 (from /trunk:1035)
+
+0.2.314
+------------------------------------------------------------------------
+r1035 | janusz@uhulinux.hu | 2014-07-09 10:44:59 +0200 (sze, 09 júl 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+set new version number
+
+------------------------------------------------------------------------
+r1033 | janusz@uhulinux.hu | 2014-05-20 17:13:31 +0200 (k, 20 máj 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+sometimes gnome ftp contains more than one latest file
+
+------------------------------------------------------------------------
+r1031 | janusz@uhulinux.hu | 2014-05-07 09:58:01 +0200 (sze, 07 máj 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/menu
+
+do not fail on wrong desktop files
+
+------------------------------------------------------------------------
+r1029 | janusz@uhulinux.hu | 2014-05-03 19:09:05 +0200 (szo, 03 máj 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/menu
+
+die onerrors only
+
+------------------------------------------------------------------------
+r1027 | janusz@uhulinux.hu | 2014-04-28 10:27:11 +0200 (h, 28 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+   M /trunk/src/steps/buildinfo
+   M /trunk/src/steps/compile
+   M /trunk/src/steps/install
+   M /trunk/src/steps/menu
+   M /trunk/src/uhubuild-common
+
+merge patches
+
+------------------------------------------------------------------------
+r1025 | janusz@uhulinux.hu | 2014-04-17 13:17:10 +0200 (cs, 17 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+u2dperl fix
+
+------------------------------------------------------------------------
+r1023 | janusz@uhulinux.hu | 2014-04-15 09:14:36 +0200 (k, 15 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/optipng
+
+filename escaping fix
+
+------------------------------------------------------------------------
+r1021 | janusz@uhulinux.hu | 2014-04-15 08:43:45 +0200 (k, 15 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+fix fix
+
+------------------------------------------------------------------------
+r1019 | janusz@uhulinux.hu | 2014-04-15 08:31:58 +0200 (k, 15 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+chroot cleanup fix
+
+------------------------------------------------------------------------
+r1017 | janusz@uhulinux.hu | 2014-04-14 13:33:44 +0200 (h, 14 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-chrootbuild
+
+uhubuild depends can't read build depends file
+
+------------------------------------------------------------------------
+r1015 | janusz@uhulinux.hu | 2014-04-14 11:24:01 +0200 (h, 14 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+chroot cleanup fixes and cleanup
+
+------------------------------------------------------------------------
+r1013 | janusz@uhulinux.hu | 2014-04-14 10:21:13 +0200 (h, 14 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-chrootbuild
+
+create dev,proc directories
+
+------------------------------------------------------------------------
+r1011 | janusz@uhulinux.hu | 2014-04-14 09:51:15 +0200 (h, 14 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-chrootbuild
+
+prepare chroot after /{dev,proc} mount
+
+------------------------------------------------------------------------
+r1009 | janusz@uhulinux.hu | 2014-04-09 11:00:14 +0200 (sze, 09 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/optipng
+
+multithread optipng
+
+------------------------------------------------------------------------
+r1007 | janusz@uhulinux.hu | 2014-04-09 08:31:47 +0200 (sze, 09 ápr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+add pkgProblemResolver option to apt
+
+------------------------------------------------------------------------
+r1005 | janusz@uhulinux.hu | 2014-03-26 08:54:24 +0100 (sze, 26 márc 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+   M /trunk/src/steps/split
+
+create systemd init script directory by default
+
+------------------------------------------------------------------------
+r1003 | janusz@uhulinux.hu | 2014-03-05 12:23:30 +0100 (sze, 05 márc 2014) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+better scons support
+
+------------------------------------------------------------------------
+r1001 | janusz@uhulinux.hu | 2014-03-05 08:57:20 +0100 (sze, 05 márc 2014) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+filter out wrong cpan responses
+
+------------------------------------------------------------------------
+r999 | janusz@uhulinux.hu | 2014-03-03 12:58:33 +0100 (h, 03 márc 2014) | 2 lines
+Changed paths:
+   M /trunk/src/steps/acquire
+
+remove .git folder
+
+------------------------------------------------------------------------
+r997 | janusz@uhulinux.hu | 2014-02-27 11:59:04 +0100 (cs, 27 febr 2014) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+add Perl Module::Build support to ub_compile and ub_install
+
+------------------------------------------------------------------------
+r995 | janusz@uhulinux.hu | 2014-02-17 17:19:39 +0100 (h, 17 febr 2014) | 3 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+separate download function from geturl to _geturl
+fix pattern escaping in splitver
+
+------------------------------------------------------------------------
+r993 | janusz@uhulinux.hu | 2014-02-15 22:52:13 +0100 (szo, 15 febr 2014) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+add xz-dev to default macro
+
+------------------------------------------------------------------------
+r991 | janusz@uhulinux.hu | 2013-10-18 13:18:32 +0200 (p, 18 okt 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+add unstable support to u2dgnome
+
+------------------------------------------------------------------------
+r989 | janusz@uhulinux.hu | 2013-10-02 14:37:55 +0200 (sze, 02 okt 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+Add u2dpypi to u2d helpers
+
+------------------------------------------------------------------------
+r988 | janusz@uhulinux.hu | 2013-10-02 14:37:35 +0200 (sze, 02 okt 2013) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+excludes documentation
+
+------------------------------------------------------------------------
+r986 | janusz@uhulinux.hu | 2013-10-02 14:35:00 +0200 (sze, 02 okt 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+Add .zip support to u2d
+
+------------------------------------------------------------------------
+r984 | janusz@uhulinux.hu | 2013-09-18 13:58:09 +0200 (sze, 18 szept 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-pack
+
+revert previous commit
+
+------------------------------------------------------------------------
+r982 | janusz@uhulinux.hu | 2013-09-17 17:21:57 +0200 (k, 17 szept 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-pack
+
+use gzip compression in dpkg by default
+
+------------------------------------------------------------------------
+r980 | janusz@uhulinux.hu | 2013-08-13 16:42:58 +0200 (k, 13 aug 2013) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-build
+
+better paralell build handling
+
+------------------------------------------------------------------------
+r978 | pozsy@uhulinux.hu | 2013-08-13 16:21:35 +0200 (k, 13 aug 2013) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_make
+
+- new default in ub_make for UB_MAKE_PROCS: use the number of the cpus online by default
+
+------------------------------------------------------------------------
+r976 | janusz@uhulinux.hu | 2013-05-15 12:01:14 +0200 (sze, 15 máj 2013) | 3 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+u2d hard timeout
+try passive and active ftp too
+
+------------------------------------------------------------------------
+r974 | janusz@uhulinux.hu | 2013-04-24 21:51:50 +0200 (sze, 24 ápr 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+timeout
+
+------------------------------------------------------------------------
+r972 | janusz@uhulinux.hu | 2013-04-05 18:33:38 +0200 (p, 05 ápr 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+uhubuild-check runs uhubuild-u2d, and warns if new version available
+
+------------------------------------------------------------------------
+r970 | janusz@uhulinux.hu | 2013-04-05 12:54:58 +0200 (p, 05 ápr 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+cpan helper
+
+------------------------------------------------------------------------
+r968 | janusz@uhulinux.hu | 2013-03-26 11:23:08 +0100 (k, 26 márc 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+fix sflist without path
+
+------------------------------------------------------------------------
+r966 | janusz@uhulinux.hu | 2013-03-22 19:54:28 +0100 (p, 22 márc 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d.sh
+
+version parse fix
+
+------------------------------------------------------------------------
+r965 | janusz@uhulinux.hu | 2013-03-19 13:00:54 +0100 (k, 19 márc 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+uhubuild-check allows u2d file
+
+------------------------------------------------------------------------
+r963 | janusz@uhulinux.hu | 2013-03-19 12:52:34 +0100 (k, 19 márc 2013) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-u2d
+
+u2d fix
+
+------------------------------------------------------------------------
+r961 | janusz@uhulinux.hu | 2013-03-17 19:20:09 +0100 (v, 17 márc 2013) | 2 lines
+Changed paths:
+   A /trunk/src/uhubuild-u2d
+   A /trunk/src/uhubuild-u2d.sh
+
+up 2 date scripts
+
+------------------------------------------------------------------------
+r959 | janusz@uhulinux.hu | 2013-03-10 12:45:53 +0100 (v, 10 márc 2013) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+fix interpreter finder
+
+------------------------------------------------------------------------
+r957 | janusz@uhulinux.hu | 2013-02-26 17:40:50 +0100 (k, 26 febr 2013) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+depends phase now handle relative paths in interpreter
+
+------------------------------------------------------------------------
+r955 | janusz@uhulinux.hu | 2013-02-23 10:42:57 +0100 (szo, 23 febr 2013) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+remove all trailing spaces
+
+------------------------------------------------------------------------
+r953 | janusz@uhulinux.hu | 2013-02-23 10:23:19 +0100 (szo, 23 febr 2013) | 3 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+revert previous commit
+better error msg (make whitespaces visible in the detected interpreter)
+
+------------------------------------------------------------------------
+r951 | janusz@uhulinux.hu | 2013-02-23 09:37:31 +0100 (szo, 23 febr 2013) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+recognize symlinks too
+
+------------------------------------------------------------------------
+r949 | janusz@uhulinux.hu | 2012-05-20 21:57:54 +0200 (v, 20 máj 2012) | 2 lines
+Changed paths:
+   M /trunk/src/steps/fhs
+
+* fix previous commit
+
+------------------------------------------------------------------------
+r947 | janusz@uhulinux.hu | 2012-05-17 21:42:33 +0200 (cs, 17 máj 2012) | 2 lines
+Changed paths:
+   M /trunk/src/steps/fhs
+
+* informative utf8 filename check
+
+------------------------------------------------------------------------
+r945 | janusz@uhulinux.hu | 2012-05-16 22:20:58 +0200 (sze, 16 máj 2012) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+* search for .pc files under /lib/pkgconfig too
+
+------------------------------------------------------------------------
+r943 | janusz@uhulinux.hu | 2011-11-04 20:25:49 +0100 (p, 04 nov 2011) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+   M /trunk/src/uhubuild-check
+
+* add exclude support to split by Tamás Bajusz (gbtami@gmail.com)
+
+------------------------------------------------------------------------
+r941 | janusz@uhulinux.hu | 2010-09-07 17:13:50 +0200 (k, 07 szept 2010) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+* talan ez lesz a kov uhu verzioszama :)
+
+------------------------------------------------------------------------
+r939 | janusz@uhulinux.hu | 2010-09-03 15:51:05 +0200 (p, 03 szept 2010) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+* set distribution to 2.2
+
+------------------------------------------------------------------------
+r937 | janusz@uhulinux.hu | 2010-04-15 17:15:44 +0200 (cs, 15 ápr 2010) | 2 lines
+Changed paths:
+   M /trunk/src/steps/perms
+
+* keep s bits in {,usr/}{,s}bin/* (szeretünk pozsy!)
+
+------------------------------------------------------------------------
+r935 | pozsy | 2010-03-22 14:06:29 +0100 (h, 22 márc 2010) | 2 lines
+Changed paths:
+   M /trunk/src/steps/perms
+
+- chmod 755 files under {,usr/}{s,bin}
+
+------------------------------------------------------------------------
+r933 | pozsy | 2010-03-08 16:59:56 +0100 (h, 08 márc 2010) | 2 lines
+Changed paths:
+   M /trunk/src/steps/ccache-extract
+
+- do not die on ccache extract errors
+
+------------------------------------------------------------------------
+r931 | janusz@uhulinux.hu | 2009-11-29 11:20:43 +0100 (v, 29 nov 2009) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- remove deleted packages from %x
+
+------------------------------------------------------------------------
+r929 | pozsy | 2009-11-29 11:05:24 +0100 (v, 29 nov 2009) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- build for i686/generic by default
+
+------------------------------------------------------------------------
+r927 | janusz@uhulinux.hu | 2009-11-25 20:01:19 +0100 (sze, 25 nov 2009) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_xpiinstall
+
+- add seamonkey support to ub_xpiinstall
+
+------------------------------------------------------------------------
+r925 | janusz@uhulinux.hu | 2009-11-11 23:53:59 +0100 (sze, 11 nov 2009) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+- better chroot cleaning
+
+------------------------------------------------------------------------
+r923 | janusz@uhulinux.hu | 2009-11-11 22:33:47 +0100 (sze, 11 nov 2009) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- remove mktemp from bootstrap
+
+------------------------------------------------------------------------
+r921 | janusz@uhulinux.hu | 2009-09-29 20:24:26 +0200 (k, 29 szept 2009) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- remove libxp{,rintutil,rintapputil} from macros
+
+------------------------------------------------------------------------
+r919 | janusz@uhulinux.hu | 2009-09-29 14:10:09 +0200 (k, 29 szept 2009) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-prepare-chroot
+
+- skip chroot clean
+
+------------------------------------------------------------------------
+r917 | janusz@uhulinux.hu | 2009-09-28 21:06:44 +0200 (h, 28 szept 2009) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+- autoclean broken chroot
+
+------------------------------------------------------------------------
+r915 | janusz | 2009-07-12 16:28:38 +0200 (v, 12 júl 2009) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+remove liblbxutil-dev from macros
+
+------------------------------------------------------------------------
+r913 | ralesk@uhulinux.hu | 2009-04-23 18:37:22 +0200 (cs, 23 ápr 2009) | 3 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+fix mkdir
+check for build/Makefile
+
+------------------------------------------------------------------------
+r911 | ralesk@uhulinux.hu | 2009-03-29 22:41:10 +0200 (v, 29 márc 2009) | 3 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+
+Brown paper bag commit
+M    helpers/ub_compile
+
+------------------------------------------------------------------------
+r909 | ralesk@uhulinux.hu | 2009-03-29 19:51:15 +0200 (v, 29 márc 2009) | 15 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+   M /trunk/src/helpers/ub_makeinstall
+
+CMake support fix:
+
+M    helpers/ub_makeinstall
+  * check in .. for CMakeLists.txt due to being called from build/
+  
+M    helpers/ub_install
+  * separate build environment seems to be customary in the cmake world (and compulsory with kdelibs)
+  
+M    helpers/ub_compile
+  * CMakeLists.txt takes priority over ./configure if exists
+  * add KDE home dir
+  * force sysconf dir to /etc
+  * force prefix to /usr
+  * separate build environment seems to be customary in the cmake world (and compulsory with kdelibs)
+
+------------------------------------------------------------------------
+r907 | janusz | 2009-03-13 20:25:31 +0100 (p, 13 márc 2009) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- drop debug echo
+
+------------------------------------------------------------------------
+r905 | janusz | 2009-03-13 20:23:33 +0100 (p, 13 márc 2009) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- better $ORIGIN handling ;)
+
+------------------------------------------------------------------------
+r903 | janusz | 2008-12-16 23:10:14 +0100 (k, 16 dec 2008) | 3 lines
+Changed paths:
+   M /trunk/src/steps/compile
+   M /trunk/src/steps/logpack
+
+- collect logs in logpack step
+- store Cmake error files too
+
+------------------------------------------------------------------------
+r901 | pozsy | 2008-11-05 17:23:06 +0100 (sze, 05 nov 2008) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+
+- cmake parameterezes fix
+
+------------------------------------------------------------------------
+r899 | janusz | 2008-10-24 11:12:23 +0200 (p, 24 okt 2008) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+
+- cmake fix
+
+------------------------------------------------------------------------
+r897 | janusz | 2008-09-09 14:43:34 +0200 (k, 09 szept 2008) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_makeinstall
+
+- cmake support
+
+------------------------------------------------------------------------
+r895 | janusz | 2007-11-27 17:15:43 +0100 (k, 27 nov 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/optipng
+   M /trunk/src/uhubuild-check
+
+- skip optipng
+
+------------------------------------------------------------------------
+r893 | janusz | 2007-11-12 20:28:15 +0100 (h, 12 nov 2007) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+- files fix
+
+------------------------------------------------------------------------
+r891 | pozsy | 2007-11-05 17:15:07 +0100 (h, 05 nov 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/optipng
+
+- optipng errors are fatal, only warnings
+
+------------------------------------------------------------------------
+r889 | pozsy | 2007-11-05 12:24:19 +0100 (h, 05 nov 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/cleanup
+
+- fix for cleanup :)
+
+------------------------------------------------------------------------
+r887 | pozsy | 2007-11-05 12:21:19 +0100 (h, 05 nov 2007) | 2 lines
+Changed paths:
+   A /trunk/src/steps/cleanup
+   M /trunk/src/steps/install
+   M /trunk/src/uhubuild-build
+
+- add cleanup stage to remove .xvpics mess
+
+------------------------------------------------------------------------
+r885 | pozsy | 2007-11-05 11:52:50 +0100 (h, 05 nov 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+- install: remove .xvpics too
+
+------------------------------------------------------------------------
+r883 | pozsy | 2007-11-04 19:00:05 +0100 (v, 04 nov 2007) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+   A /trunk/src/steps/optipng
+   M /trunk/src/uhubuild-build
+
+- optimize png images using optipng
+
+------------------------------------------------------------------------
+r881 | pozsy | 2007-10-24 18:55:18 +0200 (sze, 24 okt 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- ub_configure: env flag to disable --disable-static
+
+------------------------------------------------------------------------
+r879 | pozsy | 2007-10-23 19:05:40 +0200 (k, 23 okt 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- ub_configure: do not overwrite, just prepend CFLAGS
+
+------------------------------------------------------------------------
+r877 | pozsy | 2007-10-23 17:16:27 +0200 (k, 23 okt 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- ub_configure fix
+
+------------------------------------------------------------------------
+r875 | pozsy | 2007-10-23 17:12:13 +0200 (k, 23 okt 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- ub_configure: be compatible with autoconf 2.13                                                                                                             
+
+------------------------------------------------------------------------
+r872 | pozsy | 2007-10-21 20:15:24 +0200 (v, 21 okt 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- ub_configure: disable static, march=c3, mtune=pentium4
+
+------------------------------------------------------------------------
+r870 | janusz | 2007-10-19 09:25:37 +0200 (p, 19 okt 2007) | 3 lines
+Changed paths:
+   M /trunk/src/steps/depends
+   M /trunk/src/steps/python
+
+- python cleanup fix
+- better interpreter error
+
+------------------------------------------------------------------------
+r868 | pozsy | 2007-10-18 18:41:46 +0200 (cs, 18 okt 2007) | 2 lines
+Changed paths:
+   A /trunk/src/steps/python
+   M /trunk/src/uhubuild-build
+
+- remove *.pyc and *.pyo after install
+
+------------------------------------------------------------------------
+r866 | egmont | 2007-08-28 16:01:08 +0200 (k, 28 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- replace scrollkeeper with rarian
+
+------------------------------------------------------------------------
+r864 | egmont | 2007-08-22 19:46:36 +0200 (sze, 22 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- include dbus-glib-dev in %gnome2
+
+------------------------------------------------------------------------
+r862 | egmont | 2007-08-21 16:53:24 +0200 (k, 21 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+- 'dev' is transformed to '2.1' instead of '2.0' in the distribution field
+
+------------------------------------------------------------------------
+r860 | egmont | 2007-08-16 18:45:25 +0200 (cs, 16 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+- revert last change (setup.py)
+
+------------------------------------------------------------------------
+r858 | pozsy | 2007-08-15 16:20:17 +0200 (sze, 15 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+- ub_{compile,install}: use setup.py if available
+
+------------------------------------------------------------------------
+r856 | pozsy | 2007-08-15 16:19:09 +0200 (sze, 15 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- depends: interpreter line can end in spaces if env is used
+
+------------------------------------------------------------------------
+r854 | egmont | 2007-08-15 12:26:05 +0200 (sze, 15 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+   M /trunk/src/steps/menu
+   M /trunk/src/steps/mo
+   M /trunk/src/steps/strip
+   M /trunk/src/uhubuild-check
+   M /trunk/src/uhubuild-depends
+
+- aviod some broken pipe messages
+
+------------------------------------------------------------------------
+r852 | egmont | 2007-08-13 17:30:26 +0200 (h, 13 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- try to get rid of ed
+
+------------------------------------------------------------------------
+r850 | egmont | 2007-08-01 20:07:02 +0200 (sze, 01 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-pack
+
+- The Magic Sync
+
+------------------------------------------------------------------------
+r848 | egmont | 2007-08-01 11:51:04 +0200 (sze, 01 aug 2007) | 2 lines
+Changed paths:
+   M /trunk/src/steps/info
+
+- info: don't iconv images
+
+------------------------------------------------------------------------
+r846 | egmont | 2007-06-08 19:44:24 +0200 (p, 08 jún 2007) | 3 lines
+Changed paths:
+   M /trunk/src/steps/doc
+   M /trunk/src/steps/info
+   M /trunk/src/steps/install
+   M /trunk/src/steps/man
+   M /trunk/src/steps/menu
+   M /trunk/src/steps/mo
+   M /trunk/src/steps/remove-misc
+   M /trunk/src/steps/split
+
+- use pretendroot whenever a rm/rmdir/mv/cp may remove or overwrite a file
+  that may be pretended to be owned by someone else than root
+
+------------------------------------------------------------------------
+r844 | egmont | 2007-05-31 18:39:16 +0200 (cs, 31 máj 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+
+- pass args
+
+------------------------------------------------------------------------
+r842 | egmont | 2007-05-29 17:49:56 +0200 (k, 29 máj 2007) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- don't update libtool by default, part 2
+
+------------------------------------------------------------------------
+r840 | egmont | 2007-05-29 17:49:33 +0200 (k, 29 máj 2007) | 2 lines
+Changed paths:
+   M /trunk/doc/Makefile
+   M /trunk/doc/bin/datefix.sh
+   M /trunk/doc/bin/pagenumfix.sh
+   M /trunk/doc/bin/spellcheck.sh
+   M /trunk/doc/uhubuild.sgml
+
+- don't update libtool by default
+
+------------------------------------------------------------------------
+r838 | egmont | 2006-10-27 11:00:07 +0200 (p, 27 okt 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- revert r832, gettext is fixed now
+
+------------------------------------------------------------------------
+r836 | egmont | 2006-10-10 18:12:04 +0200 (k, 10 okt 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+
+- hardwire the charset of two more ambiguous language codes
+
+------------------------------------------------------------------------
+r834 | egmont | 2006-09-29 12:53:00 +0200 (p, 29 szept 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/strip
+
+- continue the strip step if a strip command returns error
+
+------------------------------------------------------------------------
+r832 | egmont | 2006-08-15 22:22:45 +0200 (k, 15 aug 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- don't convert .mo files that contain '%<PRIuMAX>' and friends
+
+------------------------------------------------------------------------
+r830 | egmont | 2006-08-07 16:07:04 +0200 (h, 07 aug 2006) | 4 lines
+Changed paths:
+   M /trunk/src/steps/menu
+
+- stricter check for menu files:
+  - don't allow '${' in the files
+  - don't allow absolute path for Exec/TryExec
+
+------------------------------------------------------------------------
+r828 | egmont | 2006-06-07 18:52:40 +0200 (sze, 07 jún 2006) | 3 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+- tr isn't multibyte aware, use awk instead
+- run hunspell with hu_HU.UTF-8 locale
+
+------------------------------------------------------------------------
+r826 | janusz | 2006-05-23 19:16:40 +0200 (k, 23 máj 2006) | 5 lines
+Changed paths:
+   M /trunk/src/steps/fhs
+
+fhs step fixes
+ - check hidden files
+ - disallow /usr/X11*
+ - check root directory
+
+------------------------------------------------------------------------
+r824 | egmont | 2006-05-23 17:10:33 +0200 (k, 23 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- remove empty /var/log directory
+
+------------------------------------------------------------------------
+r822 | egmont | 2006-05-19 16:30:44 +0200 (p, 19 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix stupid but serious typos in depends
+
+------------------------------------------------------------------------
+r820 | pozsy | 2006-05-18 17:10:35 +0200 (cs, 18 máj 2006) | 3 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix a little bug in depends step: do not omit foobar from the list if
+  bar is being built
+
+------------------------------------------------------------------------
+r818 | egmont | 2006-05-10 18:06:19 +0200 (sze, 10 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/doc/Makefile
+   M /trunk/doc/bin/datefix.sh
+   M /trunk/doc/bin/spellcheck.sh
+   M /trunk/doc/uhubuild.sgml
+
+- convert doc to UTF-8
+
+------------------------------------------------------------------------
+r816 | egmont | 2006-05-08 14:47:42 +0200 (h, 08 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+- only run scons if it's available
+
+------------------------------------------------------------------------
+r814 | pozsy | 2006-05-05 15:57:33 +0200 (p, 05 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- gnome2-vfs-dev needs avahi-dev, not howl-dev, and already depends on it
+
+------------------------------------------------------------------------
+r812 | egmont | 2006-05-04 19:39:11 +0200 (cs, 04 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- rmdir bugfix 
+
+------------------------------------------------------------------------
+r810 | egmont | 2006-05-04 19:28:43 +0200 (cs, 04 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- fix previous commits
+
+------------------------------------------------------------------------
+r808 | egmont | 2006-05-04 19:25:28 +0200 (cs, 04 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- fix previous commit
+
+------------------------------------------------------------------------
+r806 | egmont | 2006-05-04 19:17:08 +0200 (cs, 04 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- remove charset part of .mo files' directories
+
+------------------------------------------------------------------------
+r805 | egmont | 2006-05-04 19:01:51 +0200 (cs, 04 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- fix previous commit
+
+------------------------------------------------------------------------
+r803 | egmont | 2006-05-04 15:41:04 +0200 (cs, 04 máj 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/mo
+
+- minor mo fix
+
+------------------------------------------------------------------------
+r801 | egmont | 2006-05-03 20:25:49 +0200 (sze, 03 máj 2006) | 2 lines
+Changed paths:
+   A /trunk/src/steps/mo
+   M /trunk/src/uhubuild-build
+
+- convert message catalogs (.mo) to UTF-8
+
+------------------------------------------------------------------------
+r799 | egmont | 2006-04-24 18:48:55 +0200 (h, 24 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+- update doc
+
+------------------------------------------------------------------------
+r797 | egmont | 2006-04-14 15:31:43 +0200 (p, 14 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-commonenvironment
+
+- simplify setting the environment
+
+------------------------------------------------------------------------
+r795 | egmont | 2006-04-14 15:14:23 +0200 (p, 14 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/pack
+   M /trunk/src/steps/split
+
+- empty directories should always belong to the package, appear in "stat" etc.
+
+------------------------------------------------------------------------
+r794 | egmont | 2006-04-14 15:08:24 +0200 (p, 14 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/conffiles
+   M /trunk/src/steps/depends
+   M /trunk/src/steps/shlibs
+   M /trunk/src/uhubuild-check
+   M /trunk/src/uhubuild-depends
+   M /trunk/src/uhubuild-pack
+
+- prefer "sort -u" to "sort | uniq"
+
+------------------------------------------------------------------------
+r792 | egmont | 2006-04-14 14:49:20 +0200 (p, 14 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- remove empty init script directories
+
+------------------------------------------------------------------------
+r790 | egmont | 2006-04-13 14:17:19 +0200 (cs, 13 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-commonenvironment
+
+- set environment variables from /etc/env.d/*.env
+
+------------------------------------------------------------------------
+r788 | egmont | 2006-04-12 15:41:07 +0200 (sze, 12 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/strip
+
+- strip unwritable files
+
+------------------------------------------------------------------------
+r786 | egmont | 2006-04-10 15:25:38 +0200 (h, 10 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+- scons support
+
+------------------------------------------------------------------------
+r784 | egmont | 2006-04-10 14:17:34 +0200 (h, 10 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- fix for stupid "rmdir -p"
+
+------------------------------------------------------------------------
+r782 | egmont | 2006-04-10 14:01:52 +0200 (h, 10 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- remove empty directories from /usr/lib/perl5
+
+------------------------------------------------------------------------
+r780 | egmont | 2006-04-10 13:00:29 +0200 (h, 10 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- keep /var/{lock,log,run}
+
+------------------------------------------------------------------------
+r778 | egmont | 2006-04-10 12:28:11 +0200 (h, 10 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- typo fix
+
+------------------------------------------------------------------------
+r776 | egmont | 2006-04-10 12:25:31 +0200 (h, 10 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- remove some more empty directories
+
+------------------------------------------------------------------------
+r774 | egmont | 2006-04-07 18:47:07 +0200 (p, 07 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- remove empty directories from /usr/share/applnk
+
+------------------------------------------------------------------------
+r772 | egmont | 2006-04-07 13:57:04 +0200 (p, 07 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- sort empty directory messages
+
+------------------------------------------------------------------------
+r770 | egmont | 2006-04-07 13:36:48 +0200 (p, 07 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/steps/install
+   M /trunk/src/steps/split
+   M /trunk/src/uhubuild-pack
+
+- keep empty directories that seem to really belong to the package
+
+------------------------------------------------------------------------
+r768 | janusz | 2006-04-04 14:36:50 +0200 (k, 04 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_xpiinstall
+
+- black magic to support language packs
+
+------------------------------------------------------------------------
+r766 | pozsy | 2006-04-04 13:35:09 +0200 (k, 04 ápr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_install
+
+- ub_install: export MONO_SHARED_DIR="/tmp"
+
+------------------------------------------------------------------------
+r764 | janusz | 2006-03-31 18:52:20 +0200 (p, 31 márc 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+   A /trunk/src/helpers/ub_xpiinstall
+
+- xpi install magic
+
+------------------------------------------------------------------------
+r762 | janusz | 2006-03-21 18:38:53 +0100 (k, 21 márc 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- fix
+
+------------------------------------------------------------------------
+r760 | pozsy | 2006-03-21 16:09:08 +0100 (k, 21 márc 2006) | 3 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- add --disable-schemas-install and --disable-scrollkeeper to configure if
+  it supports it
+
+------------------------------------------------------------------------
+r758 | egmont | 2006-02-03 11:36:14 +0100 (p, 03 febr 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/info
+   M /trunk/src/steps/install
+   M /trunk/src/steps/man
+   M /trunk/src/uhubuild-prepare-chroot
+
+- fixes for coreutils 5.93
+
+------------------------------------------------------------------------
+r756 | egmont | 2006-01-17 18:24:17 +0100 (k, 17 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/menu
+
+- fail if .desktop file contains more than one Categories line
+
+------------------------------------------------------------------------
+r754 | egmont | 2006-01-17 16:08:14 +0100 (k, 17 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_list
+   M /trunk/src/steps/acquire
+   M /trunk/src/steps/install
+
+- get rid of .gitignore files
+
+------------------------------------------------------------------------
+r752 | egmont | 2006-01-17 15:49:34 +0100 (k, 17 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- handle '$ORIGIN' keyword in RPATH
+
+------------------------------------------------------------------------
+r750 | egmont | 2006-01-17 14:18:47 +0100 (k, 17 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix objdump depends
+
+------------------------------------------------------------------------
+r748 | egmont | 2006-01-16 19:40:29 +0100 (h, 16 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- depends: use objdump instead of ldd
+
+------------------------------------------------------------------------
+r747 | egmont | 2006-01-16 12:07:08 +0100 (h, 16 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/doc/bin/datefix.sh
+   M /trunk/doc/uhubuild.sgml
+
+- minor doc fix
+
+------------------------------------------------------------------------
+r745 | egmont | 2006-01-11 18:50:36 +0100 (sze, 11 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+- 'dev' is transformed to '2.0' instead of '1.2' in the distribution field
+
+------------------------------------------------------------------------
+r743 | egmont | 2006-01-10 20:40:05 +0100 (k, 10 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/logpack
+
+- store compile host's hostname and chroot package list in logpack
+
+------------------------------------------------------------------------
+r741 | egmont | 2006-01-10 12:40:06 +0100 (k, 10 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- libstdc++5 -> libstdc++
+
+------------------------------------------------------------------------
+r739 | egmont | 2006-01-05 16:29:29 +0100 (cs, 05 jan 2006) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- do not fail on dangling symlinks
+
+------------------------------------------------------------------------
+r737 | janusz | 2005-12-22 12:04:06 +0100 (cs, 22 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- libapr -> apr
+
+------------------------------------------------------------------------
+r735 | egmont | 2005-12-21 15:45:00 +0100 (sze, 21 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/remove-misc
+
+- remove auto-generated mime files
+
+------------------------------------------------------------------------
+r733 | egmont | 2005-12-15 14:52:52 +0100 (cs, 15 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+
+- fix language to charset conversion
+
+------------------------------------------------------------------------
+r731 | egmont | 2005-12-15 14:35:56 +0100 (cs, 15 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+
+- assume KOI-8 for russian manpages
+
+------------------------------------------------------------------------
+r729 | egmont | 2005-12-15 14:27:49 +0100 (cs, 15 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+   D /trunk/src/steps/remove-gnomedoc
+   D /trunk/src/steps/remove-locale
+   D /trunk/src/steps/remove-man
+   M /trunk/src/uhubuild-build
+
+- keep foreign translations
+
+------------------------------------------------------------------------
+r727 | egmont | 2005-12-14 18:58:38 +0100 (sze, 14 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- make previous patch compatible with gcc4
+
+------------------------------------------------------------------------
+r725 | egmont | 2005-12-14 18:47:01 +0100 (sze, 14 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- depends: handle -lgcc as a special case
+
+------------------------------------------------------------------------
+r723 | egmont | 2005-12-08 20:00:21 +0100 (cs, 08 dec 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- adapt to modular X.Org
+
+------------------------------------------------------------------------
+r721 | egmont | 2005-11-30 13:27:05 +0100 (sze, 30 nov 2005) | 2 lines
+Changed paths:
+   D /trunk/src/steps/manx
+   M /trunk/src/steps/remove-man
+   M /trunk/src/uhubuild-build
+
+- revert r713 and r715, X.Org is fixed now
+
+------------------------------------------------------------------------
+r719 | pozsy | 2005-11-28 17:22:33 +0100 (h, 28 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- update %krb5 macro, add %libcom-err
+
+------------------------------------------------------------------------
+r717 | egmont | 2005-11-28 15:00:16 +0100 (h, 28 nov 2005) | 3 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- handle .private tags in .pc files
+- require libc.so if any linking is done
+
+------------------------------------------------------------------------
+r715 | egmont | 2005-11-25 16:31:28 +0100 (p, 25 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+   A /trunk/src/steps/manx
+   M /trunk/src/uhubuild-build
+
+- move manpages before splitting to packages
+
+------------------------------------------------------------------------
+r713 | egmont | 2005-11-25 15:37:56 +0100 (p, 25 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+   M /trunk/src/steps/remove-man
+
+- move manpages of new X to their proper place
+
+------------------------------------------------------------------------
+r711 | egmont | 2005-11-23 16:14:25 +0100 (sze, 23 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add gnome-doc-utils-dev to %gnome2
+
+------------------------------------------------------------------------
+r709 | egmont | 2005-11-22 16:04:49 +0100 (k, 22 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- ignore dependencies of .la files, they suck
+
+------------------------------------------------------------------------
+r707 | egmont | 2005-11-22 15:11:53 +0100 (k, 22 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r705 | egmont | 2005-11-22 14:57:26 +0100 (k, 22 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r703 | egmont | 2005-11-22 14:18:59 +0100 (k, 22 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r701 | egmont | 2005-11-22 13:50:35 +0100 (k, 22 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- parse variables in pkgconfig files
+
+------------------------------------------------------------------------
+r699 | egmont | 2005-11-22 11:30:50 +0100 (k, 22 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r697 | egmont | 2005-11-21 21:42:20 +0100 (h, 21 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r695 | egmont | 2005-11-21 21:33:46 +0100 (h, 21 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- look for .a if .so is not found
+
+------------------------------------------------------------------------
+r693 | egmont | 2005-11-21 21:23:04 +0100 (h, 21 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r691 | egmont | 2005-11-21 21:13:13 +0100 (h, 21 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix
+
+------------------------------------------------------------------------
+r689 | egmont | 2005-11-21 20:39:19 +0100 (h, 21 nov 2005) | 3 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- track down dependencies of .pc and .la files
+- symbolic links require their target (if that is not a directory)
+
+------------------------------------------------------------------------
+r687 | janusz | 2005-11-18 16:01:31 +0100 (p, 18 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+- split-order fix
+
+------------------------------------------------------------------------
+r685 | janusz | 2005-11-18 15:49:32 +0100 (p, 18 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+- check only if exists
+
+------------------------------------------------------------------------
+r683 | janusz | 2005-11-18 15:05:19 +0100 (p, 18 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+   M /trunk/src/uhubuild-check
+
+- split order support
+
+------------------------------------------------------------------------
+r681 | pozsy | 2005-11-17 17:03:39 +0100 (cs, 17 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+- ub_{compile,install}: setup.py does not need +x perms
+
+------------------------------------------------------------------------
+r679 | egmont | 2005-11-16 11:20:33 +0100 (sze, 16 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- macros for dbus, hal, attr, acl; %kdelibs includes %acl
+
+------------------------------------------------------------------------
+r677 | egmont | 2005-11-03 18:48:39 +0100 (cs, 03 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/menu
+
+- fix steps/menu
+
+------------------------------------------------------------------------
+r675 | egmont | 2005-11-03 13:55:58 +0100 (cs, 03 nov 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+   M /trunk/src/steps/menu
+   M /trunk/src/steps/remove-misc
+
+- convert old uhu-menu desktop files to new ones
+
+------------------------------------------------------------------------
+r673 | pozsy | 2005-10-25 21:10:19 +0200 (k, 25 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add %libpcap macro
+
+------------------------------------------------------------------------
+r670 | pozsy | 2005-10-25 20:31:34 +0200 (k, 25 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- fix bug in depends when using "package = version"
+
+------------------------------------------------------------------------
+r668 | pozsy | 2005-10-13 18:03:33 +0200 (cs, 13 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add gnome2-menus,{-dev} to %gnome2
+
+------------------------------------------------------------------------
+r666 | pozsy | 2005-10-13 17:26:37 +0200 (cs, 13 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add howl{,-dev} to %gnome2-vfs
+
+------------------------------------------------------------------------
+r664 | pozsy | 2005-10-13 17:06:09 +0200 (cs, 13 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- fix prev commit
+
+------------------------------------------------------------------------
+r662 | pozsy | 2005-10-13 16:57:29 +0200 (cs, 13 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add gnome2-desktop{,dev} to %gnome2 macro
+
+------------------------------------------------------------------------
+r660 | pozsy | 2005-10-10 21:35:31 +0200 (h, 10 okt 2005) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+- ub_{compile,install}: workaround for shebang-less setup.py scripts
+
+------------------------------------------------------------------------
+r658 | egmont | 2005-09-30 18:21:34 +0200 (p, 30 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- %gnome2 includes gnome-doc-utils
+
+------------------------------------------------------------------------
+r656 | pozsy | 2005-09-29 16:55:16 +0200 (cs, 29 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add %gnutls macro
+
+------------------------------------------------------------------------
+r654 | egmont | 2005-09-28 18:10:16 +0200 (sze, 28 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- add cairo+glitz
+
+------------------------------------------------------------------------
+r652 | egmont | 2005-09-22 20:19:46 +0200 (cs, 22 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/bin/spellcheck.sh
+   M /trunk/src/uhubuild-check
+
+- adapt to hunspell 1.1.0 using UTF-8
+
+------------------------------------------------------------------------
+r650 | egmont | 2005-09-20 21:00:36 +0200 (k, 20 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/strip
+   M /trunk/src/uhubuild-check
+
+- skip-strip option
+
+------------------------------------------------------------------------
+r648 | egmont | 2005-09-14 11:35:04 +0200 (sze, 14 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/Makefile
+
+- convert info file to UTF-8
+
+------------------------------------------------------------------------
+r646 | egmont | 2005-09-06 14:02:41 +0200 (k, 06 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/changelog
+   M /trunk/src/steps/control
+
+- typo fixes
+
+------------------------------------------------------------------------
+r644 | egmont | 2005-09-02 16:42:20 +0200 (p, 02 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/changelog
+   M /trunk/src/steps/control
+   M /trunk/src/steps/fhs
+
+- refuse invalid UTF-8 filenames, control and changelog files
+
+------------------------------------------------------------------------
+r642 | egmont | 2005-09-02 14:06:06 +0200 (p, 02 szept 2005) | 2 lines
+Changed paths:
+   M /trunk/src/steps/info
+   M /trunk/src/steps/man
+
+- convert man and info pages to UTF-8
+
+------------------------------------------------------------------------
+r640 | egmont | 2005-08-31 15:59:12 +0200 (sze, 31 aug 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/Makefile
+   M /trunk/doc/uhubuild.sgml
+
+- linuxdoc-tools sucks, revert doc to Latin-2
+
+------------------------------------------------------------------------
+r638 | egmont | 2005-08-31 15:54:11 +0200 (sze, 31 aug 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/Makefile
+   M /trunk/doc/bin/datefix.sh
+   M /trunk/doc/bin/spellcheck.sh
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/common
+   M /trunk/src/helpers/ub_configure
+   M /trunk/src/helpers/ub_download
+   M /trunk/src/helpers/ub_makeinstall
+   M /trunk/src/steps/acquire
+   M /trunk/src/steps/addons
+   M /trunk/src/steps/buildinfo
+   M /trunk/src/steps/changelog
+   M /trunk/src/steps/compile
+   M /trunk/src/steps/compile-snapshot
+   M /trunk/src/steps/conffiles
+   M /trunk/src/steps/control
+   M /trunk/src/steps/depends
+   M /trunk/src/steps/dirs
+   M /trunk/src/steps/doc
+   M /trunk/src/steps/fhs
+   M /trunk/src/steps/info
+   M /trunk/src/steps/install
+   M /trunk/src/steps/install-snapshot
+   M /trunk/src/steps/man
+   M /trunk/src/steps/menu
+   M /trunk/src/steps/pack
+   M /trunk/src/steps/perms
+   M /trunk/src/steps/remove-gnomedoc
+   M /trunk/src/steps/remove-locale
+   M /trunk/src/steps/remove-man
+   M /trunk/src/steps/remove-misc
+   M /trunk/src/steps/scripts
+   M /trunk/src/steps/shlibs
+   M /trunk/src/steps/split
+   M /trunk/src/steps/strip
+   M /trunk/src/steps/suid_wrapper
+   M /trunk/src/steps/timestamps
+   M /trunk/src/steps/users-groups
+   M /trunk/src/uhubuild-build
+   M /trunk/src/uhubuild-check
+   M /trunk/src/uhubuild-chrootbuild
+   M /trunk/src/uhubuild-common
+   M /trunk/src/uhubuild-depends
+   M /trunk/src/uhubuild-expand
+   M /trunk/src/uhubuild-extract
+   M /trunk/src/uhubuild-pack
+   M /trunk/src/uhubuild-prepare-chroot
+   M /trunk/words/README
+   M /trunk/words/hu
+
+- UTF-8
+
+------------------------------------------------------------------------
+r636 | egmont | 2005-01-16 14:21:05 +0100 (v, 16 jan 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+- workaround stupid 'info' file format
+
+------------------------------------------------------------------------
+r634 | egmont | 2005-01-16 14:17:01 +0100 (v, 16 jan 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+- doc update
+
+------------------------------------------------------------------------
+r632 | egmont | 2004-12-09 14:17:54 +0100 (cs, 09 dec 2004) | 2 lines
+Changed paths:
+   A /trunk/src/steps/remove-misc
+   M /trunk/src/uhubuild-build
+
+- remove mimeinfo.cache and /var/scrollkeeper
+
+------------------------------------------------------------------------
+r630 | egmont | 2004-11-09 21:12:05 +0100 (k, 09 nov 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+- understand new tricks in ldd syntax
+
+------------------------------------------------------------------------
+r628 | egmont | 2004-10-18 13:04:44 +0200 (h, 18 okt 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+- remove contents of /tmp/.X11-unix and /tmp/.ICE-unix
+
+------------------------------------------------------------------------
+r626 | egmont | 2004-10-18 12:52:29 +0200 (h, 18 okt 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+- prepare-chroot: don't remove /tmp/.X11-unix and /tmp/.ICE-unix
+
+------------------------------------------------------------------------
+r624 | pozsy | 2004-09-28 15:58:27 +0200 (k, 28 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%neon macro fix
+
+------------------------------------------------------------------------
+r622 | egmont | 2004-09-14 14:44:04 +0200 (k, 14 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- macros: fam -> gamin
+
+------------------------------------------------------------------------
+r620 | egmont | 2004-09-12 11:41:15 +0200 (v, 12 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-commonenvironment
+
+- workaround, part 2
+
+------------------------------------------------------------------------
+r618 | egmont | 2004-09-12 11:36:53 +0200 (v, 12 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-commonenvironment
+
+- workaround for a bash 3.00.13 bug
+
+------------------------------------------------------------------------
+r616 | egmont | 2004-09-08 14:25:48 +0200 (sze, 08 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- %kdelibs includes %idn
+
+------------------------------------------------------------------------
+r614 | egmont | 2004-09-08 14:06:52 +0200 (sze, 08 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- %idn macro
+
+------------------------------------------------------------------------
+r612 | egmont | 2004-09-01 14:26:52 +0200 (sze, 01 szept 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- %kdelibs now includes %libart
+
+------------------------------------------------------------------------
+r610 | egmont | 2004-08-15 00:04:07 +0200 (v, 15 aug 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+- store the apt cache under the chroot
+
+------------------------------------------------------------------------
+r608 | egmont | 2004-08-12 18:04:08 +0200 (cs, 12 aug 2004) | 3 lines
+Changed paths:
+   M /trunk/src/uhubuild-chrootbuild
+   M /trunk/src/uhubuild-prepare-chroot
+
+- store the apt database under the chroot
+- do not lock the chroot building phase, no longer needed due to this change
+
+------------------------------------------------------------------------
+r606 | egmont | 2004-07-28 23:09:45 +0200 (sze, 28 júl 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+   M /trunk/src/uhubuild-pack
+
+- fixes for bash 3.0
+
+------------------------------------------------------------------------
+r604 | egmont | 2004-06-28 17:01:48 +0200 (h, 28 jún 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+libpopt -> popt
+
+------------------------------------------------------------------------
+r602 | egmont | 2004-06-17 12:12:56 +0200 (cs, 17 jún 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+- fix symlinks pointing under $UB_INSTALLDIR instead of failing on them
+
+------------------------------------------------------------------------
+r600 | pozsy | 2004-06-10 22:58:55 +0200 (cs, 10 jún 2004) | 3 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_makeinstall
+
+- recognise "${DESTDIR}" too in Makefiles
+- support for building ruby modules via ub_compile
+
+------------------------------------------------------------------------
+r598 | egmont | 2004-06-08 18:08:55 +0200 (k, 08 jún 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/ccache-compress
+   M /trunk/src/steps/ccache-extract
+   A /trunk/src/steps/ccache-remove-unused
+   M /trunk/src/uhubuild-build
+
+- remove unused ccache files if compilation was successful
+
+------------------------------------------------------------------------
+r596 | egmont | 2004-06-07 15:28:22 +0200 (h, 07 jún 2004) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/steps/timestamps
+   M /trunk/src/uhubuild-build
+   M /trunk/src/uhubuild-check
+
+- timestamps are guaranteed not to be newer than the changelog file
+
+------------------------------------------------------------------------
+r594 | egmont | 2004-06-05 18:07:14 +0200 (szo, 05 jún 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/ccache-compress
+   M /trunk/src/steps/ccache-extract
+   M /trunk/src/steps/depends
+   M /trunk/src/uhubuild-build
+
+- support for ldd running on 2.6 kernel
+
+------------------------------------------------------------------------
+r592 | egmont | 2004-06-04 16:45:27 +0200 (p, 04 jún 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/ccache-compress
+   M /trunk/src/steps/ccache-extract
+   M /trunk/src/uhubuild-build
+
+- create ccache tarball even if build fails
+
+------------------------------------------------------------------------
+r590 | egmont | 2004-05-28 17:14:02 +0200 (p, 28 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/ccache-compress
+   M /trunk/src/steps/ccache-extract
+
+- ccache tarball bugfix
+
+------------------------------------------------------------------------
+r588 | egmont | 2004-05-28 17:04:49 +0200 (p, 28 máj 2004) | 2 lines
+Changed paths:
+   A /trunk/src/steps/ccache-compress
+   A /trunk/src/steps/ccache-extract
+   M /trunk/src/uhubuild-build
+   M /trunk/src/uhubuild-chrootbuild
+
+- use ccache tarball
+
+------------------------------------------------------------------------
+r586 | egmont | 2004-05-27 17:16:43 +0200 (cs, 27 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+- put '1.2' in the distribution field instead of 'dev'
+
+------------------------------------------------------------------------
+r584 | egmont | 2004-05-25 20:59:19 +0200 (k, 25 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-chrootbuild
+
+- try to umount previously mounted stuff
+
+------------------------------------------------------------------------
+r582 | egmont | 2004-05-25 19:39:34 +0200 (k, 25 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/compile
+   M /trunk/src/steps/depends
+   M /trunk/src/steps/install
+
+- use "-n 1" instead of "-1" for head and tail
+
+------------------------------------------------------------------------
+r580 | egmont | 2004-05-25 17:09:10 +0200 (k, 25 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+- prepare-chroot: run dpkg --configure -a if necessary
+
+------------------------------------------------------------------------
+r578 | egmont | 2004-05-16 17:50:16 +0200 (v, 16 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+
+- --build and --host changed from i386-pc-linux-gnu to i586-uhu-linux
+
+------------------------------------------------------------------------
+r576 | egmont | 2004-05-08 21:45:29 +0200 (szo, 08 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/compile
+   M /trunk/src/steps/install
+
+me stupid
+
+------------------------------------------------------------------------
+r574 | egmont | 2004-05-08 21:37:21 +0200 (szo, 08 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/compile
+   M /trunk/src/steps/install
+
+make sure files are readable after compile and install
+
+------------------------------------------------------------------------
+r572 | egmont | 2004-05-06 20:46:24 +0200 (cs, 06 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+xfree86 -> x.org
+
+------------------------------------------------------------------------
+r570 | egmont | 2004-05-06 19:23:04 +0200 (cs, 06 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+- two small bugfixes
+
+------------------------------------------------------------------------
+r568 | egmont | 2004-05-03 23:02:50 +0200 (h, 03 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/src/common
+
+fix cpp wrapper
+
+------------------------------------------------------------------------
+r566 | egmont | 2004-05-03 15:01:26 +0200 (h, 03 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-check
+
+preproc support for addons
+
+------------------------------------------------------------------------
+r565 | egmont | 2004-05-03 14:25:22 +0200 (h, 03 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-check
+
+define UHU_LINUX_1_1 or whatsoever
+
+------------------------------------------------------------------------
+r564 | egmont | 2004-05-03 14:14:33 +0200 (h, 03 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-check
+
+preproc support for patches
+
+------------------------------------------------------------------------
+r562 | egmont | 2004-05-03 12:53:50 +0200 (h, 03 máj 2004) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/common
+   M /trunk/src/uhubuild-build
+   M /trunk/src/uhubuild-check
+
+preprocessor support, part 1
+
+------------------------------------------------------------------------
+r561 | egmont | 2004-04-04 18:12:35 +0200 (v, 04 ápr 2004) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+typo fix
+
+------------------------------------------------------------------------
+r559 | egmont | 2004-03-04 16:54:38 +0100 (cs, 04 márc 2004) | 2 lines
+Changed paths:
+   M /trunk/src/steps/man
+
+manpage directory check fixed
+
+------------------------------------------------------------------------
+r557 | egmont | 2004-01-22 18:40:11 +0100 (cs, 22 jan 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%gnome2 includes perl-xml-parser
+
+------------------------------------------------------------------------
+r555 | egmont | 2004-01-20 00:59:05 +0100 (k, 20 jan 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%fontconfig makró
+
+------------------------------------------------------------------------
+r553 | pozsy | 2004-01-18 19:54:04 +0100 (v, 18 jan 2004) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- macros: openldap needs ssl
+
+------------------------------------------------------------------------
+r551 | pozsy | 2004-01-18 13:55:10 +0100 (v, 18 jan 2004) | 4 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+- recommend using & instead of words file
+- fix conffiles cleanup
+- remove extra 'reformat' while parsing categories file
+
+------------------------------------------------------------------------
+r549 | pozsy | 2004-01-12 16:54:41 +0100 (h, 12 jan 2004) | 3 lines
+Changed paths:
+   M /trunk/config/macros
+   M /trunk/words/hu
+
+- %sasl needs %krb5
+- new words: compaq, lexmark
+
+------------------------------------------------------------------------
+r547 | egmont | 2003-12-13 19:30:36 +0100 (szo, 13 dec 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+doc: update autoconf+automake, fix some typos
+
+------------------------------------------------------------------------
+r545 | pozsy | 2003-12-13 03:13:48 +0100 (szo, 13 dec 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- fix ldap macro
+
+------------------------------------------------------------------------
+r544 | pozsy | 2003-12-08 11:53:49 +0100 (h, 08 dec 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+- %krb5 macro
+
+------------------------------------------------------------------------
+r542 | egmont | 2003-11-26 00:48:43 +0100 (sze, 26 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/doc
+
+fix typo
+
+------------------------------------------------------------------------
+r540 | egmont | 2003-11-26 00:23:36 +0100 (sze, 26 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/doc
+
+doc szimlinkesítés: minor cleanup
+
+------------------------------------------------------------------------
+r538 | egmont | 2003-11-25 21:02:49 +0100 (k, 25 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/steps/doc
+
+doc alatt szimlinkesítünk a licenses csomag fájljaira
+
+------------------------------------------------------------------------
+r537 | egmont | 2003-11-23 16:25:36 +0100 (v, 23 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+Drop APT::Immediate-Configure bug compatibility
+
+------------------------------------------------------------------------
+r535 | egmont | 2003-11-20 16:41:19 +0100 (cs, 20 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/split
+
+split: szimlink sem maradhat csomagon kívül
+
+------------------------------------------------------------------------
+r533 | pozsy | 2003-11-12 00:18:45 +0100 (sze, 12 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/TODO
+   M /trunk/src/helpers/ub_makeinstall
+   M /trunk/words/hu
+
+- ub_makeinstall: do not use "install_vendor" for perl modules, use "install"
+
+------------------------------------------------------------------------
+r531 | egmont | 2003-11-01 19:36:26 +0100 (szo, 01 nov 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/strip
+
+tulaj/csoport megtartása strip során
+
+------------------------------------------------------------------------
+r529 | egmont | 2003-10-11 12:40:43 +0200 (szo, 11 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/steps/control
+   M /trunk/src/steps/depends
+   M /trunk/src/steps/shlibs
+   M /trunk/src/uhubuild-check
+
+Alcsomagonkénti külön version/release lehetősége kidobva.
+
+------------------------------------------------------------------------
+r527 | egmont | 2003-10-09 16:51:03 +0200 (cs, 09 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-commonenvironment
+
+környezeti változók dobása javítva újsort tartalmazó értékre
+
+------------------------------------------------------------------------
+r525 | egmont | 2003-10-08 17:49:57 +0200 (sze, 08 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-commonenvironment
+
+$HOME kellhet
+
+------------------------------------------------------------------------
+r523 | egmont | 2003-10-08 16:30:18 +0200 (sze, 08 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-chrootbuild
+   M /trunk/src/uhubuild-common
+   M /trunk/src/uhubuild-commonenvironment
+
+környezeti változók kidobása
+
+------------------------------------------------------------------------
+r522 | egmont | 2003-10-08 16:12:11 +0200 (sze, 08 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+doc update (files)
+
+------------------------------------------------------------------------
+r521 | egmont | 2003-10-08 16:08:21 +0200 (sze, 08 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+doc update (uhu-scanpkgs)
+
+------------------------------------------------------------------------
+r520 | egmont | 2003-10-08 15:49:54 +0200 (sze, 08 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+doc update
+
+------------------------------------------------------------------------
+r518 | pozsy | 2003-10-06 22:00:51 +0200 (h, 06 okt 2003) | 4 lines
+Changed paths:
+   M /trunk/TODO
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+   M /trunk/words/hu
+
+- ub_{compile,install}: use make if we have a Makefile, not setup.py
+- new words: berkeley, mime, ssl
+- todo update
+
+------------------------------------------------------------------------
+r516 | egmont | 2003-10-04 15:18:46 +0200 (szo, 04 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+install: /usr/{games,X11R6} szimlinkek mégsem jók
+
+------------------------------------------------------------------------
+r514 | egmont | 2003-10-04 14:53:30 +0200 (szo, 04 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+install: /usr/libexec könyvtár, /usr/games és /usr/X11R6 szimlinkek létrehozása
+
+------------------------------------------------------------------------
+r513 | egmont | 2003-10-04 14:42:02 +0200 (szo, 04 okt 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+uhubuild-check: sectionnek nagybetűvel kell kezdődnie
+
+------------------------------------------------------------------------
+r511 | egmont | 2003-09-30 18:54:06 +0200 (k, 30 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-chrootbuild
+
+Több chroot közül az egyik szabad automatikus kiválasztása.
+
+------------------------------------------------------------------------
+r509 | pozsy | 2003-09-28 15:25:06 +0200 (v, 28 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_install
+   A /trunk/src/helpers/ub_removeperllocalpod
+
+- ub_install: remove perllocal.pod files from perl installations
+
+------------------------------------------------------------------------
+r507 | pozsy | 2003-09-28 14:59:30 +0200 (v, 28 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_makeinstall
+   M /trunk/words/hu
+
+- fix usage of PERL_INSTALL_ROOT in ub_makeinstall for perl 5.8.1
+
+------------------------------------------------------------------------
+r505 | egmont | 2003-09-28 01:23:55 +0200 (v, 28 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+
+Megoldási kísérlet a rejtélyes files-csonkítási hibára.
+
+------------------------------------------------------------------------
+r503 | egmont | 2003-09-28 00:19:01 +0200 (v, 28 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_install
+
+ub_compile, ub_install: python support
+
+------------------------------------------------------------------------
+r501 | egmont | 2003-09-25 00:46:56 +0200 (cs, 25 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+depends fix: szálljon el, ha a keresett fájl nem található
+
+------------------------------------------------------------------------
+r499 | egmont | 2003-09-24 02:57:07 +0200 (sze, 24 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-pack
+
+A csomagok fájljait strverscmp() szerint rendezzük.
+
+------------------------------------------------------------------------
+r497 | egmont | 2003-09-17 23:37:53 +0200 (sze, 17 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+Categories: vessző után szóköz
+
+------------------------------------------------------------------------
+r496 | egmont | 2003-09-17 23:33:28 +0200 (sze, 17 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-check
+
+section bármi lehet
+
+------------------------------------------------------------------------
+r494 | egmont | 2003-09-16 18:11:04 +0200 (k, 16 szept 2003) | 3 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+depends: szkript interpretere és az uhu-pkg nem kapnak verziószámot,
+debug üzenetek kikapcsolva
+
+------------------------------------------------------------------------
+r493 | egmont | 2003-09-13 02:14:39 +0200 (szo, 13 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+
+doc update: priority, categories
+
+------------------------------------------------------------------------
+r491 | egmont | 2003-09-12 21:38:08 +0200 (p, 12 szept 2003) | 3 lines
+Changed paths:
+   M /trunk/src/steps/control
+   M /trunk/src/uhubuild-check
+
+categories támogatás
+perms-ben hiányzó kezdő / jelek pótlása
+
+------------------------------------------------------------------------
+r490 | egmont | 2003-09-12 19:26:06 +0200 (p, 12 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/pack
+
+/usr/share/doc/Packages/<sourcename> ne kerüljön bele dirs-be automatikusan
+
+------------------------------------------------------------------------
+r488 | egmont | 2003-09-12 18:43:15 +0200 (p, 12 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+takarítás fix
+
+------------------------------------------------------------------------
+r486 | egmont | 2003-09-12 18:29:11 +0200 (p, 12 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-build
+   M /trunk/src/uhubuild-prepare-chroot
+
+/tmp, ~uhubuild törlése a chroot felépítésének végén
+
+------------------------------------------------------------------------
+r485 | egmont | 2003-09-12 17:55:59 +0200 (p, 12 szept 2003) | 2 lines
+Changed paths:
+   A /trunk/src/steps/menu
+   M /trunk/src/uhubuild-build
+
+Nem UTF-8 menü fájlok kiszűrése.
+
+------------------------------------------------------------------------
+r483 | egmont | 2003-09-07 16:31:25 +0200 (v, 07 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+install: csomagnévtől függő könyvtárakat ne hozzon létre
+
+------------------------------------------------------------------------
+r481 | egmont | 2003-09-05 14:03:45 +0200 (p, 05 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+macros: bonobo-activation kiszedve
+
+------------------------------------------------------------------------
+r479 | egmont | 2003-09-05 13:17:55 +0200 (p, 05 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+macros: linc kiszedve, libidl2 berakva
+
+------------------------------------------------------------------------
+r477 | pozsy | 2003-09-04 17:54:43 +0200 (cs, 04 szept 2003) | 10 lines
+Changed paths:
+   M /trunk/src/steps/control
+   M /trunk/src/uhubuild-check
+
+uhubuild-check:
+ - a patch fájlok mérete mégis lehessen 0
+ - ha a description és a summary ugyanaz, akkor törli a description-t
+ - új stílusú helyesírásellenőrzés: a mindenképpen helyesnek megítélendő
+   szavakat a words fájlba írás helyett az előtaggal jelölhetjük meg
+ - a priority nem kötelező, alapértelmezésben "optional"
+ - ha a priority optional a forráskönyvátban, törli a fájlt
+ - a forráskönyvtárból törli a jelentéssel nem bíró 0 méretű fájlokat
+ - a forráskönyvtárból törli az üres könytárakat
+
+------------------------------------------------------------------------
+r475 | pozsy | 2003-09-01 23:10:24 +0200 (h, 01 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+macros fix
+
+------------------------------------------------------------------------
+r474 | pozsy | 2003-09-01 20:47:14 +0200 (h, 01 szept 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%qt macro fix (%x is kell bele)
+
+------------------------------------------------------------------------
+r472 | pozsy | 2003-08-31 11:13:39 +0200 (v, 31 aug 2003) | 3 lines
+Changed paths:
+   M /trunk/src/helpers/ub_compile
+   M /trunk/src/helpers/ub_makeinstall
+   M /trunk/src/steps/fhs
+
+ub_compile, ub_install: javítások perl csomagok készítéséhez
+steps/fhs: szigorúbb ellenőrzés a /usr könyvtár alatt
+
+------------------------------------------------------------------------
+r470 | egmont | 2003-08-29 23:11:14 +0200 (p, 29 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/perms
+
+perms fix
+
+------------------------------------------------------------------------
+r468 | egmont | 2003-08-29 22:02:46 +0200 (p, 29 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   D /trunk/src/steps/daemons
+   M /trunk/src/uhubuild-build
+   M /trunk/src/uhubuild-check
+
+daemons fájl megszűnt
+
+------------------------------------------------------------------------
+r467 | egmont | 2003-08-29 21:58:58 +0200 (p, 29 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+install: /etc/init.d/{daemons,system} megszűnőfélben, ne hozza létre
+
+------------------------------------------------------------------------
+r466 | egmont | 2003-08-29 21:57:00 +0200 (p, 29 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%gnome2: startup-notification{,-dev}
+
+------------------------------------------------------------------------
+r464 | egmont | 2003-08-29 19:09:40 +0200 (p, 29 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/perms
+
+init szkriptek automatikusan kapnak x jogot
+
+------------------------------------------------------------------------
+r462 | egmont | 2003-08-28 02:23:41 +0200 (cs, 28 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-prepare-chroot
+
+chroot építésekor essential csomag eltávolítása nem gond
+
+------------------------------------------------------------------------
+r460 | egmont | 2003-08-27 18:54:06 +0200 (sze, 27 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+"Essential: yes" bugfix
+
+------------------------------------------------------------------------
+r458 | egmont | 2003-08-27 18:50:42 +0200 (sze, 27 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/depends
+
+depends: /usr/bin/env mellett /bin/env-re is keresünk
+
+------------------------------------------------------------------------
+r457 | egmont | 2003-08-27 18:38:06 +0200 (sze, 27 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/control
+
+"Priority: required" esetén "Essential: yes" is kerül a control fájlba
+
+------------------------------------------------------------------------
+r455 | egmont | 2003-08-26 01:33:43 +0200 (k, 26 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/doc/uhubuild.sgml
+   M /trunk/src/uhubuild-check
+
+Priority tisztázva.
+
+------------------------------------------------------------------------
+r453 | egmont | 2003-08-25 01:55:20 +0200 (h, 25 aug 2003) | 3 lines
+Changed paths:
+   M /trunk/src/steps/conffiles
+
+Üres /etc/runlevel.d/custom/*.service konfigfájl automatikus létrehozása
+az /etc/runlevel.d/default/*.service fájlokhoz.
+
+------------------------------------------------------------------------
+r451 | pozsy | 2003-08-23 14:45:41 +0200 (szo, 23 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/uhubuild-check
+   M /trunk/words/hu
+
+description nem kötelező
+
+------------------------------------------------------------------------
+r449 | pozsy | 2003-08-23 14:18:50 +0200 (szo, 23 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%sdl fix (audiofile+esound)
+
+------------------------------------------------------------------------
+r447 | egmont | 2003-08-23 13:41:39 +0200 (szo, 23 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%gnome: png és gtk-doc
+
+------------------------------------------------------------------------
+r445 | pozsy | 2003-08-22 21:06:24 +0200 (p, 22 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/words/hu
+
+words: audio, firewire, ieee, mpeg, video
+
+------------------------------------------------------------------------
+r443 | pozsy | 2003-08-22 09:01:07 +0200 (p, 22 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+macro fixes
+
+------------------------------------------------------------------------
+r441 | egmont | 2003-08-21 12:22:18 +0200 (cs, 21 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%gnome-ba libglade és libgnomeprint{,ui}
+
+------------------------------------------------------------------------
+r439 | pozsy | 2003-08-14 22:55:13 +0200 (cs, 14 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%mng macro fix
+
+------------------------------------------------------------------------
+r437 | egmont | 2003-08-11 19:44:08 +0200 (h, 11 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/config/macros
+
+%gnome2-be scrollkeeper is
+
+------------------------------------------------------------------------
+r435 | pozsy | 2003-08-10 12:50:12 +0200 (v, 10 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/acquire
+
+acquire cleanup fix
+
+------------------------------------------------------------------------
+r433 | pozsy | 2003-08-08 17:25:37 +0200 (p, 08 aug 2003) | 6 lines
+Changed paths:
+   M /trunk/config/macros
+   M /trunk/src/steps/acquire
+   M /trunk/src/steps/fhs
+   M /trunk/src/uhubuild-check
+   M /trunk/src/uhubuild-chrootbuild
+   M /trunk/words/hu
+
+új makrók: gnome2, evolution és ezek függőségei
+.patchR támogatás
+chrootbuild fix
+fhs: gyökérkönyvtár alatt nem lehet fájl
+új szavak: bluetooth, firmware
+
+------------------------------------------------------------------------
+r431 | egmont | 2003-08-08 13:20:32 +0200 (p, 08 aug 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/timestamps
+
+timestamps fix
+
+------------------------------------------------------------------------
+r429 | egmont | 2003-07-24 12:52:15 +0200 (cs, 24 júl 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/install
+
+$UB_INSTALLDIR/usr/lib/applications létrehozása
+
+------------------------------------------------------------------------
+r428 | egmont | 2003-07-24 12:23:33 +0200 (cs, 24 júl 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/remove-locale
+
+hu@ locale-ek megtartása
+
+------------------------------------------------------------------------
+r426 | pozsy | 2003-07-21 22:31:40 +0200 (h, 21 júl 2003) | 2 lines
+Changed paths:
+   M /trunk/src/steps/strip
+
+strip workaround
+
+------------------------------------------------------------------------
+r424 | pozsy | 2003-07-21 14:13:58 +0200 (h, 21 júl 2003) | 2 lines
+Changed paths:
+   M /trunk/src/helpers/ub_configure
+   D /trunk/src/helpers/ub_updatelibtool
+
+libtool frissítés másképp: a generált fájl felülírása
+
+------------------------------------------------------------------------
+r422 | pozsy | 2003-07-19 20:09:19 +0200 (szo, 19 júl 2003) | 1 line
+Changed paths:
+   D /trunk/VERSION
+
+remove VERSION
+------------------------------------------------------------------------
+r421 | pozsy | 2003-07-19 13:28:34 +0200 (szo, 19 júl 2003) | 1 line
+Changed paths:
+   D /TODO
+   D /VERSION
+   A /branches
+   D /config
+   D /doc
+   D /src
+   A /tags
+   A /trunk
+   A /trunk/TODO (from /TODO:420)
+   A /trunk/VERSION (from /VERSION:420)
+   A /trunk/config (from /config:420)
+   A /trunk/doc (from /doc:420)
+   A /trunk/src (from /src:420)
+   A /trunk/words (from /words:420)
+   D /words
+
+new repository layout
+------------------------------------------------------------------------

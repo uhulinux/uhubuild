@@ -1,0 +1,34 @@
+#!/bin/bash -eu
+
+#
+# Tényleges csomagolás.
+#
+# Elkészítjük a deb fájlt, és rögvest át is kereszteljük uhu-ra.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ -z "${UB_RESULTDIR:-}" ]; then
+	echo " (kihagyva)"
+	exit 0
+fi
+
+cd "$UB_WORKDIR"
+
+mkdir -p "$UB_RESULTDIR"
+for pkg in $UB_PACKAGES; do
+	chmod 755 "$UB_PACKAGEDIR/$pkg"/DEBIAN/post{inst,rm}{,-custom} 2>/dev/null || true
+	if [ -f "$UB_SRCDIR/packages/$pkg/dirs" ]; then
+		cp "$UB_SRCDIR/packages/$pkg/dirs" "$UB_PACKAGEDIR/$pkg/DEBIAN/"
+	fi
+	if [ -f "$UB_ADMINDIR/dirs-$pkg" ]; then
+		cat "$UB_ADMINDIR/dirs-$pkg" >> "$UB_PACKAGEDIR/$pkg/DEBIAN/dirs"
+	fi
+
+	echo "  $pkg..."
+	pretendroot \
+	  uhubuild-pack "$UB_PACKAGEDIR/$pkg" "$UB_RESULTDIR"
+done
+for pkg in "$UB_RESULTDIR"/*.deb; do
+	mv "$pkg" "${pkg%.deb}.uhu"
+done

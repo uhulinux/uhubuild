@@ -1,0 +1,32 @@
+#!/bin/sh
+
+unset STOPLIST
+STOPLIST[${#STOPLIST[@]}]=".svn"
+STOPLIST[${#STOPLIST[@]}]="CVS"
+STOPLIST[${#STOPLIST[@]}]=".cvsignore"
+STOPLIST[${#STOPLIST[@]}]="RCS"
+STOPLIST[${#STOPLIST[@]}]="SCCS"
+STOPLIST[${#STOPLIST[@]}]=".gitignore"
+STOPLIST[${#STOPLIST[@]}]="*~"
+STOPLIST[${#STOPLIST[@]}]=".#*"
+STOPLIST[${#STOPLIST[@]}]="#*#"
+STOPLIST[${#STOPLIST[@]}]="*.rej"
+STOPLIST[${#STOPLIST[@]}]="*.orig"
+
+unset E
+for i in "${STOPLIST[@]}"; do
+	E[${#E[@]}]="-path";E[${#E[@]}]="*/$i/*";E[${#E[@]}]="-prune";E[${#E[@]}]="-o"
+	E[${#E[@]}]="-name";E[${#E[@]}]="$i";    E[${#E[@]}]="-prune";E[${#E[@]}]="-o"
+done
+
+DIR="${1:-.}"
+shift
+if [ ! -d "$DIR" ]; then
+	echo "no such directory: $DIR" >&2
+	exit 1
+fi
+
+COMMAND="${1:--print}"
+shift
+
+find "$DIR/" -mindepth 1 "${E[@]}" "$COMMAND" "$@"

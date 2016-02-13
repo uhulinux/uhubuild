@@ -1,0 +1,10 @@
+#!/bin/bash -eu
+
+. /usr/lib/uhubuild/common
+
+j="-j${UB_MAKE_PROCS:-$(_procs)}"
+echo "make $j"
+for i in "$@"; do
+	echo -e "\t$i"
+done
+make "$j" "$@"

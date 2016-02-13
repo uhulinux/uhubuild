@@ -1,0 +1,173 @@
+#!/bin/bash -e
+
+#
+# Csomagot fordít le.
+#
+# Nem telepít csomagokat és nem is törődik azzal, hogy telepítve van-e
+# minden, ami a fordításhoz kelleni fog. Nem hív chroot-ot, és nem is
+# érdekli, hogy chroot-on belül fut-e. Ez mind az ezt meghívó másik szkript
+# (például uhubuild-chrootbuild) feladata.
+#
+# Teljes mértékben offline. A fordításhoz szükséges forrásnak és egyéb
+# adatoknak a helyi fájlrendszerben kell lenniük. Nem tölt le csomagot a
+# netről, nem fordul az SVN rendszerhez.
+#
+
+. /usr/lib/uhubuild/uhubuild-commonenvironment
+. /usr/lib/uhubuild/uhubuild-common
+
+warnifroot
+
+if [ $# -gt 1 ]; then
+	die "Használat: uhubuild-build [forrás-könyvtár]"
+fi
+
+# A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
+if [ -z "${UHUBUILD_SRCDIR:-}" ]; then
+	export UHUBUILD_SRCDIR="$(cd "${1:-.}" && pwd -P)"
+fi
+
+check_uhubuild_variables
+
+if [ -z "${UHUBUILD_WORKDIR:-}" ]; then
+	tmpdir UHUBUILD_WORKDIR
+	export UHUBUILD_WORKDIR
+	echo "FYI: nem volt megadva UHUBUILD_WORKDIR." >&2
+	echo "A választott érték: $UHUBUILD_WORKDIR" >&2
+else
+	rm -rf "$UHUBUILD_WORKDIR"
+fi
+mkdir --mode=0755 -p -- "$UHUBUILD_WORKDIR"
+
+export UHUBUILD_SRC2DIR="$UHUBUILD_WORKDIR/.src"
+uhubuild-check --copy --preproc="$UHUBUILD_PREPROC"
+
+export UB_WORKDIR="$UHUBUILD_WORKDIR"
+
+export UB_TMPDIR="$UB_WORKDIR/.tmp"
+export UB_SRCDIR="$UB_WORKDIR/.src"
+export UB_CCACHE_DIR="$UB_WORKDIR/.ccache"
+export UB_ADMINDIR="$UB_WORKDIR/admin"
+export UB_COMPILEDIR="$UB_WORKDIR/compile"
+export UB_OBJECTDIR="$UB_WORKDIR/object"
+export UB_INSTALLDIR="$UB_WORKDIR/install"
+export UB_PACKAGEDIR="$UB_WORKDIR/package"
+
+export UB_SNAPSHOTFILE="${UHUBUILD_SNAPSHOTFILE:-}"
+export UB_COMPILESNAPSHOTDIR="${UHUBUILD_COMPILESNAPSHOTDIR:-}"
+export UB_INSTALLSNAPSHOTDIR="${UHUBUILD_INSTALLSNAPSHOTDIR:-}"
+export UB_RESULTDIR="${UHUBUILD_RESULTDIR:-}"
+export UB_LOGPACKDIR="${UHUBUILD_LOGPACKDIR:-}"
+export UB_MAKE_PROCS="${UHUBUILD_MAKE_PROCS:-$(_procs)}"
+
+export PRETENDROOTDIR="$UB_WORKDIR/.pretendroot"
+
+mkdir -p "$PRETENDROOTDIR" "$UB_TMPDIR"
+
+export UB_PACKAGES=$(cd "$UB_SRCDIR/packages"; echo *)
+export UB_SOURCENAME="$(<"$UB_SRCDIR/sourcename")"
+export UB_DISTRIBUTION="$(<"$UB_SRCDIR/distribution")"
+export UB_VERSION="$(<"$UB_SRCDIR/version")"
+export UB_VERSION_MAJOR="$(cut -d. -f1 "$UB_SRCDIR/version")"
+export UB_VERSION_MINOR="$(cut -d. -f2 "$UB_SRCDIR/version")"
+export UB_VERSION_MICRO="$(cut -d. -f3 "$UB_SRCDIR/version")"
+export UB_VERSION_HEAD1="$(cut -d. -f-1 "$UB_SRCDIR/version")"
+export UB_VERSION_HEAD2="$(cut -d. -f-2 "$UB_SRCDIR/version")"
+export UB_VERSION_HEAD3="$(cut -d. -f-3 "$UB_SRCDIR/version")"
+export UB_VERSION_HEAD4="$(cut -d. -f-4 "$UB_SRCDIR/version")"
+export UB_VERSION_HEAD5="$(cut -d. -f-5 "$UB_SRCDIR/version")"
+export UB_VERSION_HEAD6="$(cut -d. -f-6 "$UB_SRCDIR/version")"
+export UB_VERSION_TAIL1="$(rev "$UB_SRCDIR/version"|cut -d. -f-1|rev)"
+export UB_VERSION_TAIL2="$(rev "$UB_SRCDIR/version"|cut -d. -f-2|rev)"
+export UB_VERSION_TAIL3="$(rev "$UB_SRCDIR/version"|cut -d. -f-3|rev)"
+export UB_VERSION_TAIL4="$(rev "$UB_SRCDIR/version"|cut -d. -f-4|rev)"
+export UB_VERSION_TAIL5="$(rev "$UB_SRCDIR/version"|cut -d. -f-5|rev)"
+export UB_VERSION_TAIL6="$(rev "$UB_SRCDIR/version"|cut -d. -f-6|rev)"
+export UB_RELEASE="$(<"$UB_SRCDIR/release")"
+export UB_EXTRARELEASE="${UHUBUILD_EXTRARELEASE:+.}${UHUBUILD_EXTRARELEASE:-}"
+
+if [ -n "${UHUBUILD_CCACHE_DIR:-}" ]; then
+	export CCACHE_DIR="$UB_CCACHE_DIR"
+	export CCACHE_LOGFILE="$UB_ADMINDIR/ccache.log"
+	unset  CCACHE_PATH      || true
+	unset  CCACHE_CC        || true
+	unset  CCACHE_PREFIX    || true
+	unset  CCACHE_DISABLE   || true
+	unset  CCACHE_CPP2      || true
+	export CCACHE_NOSTATS=1
+	export CCACHE_NLEVELS=2
+	unset  CCACHE_HARDLINK  || true
+#	unset  CCACHE_RECACHE   || true ## ez legyen kívülről megadható
+	unset  CCACHE_HASHDIR   || true
+	unset  CCACHE_UNIFY     || true
+	unset  CCACHE_EXTENSION || true
+	mkdir -p "$CCACHE_DIR"
+else
+	export CCACHE_DISABLE=true
+fi
+
+blueecho "Building ${UB_SOURCENAME}-${UB_VERSION}-${UB_RELEASE} for distribution ${UB_DISTRIBUTION}."
+blueecho "Target binary packages: ${UB_PACKAGES}."
+
+if [ -z "${UB_SNAPSHOTFILE:-}" ]; then
+	mkdir -p "$UB_ADMINDIR" "$UB_COMPILEDIR" "$UB_OBJECTDIR"
+	logdate "Build-Started"
+	steps="acquire ccache-extract compile ccache-remove-unused ccache-compress compile-snapshot install strip doc move-compile install-snapshot"
+else
+	greenecho "snapshot visszaállítása..."
+	if [ ! -f "$UB_SNAPSHOTFILE" ]; then
+		die "Nincs meg a $UB_SNAPSHOTFILE snapshot fájl!"
+	fi
+	cd "$UB_WORKDIR"
+	mkdir snapshot-restore
+	cd snapshot-restore
+	pretendroot tar xpzf "$UB_SNAPSHOTFILE"
+	type="$(cat snapshot-type)"
+	if [ "$type" = "compiled" ]; then
+#		echo -n " (compiled)"
+		mv admin compile object ..
+		logdate "Compile-Snapshot-Restored"
+		steps="install strip doc move-compile install-snapshot"
+	elif [ "$type" = "installed" ]; then
+#		echo -n " (installed)"
+		mv admin install ..
+		logdate "Install-Snapshot-Restored"
+		steps=""
+	else
+		die "Hibás snapshot típus!"
+	fi
+	cd ..
+	rm -rf snapshot-restore
+	echo " OK" >> "$UB_ADMINDIR/log"
+	echo "SNAPSHOT RESTORED" >> "$UB_ADMINDIR/log"
+#	greenecho " OK"
+fi
+
+steps="$steps python addons cleanup optipng split dirs users-groups changelog suid_wrapper"\
+" perms scripts remove-misc man info mo"\
+" timestamps menu depends shlibs fhs conffiles buildinfo control pack"
+
+for step in $steps; do
+	echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- UHUBUILD -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-" >> "$UB_ADMINDIR/log"
+	echo "$step..." >> "$UB_ADMINDIR/log"
+	greenecho "$step..."
+	(
+		rm -f "$UB_ADMINDIR/retval"
+		/usr/lib/uhubuild/steps/"$step" || echo $? >"$UB_ADMINDIR/retval"
+	) 2>&1 | tee -a "$UB_ADMINDIR/log"
+	if [ -f "$UB_ADMINDIR/retval" ]; then
+		echo "HIBA a(z) $step fazisban." >> "$UB_ADMINDIR/log"
+		error "HIBA a(z) $step fazisban."
+		break
+	fi
+done
+
+# ccache-t tömörítjük, ha kell.
+if [ -f "$UB_ADMINDIR/.ccache_exctacted" ]; then
+	greenecho "ccache-compress..."
+	/usr/lib/uhubuild/steps/ccache-compress
+fi
+# A "logpack" lépést mindenképp le kell futtatni a legvégén, akkor is, ha
+# hiba történt korábban.
+greenecho "logpack..."
+/usr/lib/uhubuild/steps/logpack

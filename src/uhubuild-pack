@@ -1,0 +1,183 @@
+#!/bin/bash -e
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if [ $# -lt 1 ]; then
+	die 'uhubuild-pack: Szükségem van argumentumra!'
+fi
+
+if [ ! -f "$1"/DEBIAN/control ]; then
+	die 'uhubuild-pack: Nincsen DEBIAN/control fájl!'
+fi
+
+cd "$1"
+
+tmpdir tmpdir
+
+chmod -R u+w DEBIAN
+
+if [ ! -f data.tar.gz ]; then
+
+if [ "$UID" != "0" ]; then
+	echo 'Figyelem! Nem root vagy!' >&2
+	echo 'A készülő csomagban a fájlok tulajdonosa minden bizonnyal nem root lesz.' >&2
+	echo 'Válts át root felhasználóvá, vagy sima felhasználóként használd' >&2
+	echo 'a pretendroot program által nyújtott virtuális root környezetet.' >&2
+fi
+
+#
+# md5sum számítás azokra a fájlokra, amelyek nincsenek megemlítve
+# DEBIAN/conffiles-ban.
+#
+
+if [ ! -f DEBIAN/conffiles ]; then
+	touch "$tmpdir/conffiles"
+else
+	grep -vx '' < DEBIAN/conffiles | \
+	  sed -e 's@//*@/@g' -e 's@^/@@' -e 's@/$@@' -e 's@^@/@' | \
+	  sort -u > "$tmpdir/conffiles"
+fi
+
+find . -mindepth 1 -path ./DEBIAN -prune -o -type f -print | \
+  sed -e 's@^\./@/@' | sort | comm -23 - "$tmpdir/conffiles" | \
+  sed -e 's@^/@@' | tr '\n' '\0' | xargs -0 -r md5sum > DEBIAN/md5sums
+
+#
+# Kitaláljuk, hogy mely könyvtárak lesznek részei a csomagnak.
+#
+
+{
+	if [ -f DEBIAN/dirs ]; then
+		grep -vx '' DEBIAN/dirs || true
+		rm DEBIAN/dirs
+	fi
+	if [ -f DEBIAN/stat ]; then
+		while IFS=' ' read -r a b c d type f g h i j file l; do
+			if [ "$type" = "d" ]; then
+				printf '%s\n' "$file"
+			fi
+		done < DEBIAN/stat
+	fi
+} | sed -e 's@//*@/@g' -e 's@^/@@' -e 's@/$@@' -e 's@^@\./@' | sort -u | \
+while IFS='' read -r dir; do
+	if [ -d "$dir" ]; then
+		find "$dir" -type d
+	fi
+done | sort -u > "$tmpdir/dirlist"
+
+#
+# Stat információ készítése.
+#
+
+find . -mindepth 1 -path ./DEBIAN -prune -o ! -type d -print \
+  > "$tmpdir/filelist"
+
+cat "$tmpdir/dirlist" "$tmpdir/filelist" | grep -v '^\./DEBIAN' | \
+  sort -u | tr '\n' '\0' | xargs -0 -r uhu-stat | sed -e 's@ \./@ /@' \
+  > DEBIAN/stat
+
+#
+# Telepített méret kiszámítása a stat fájl segítségével.
+#
+# A Debian a "du -s" parancs kimenetét használja. Ennek hátránya, hogy függ
+# a csomagolás során használt fájlrendszertől és egyéb körülményektől, így
+# azonos csomagra is adhat más-más eredményt.
+#
+# Az RPM csomagkezelő a közönséges fájlok méretének össz hosszát tárolja le,
+# ami nyilván kisebb a telepített méretnél.
+#
+# Köztes megoldásként minden egyes fájlra annak hosszát 4kB-ra felkerekítve
+# számoljuk, valamint 4kB-ot számolunk minden könyvtárra, amely igazából
+# része a csomagnak. Ez viszonylag reálisan közelíti meg a diszken elfoglalt
+# terület méretét, ugyanakkor következetes: azonos csomagra mindig azonos
+# értéket ad.
+#
+
+function calc_size() {
+	size=0
+	prefix="${dir%/}"
+	prefix="$prefix/"
+	while IFS=' ' read -r a b c d type f g h length j file l; do
+		if [ "$file" = "$dir" -o "${file#$prefix}" != "$file" ]; then
+			if [ "$type" = "f" ]; then
+				length="$(((length+4095)/4096*4096))"
+				size="$((size+length))"
+			elif [ "$type" = "d" ]; then
+				size="$((size+4096))"
+			fi
+		fi
+	done < DEBIAN/stat
+	size="$((size/1024))"
+}
+
+dir=/ calc_size
+echo "Installed-Size: $size" > "$tmpdir/size"
+echo "Installed-Sizes:"     >> "$tmpdir/size2"
+total_size=0
+for dir in \
+  /boot \
+  /opt \
+  /usr \
+  /usr/share \
+  /usr/share/doc \
+  /usr/src \
+  /var; do
+	calc_size
+	total_size="$(($total_size + $size))"
+	if [ "$size" != 0 ]; then
+		printf " %6s %s\n" "$size" "$dir"
+	fi
+done >> "$tmpdir/size2"
+if [ "$total_size" != 0 ]; then
+	cat "$tmpdir/size2" >>"$tmpdir/size"
+fi
+rm "$tmpdir/size2"
+
+doprint=yes
+IFS=""
+while read line; do
+	case "$line" in
+		Installed-Size:*)
+			;;
+		Installed-Sizes:*)
+			doprint=no
+			;;
+		[[:space:]]*)
+			if [ "$doprint" = "yes" ]; then
+				echo "$line"
+			fi
+			;;
+		*)
+			doprint=yes
+			echo "$line"
+			;;
+	esac
+done < DEBIAN/control > "$tmpdir/control"
+printed=0
+while IFS='' read -r line; do
+	if [ "${line#Maintainer:}" != "${line}" -a "$printed" = 0 ]; then
+		cat "$tmpdir/size"
+		printed=1
+	fi
+	printf '%s\n' "$line"
+done < "$tmpdir/control" > DEBIAN/control
+if [ "$printed" = 0 ]; then
+	cat "$tmpdir/size"
+fi >> DEBIAN/control
+
+fi # [ ! -f data.tar.gz ]
+
+cd - >/dev/null
+
+# The Magic Sync :-)
+# http://lkml.org/lkml/2007/8/1/337
+# http://marc.info/?i=20070801174431.GA19492@uhulinux.hu
+sync
+
+export ZLIB_RSYNC=1
+export SORTDIR_VERSCMP=1
+if type -p sortdir >/dev/null; then
+	sortdir dpkg-deb --build -z 9 "$@"
+else
+	        dpkg-deb --build -z 9 "$@"
+fi

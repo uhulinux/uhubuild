@@ -1,0 +1,53 @@
+#!/bin/bash -eu
+
+#
+# Sztriptíz.
+#
+# A lényegi rész a dh_strip-ből puskázva. Aztán átalakítva:
+#
+# A lib-ekről csak a debug cuccokat sztripeljük (a la zsuzsi linux).
+# Ettől alig lesznek nagyobbak (kb. 10%), de cserébe az
+# nm progi kiírja a szimbólumokat, ami nagyon jó.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+if grep -qx skip-strip "$UB_SRCDIR/options"; then
+	echo " kihagyva"
+	exit 0
+fi
+
+cd "$UB_INSTALLDIR"
+
+find . -type f | while read file; do
+	case "$(file -b "$file")" in
+	  *ELF*executable*)
+		echo "  $file"
+		mode=$(stat -c '%a' "$file")
+		chmod u+w "$file"
+		pretendroot strip --remove-section=.comment --remove-section=.note "$file" || true
+		chmod "$mode" "$file"
+		;;
+	  *shared*)
+		echo "  $file"
+		mode=$(stat -c '%a' "$file")
+		chmod u+w "$file"
+		pretendroot strip --strip-debug "$file" || true
+		chmod "$mode" "$file"
+		;;
+	esac
+done
+find . -type f -name 'lib*.a' ! -name 'lib*_g.a' -print0 | while read -r -d $'\0' file; do
+	# Nem strippeljuk azokat a .a fileokat, amelyekben .la vagy .a fileok
+	# is vannak, ugyanis ezektol elszall a strip.
+	# (lasd: evolution 1.2, gstreamer-plugins 0.6.x, lufs 0.9.4)
+	if ! ar t "$file" | grep -E '\.(la|a)$' >/dev/null; then
+		echo "  $file"
+		mode=$(stat -c '%a' "$file")
+		chmod u+w "$file"
+		pretendroot strip --strip-debug "$file" || true
+		chmod "$mode" "$file"
+	else
+		echo "  $file: unstrippable archive (*.(la|a))"
+	fi
+done

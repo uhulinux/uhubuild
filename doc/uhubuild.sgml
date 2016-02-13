@@ -1,0 +1,2644 @@
+<!doctype linuxdoc system>
+
+<article>
+
+<title>UHUBUILD @@VERSION@@
+<author>
+<name>Koblinger Egmont <tt/&lt;egmont@uhulinux.hu&gt;/</name>
+<and>
+<name>Pozsár Balázs <tt/&lt;pozsy@uhulinux.hu&gt;/</name>
+</author>
+<date>2007. május 29. kedd 17.49.03 (CEST)
+<abstract>
+Átfogó ismertető az UHU Linux disztribúció csomagkészítési mechanizmusáról
+</abstract>
+
+<toc>
+
+
+
+<sect>Áttekintés<p>
+
+
+<sect1>Türelmetleneknek<p>
+
+Az első fejezet jelképes átfutása után sok-sok elvi síkú értekezés
+következik. Ez biztos sokakat nem érdekel. A gyakorlati útmutató az ``UHU
+csomag újrafordítása'' fejezetben kezdődik.
+
+
+<sect1>Debian kontra Dpkg<p>
+
+Mindenekelőtt egy esetlegesen felmerülő tévhitet szeretnénk eloszlatni. Az
+UHU nem Debian alapú disztribúció. Az UHU dpkg alapú disztribúció.
+Csomagkezelőként a dpkg-t választottuk, de ez nem jelenti azt, hogy bármely
+más téren a Debiant kívánjuk követni.
+
+Az elkészült bináris csomagok formátuma terén megfigyelhető egy-két apró
+eltérés a Debian csomagokhoz képest. Általában igyekeztünk minden
+információt beletenni a csomagba, amely a Debian csomagokban is benne van
+(például md5sums fájl), méghozzá azonos szintaxissal és azonos
+szemantikával. A rendszert ugyanakkor néhány saját fájllal (például stat,
+buildinfo) is kiegészítettük.
+
+A csomagok elkészítési mechanizmusa vajmi kevés hasonlóságot mutat a Debian
+rendszerével. Például nincsen ``rules'' fájlunk, és a ``control'' fájlt is
+csak mellesleg generáljuk a csomagkészítés során, mert erre mindenképpen
+szüksége van a dpkg-nak. A debhelper szkriptek (dh_*) helyett is saját
+szkripteket használunk (ub_*).
+
+
+<sect1>Célok, avagy mi nem tetszik a Debian csomagkészítési rendszerében<p>
+
+<sect2>Fordításhoz szükséges csomagok<p>
+
+Egy Debian csomag készítése során a Build-depends opcióval megadhatunk
+csomagokat, melyekre szükség van, de szó sincs arról, hogy egyéb csomagok
+esetleg telepítve vannak-e.
+
+Számtalan program van (gondoljunk csak például az MPlayer-re), amely csomó
+mindenki mással összelinkeli magát. Képtelenség kézzel pontosan
+feltérképezni mindazon csomagok halmazát, amelyeket (pl.) az MPlayer használ,
+ha fordításkor megtalál. Ha akár egyet is kifelejtünk, akkor egyszer azzal
+együtt, másszor pedig anélkül fordítjuk a progit. Ez a következetlen
+viselkedés sokkal rosszabb, mintha következetesen az adott támogatás nélkül
+fordul le a progi. (Sőt, az is lehet, hogy direkt szeretnénk valamit kihagyni
+egy csomagból.)
+
+A fordítást semmiképpen sem végezhetjük az igazi, futó rendszer alatt,
+hiszen azt valaki használja, külön fordítási célt szolgáló hardver parkot
+pedig nem engedhetünk meg magunknak (meg hülyeség is volna). Mitöbb, minden
+programot egy adott UHU disztribhez akarunk fordítani. Az is lehet, hogy
+máshoz, mint ami a gépen éppen telepítve van.
+
+Éppen ezért a fordításokat mind-mind egy chroot rendszeren belül végezzük. A
+chroot rendszerben csak a fordításhoz szükségesként felsorolt csomagok
+(plusz függőségeik) lesznek telepítve, semmi több.
+
+<sect2>Kötelező adatok<p>
+
+Nagyon szép, hogy a dpkg képes olyan csomagot előállítani, amelyben a
+fájlrendszer egy általunk megadott részét csomagolja be, de ily módon akár
+hamis md5sums vagy Installed-Size értékeket tartalmazó csomagokat is lehet
+készíteni. Sőt, nem is biztos, hogy ezek az adatok szerepelnek egyáltalán.
+Hiányzik a dpkg-ból az a réteg, amely a teljes mértékben kötelező mezőket
+helyesen kitöltve csomagolja be a fájlrendszer adott pontját.
+
+<sect2>Rules<p>
+
+A rules fájllal több problémánk is van.
+
+A Makefile szintaxist jelen feladatra teljesen fölöslegesnek és
+indokolatlanul bonyolultnak tartjuk, és ebben csak egy apró mozzanat, hogy
+cifrább shell kódot (pl. while-ciklus) kényelmetlen leírni benne.
+
+Rossz gondolatnak tartjuk, hogy minden egyes csomagnak saját magának kell
+meghívnia a mindenféle dh_ szkriptet. Ez nehezen karbantartható, és sok
+hibalehetőséget rejt (ki veszi észre, ha az egyik csomagban véletlenül
+kimarad egy fázis, vagy két fázis rossz sorrendben követi egymást?). A dh_
+szkripteknek, avagy azok megfelelőinek meghívása a fordító rendszer feladata
+kell hogy legyen. Ily módon garantálható, hogy minden standard lépés meg
+legyen hívva minden csomagra. A teljesen kötelezőek ily módon nem hagyhatók
+ki.
+
+<sect2>Control<p>
+
+A control fájllal kapcsolatban sem szimpatizáltunk azzal az ötlettel, hogy
+minden adatot egy fájlban tárolunk. Ami külön adat, az legyen mind-mind egy
+külön apró fájl. Így sokkal egyszerűbb például a release értéket növelni egy
+újrafordításkor. További nagy előnye ennek a koncepciónak, hogy ha
+verziókövető rendszerben akarjuk tárolni a forrásokat (pl. cvs vagy svn),
+akkor nem fordulhat elő az, hogy két független, de a control fájlban egymáshoz
+túl közeli módosítás ütközik.
+
+<sect2>Ellenőrzés<p>
+
+A dpkg semmilyen információt nem tárol az általa telepített fájlok
+inode-információiról (tulaj, jogok stb.), így lehetetlenség egy telepítés ép
+vagy sérült módját ellenőrizni. Ezen egy ``stat'' nevű fájl bevezetésével
+segítünk. Ez a fájl a csomagokhoz tartozó fájlokról tárolja el a
+legfontosabb meta-adatokat (tulaj, csoport, mód, fájltípus, utolsó
+módosítás, közönséges fájl esetén méret, device esetén major-minor, szimlink
+esetén hova mutat).
+
+<sect2>Könyvtárak<p>
+
+A dpkg csomagkezelő semmilyen támogatást nem nyújt arra, hogy könyvtárak
+tulajdonosát vagy jogosultságát beállítsuk. Az elsőnek telepített csomag,
+amely véletlenül létrehozza a könyvtárat, olyan tulajjal és joggal hozza
+létre, ahogyan az ő tar fájljában az szerepelt, és ez ezután mindvégig úgy
+marad. Ez nyilván nem jó.
+
+A dpkg azt sem tartja számon, hogy egy könyvtár tulajdonképpen melyik
+csomaghoz is tartozik. Ezen is segítünk.
+
+A fent bevezetett ``stat'' fájlban megemlítjük azokat a könyvtárakat, amelyek
+igazából a csomaghoz tartoznak. Például az ispell csomag esetén a /, a /usr
+és a /usr/lib nem, de a /usr/lib/ispell már a csomag része. Ezt
+természetesen a csomagkészítő feladata korrektül meghatározni. A csomagnak
+ily módon részét képező könyvtárak megjelennek a ``stat'' fájlban, és
+postinstall fázisban a tulaj, csoport és jog mezőket beállítjuk rájuk.
+
+<sect2>Postinst és társai<p>
+
+Általános gyakorlat a különféle disztribeknél, hogy a csomagkészítési
+mechanizmus mindenféle kódot fűz hozzá a postinstall szkripthez. Ennek is
+több hátrányát látjuk. Az egyik, hogy ez esetben a postinst szkript
+kötelezően egy előre rögzített nyelven (bash) kell hogy íródjon, érdekes
+lenne ugyanis mondjuk egy perl szkript végére sh kódot rakni. A másik, ami
+igen undorító, hogy nehéz karbantartani. Véleményünk szerint a csomagnak
+legfeljebb azt kell tudnia, hogy _mit_ kell vele megtenni, de azt semmiképp
+nem, hogy _hogyan_. A _hogyan_ az egy másik, uhu-pkg nevű csomag feladata.
+Például egy csomag azt tudhatja magáról, hogy létre akar hozni egy
+felhasználót, vagy telepíteni akar egy info fájlt, de az ne legyen
+beledrótozva, hogy ezt hogyan kell megtenni.
+
+Preinst szkriptet nem használunk, mint ahogyan a Pre-Depends mezőt sem.
+Postinst-ből megy minden, amit telepítés után kell megtenni. Prerm-ből
+mennek az élvezérelt jellegű dolgok (például user eltávolítása vagy info
+fájl kiszedése), ahol a kiszedés tényét kell egy programnak megmondanunk.
+Postrm-ből mennek a szintvezérelt dolgok (például ldconfig), ahol a
+jelenlegi fájlrendszer állapot alapján kell valamit újra elölről
+elkészíteni.
+
+<sect2>Pocsék tervezés<p>
+
+A Debian csomagkészítő rendszere úgy van megtervezve és kivitelezve, hogy
+annak szinte semelyik komponensét nem lehet egyedül használni. Hiányzik a
+réteges felépítés. Hiányzik az, hogy az egyes komponensek ne csak a többivel
+tudjanak együttműködni, hanem önmagukban is valami értelmes dolgot
+csináljanak. Hiányzik az, hogy az építőkövek ne adott speciális problémára
+(egymáshoz való illesztésre) legyenek tervezve, hanem általános feladatoknak
+képesek legyenek megfelelni. A Debian csomagkészítő rendszeréből lehetetlenség
+egy-egy komponenst önmagában használni, mivel mindegyikbe az elejétől a
+végéig bele van drótozva, hogy ő pontosan milyen környezetben, milyen egyéb
+szkriptek közepette működik. Ezért gyakorlatilag semmit nem használunk
+belőle, a ``dpkg-deb --build'' lépést leszámítva. Tehát a debhelper (dh_*)
+szkripteket sem.
+
+
+
+<sect1>Terminológia<p>
+
+<sect2>Build, Compile, Pack<p>
+
+A legtöbb csomagkezelő rendszer nem túl szerencsés módon build-nek hívja a
+csomagkészítés teljes egészét, valamint build-nek hívja ennek azt a lépését
+is, amikor a tényleges fordítás (általában ugye ./configure; make) zajlik. A
+Debian szerencsére a fájlok tényleges becsomagolására (dpkg-deb --build) sem
+talált ki jobb szót a build-nél. Mi a csomagkészítés folyamatának teljes
+egészére használjuk a build kifejezést, a lefordítás lépést compile-nak, az
+elkészült fájlrendszerből .uhu fájl készítése lépést pack-nek hívjuk. Ezen
+terminológia szerint a build folyamat nagyjából az alábbi részekből tevődik
+össze: mindenféle előkészület, kicsomagolás, compile, install,
+csinosítgatás, pack, majd esetleg az elkészült csomag másolása vagy
+takarítás magunk után.
+
+<sect2>Version, Release<p>
+
+A Version és Release szavakat az RPM terminológiája szerint használjuk.
+Version alatt mindig a fő, hivatalos verziószámot értjük, ez a Debian
+szerinti verzió mező első fele (a kötőjel előtti rész). Release-nek
+hívjuk azt, hogy hányadszor fordítunk csomagot az adott verzióból, ez a
+Debian szerinti verzió mező második fele (a kötőjel utáni rész),
+amit ők gyakran Debian-Revision néven emlegetnek.
+
+<sect2>Summary, Description<p>
+
+Ismét az RPM terminológiát követve Summary-nek hívjuk az egysoros leírást (a
+Debian definíciója szerinti Description első sorát), és Description-nek
+hívjuk a hosszú leírást (a Debian értelmezése szerinti Description második
+és azt követő sorait).
+
+<sect2>Sourcename<p>
+
+Sourcename-nek hívjuk a forrás csomag nevét. Ez általában megegyezik az
+egyik alcsomag nevével, de nem mindig. Például az uhubuild forrás csomagból
+sok uhubuild-valami bináris csomag készül, de nem készül uhubuild nevű
+bináris csomag.
+
+
+<sect1>Felépítés<p>
+
+Az uhu csomagkészítési mechanizmusát igyekeztünk réteg szerkezetűre
+tervezni, ezeket a rétegeket a belsőktől a külsők felé fogjuk ismertetni.
+Minden ilyen réteg olyan szkripteket tartalmaz, amelyek önmagukban megállják
+a helyüket és valami értelmes dolgot csinálnak, és mit sem tudnak a köréjük
+épülő egyéb rétegekről. Természetesen a külső rétegbe tartozó szkriptek
+használják a beljebb lévő rétegek szkriptjeit, ezáltal kiegészítik,
+továbbfejlesztik azokat.
+
+A rendszer tervezésekor törekedtünk arra, hogy bármiféle komoly
+infrastruktúra felépítése vagy egyéb energiabefektetés nélkül, tehát
+minimális munkával bárki bármikor újrafordíthasson egy UHU csomagot
+tökéletesen ugyanolyan környezetben, mint ahogyan ezt mi tesszük.
+
+Először foglaljuk össze a rétegeket, majd ezután ismertetjük azokat
+részletesen.
+
+<sect2>Az uhubuild-pack szerepe<p>
+
+Nagyjából a ``dpkg --build'' lépés, tehát a fájlrendszer adott könyvtára alatt
+lévő fájlok .deb csomaggá összerámolása. Egy-két plusz lépéssel van
+kiegészítve, amelyeket a build rendszer egészétől teljesen függetlenül
+minden UHU csomagra végre kell hajtani, mint például az md5 összegek
+vagy a telepített méret kiszámítása.
+
+<sect2>Az uhubuild-build szerepe<p>
+
+Az uhubuild-build szkript (az uhubuild-here csomag része) egy csomag
+forrását fordítja le, elkészítve ebből az egy vagy több bináris csomagot. A
+szkriptnek a lefordítandó forráskódot és a hozzá tartozó adminisztratív
+információkat egy nemsoká ismertetendő könyvtárszerkezetben kell megadni,
+ahol általában a különböző típusú információkat külön fájlok tartalmazzák.
+Például külön-külön fájlban kell tárolni a csomag verzióját, release
+értékét, a maintainer nevét, minden egyes készülő bináris csomagra annak
+rövid és hosszú leírását, a függőségeket stb.
+
+Lehetőség van snapshot megadására is. A csomagkészítés során két alkalommal,
+a compile és az install fázis után készülhet snapshot, ahonnan később
+folytatni lehet a csomagkészítést.
+
+Az uhubuild-szkript a fájlrendszer szerkezet alapján a futó rendszerben
+lefordítja a csomagot, és megadott helyre lerakja az elkészült *.uhu
+fájlokat.
+
+A szkript teljes egészében úgy van tervezve, hogy sima felhasználóként
+tudjon futni. A telepítési fázisra a pretendroot nevű függvénytárat
+használja, amely segítségével lehetőségünk van virtuálisan root (vagy
+bármilyen) tulajdonúnak látszó fájl létrehozásához (tehát nagyon hasonlít a
+Debian fakeroot csomagjához).
+
+Mindemellett az uhubuild-build a forrás könyvtárstruktúrát nem
+piszkálja, azt csak olvashatónak tételezi fel.
+
+Mivel a forrás fa különféle helyekről származhat (verziókezelőből, vfat
+fájlrendszerről), az itt lévő fájlok jogainak semmiféle jelentéssel nem
+szabad bírniuk. Amennyiben a fájlok mindenki által olvashatóak, és semmi
+több, a csomagkészítésnek helyesen kell végigmennie.
+
+A szkript nem törődik azzal, hogy root-ként fut-e, de illik nem root-ként
+indítani. Nem törődik azzal, hogy az igazi rendszerben, vagy chroot alatt
+fut-e. Nem törődik azzal sem, hogy a fordítás sikerességéhez szükséges
+csomagok telepítve vannak-e.
+
+<sect2>Az uhubuild-chrootbuild szerepe<p>
+
+Ez a szkript (uhubuild-under-chroot csomag része) szintén a megadott
+csomagot fordítja le, viszont egy általa felépített chroot rendszerben. A
+szkriptet root-ként kell indítani. Az előzőhöz hasonlóan nem feltételez
+írási jogot a fordítandó cuccok könyvtárára.
+
+A chroot rendszer felépítéséhez természetesen szükség van arra, hogy az UHU
+csomagok *.uhu fájlként (tehát nem telepített formában) valahol elérhetők
+legyenek.
+
+A chroot-on belüli fordítás egyik óriási előnye, hogy nem feltétlenül kell
+az élesen futó disztrib verziójához passzolni. Például egy élesen futó UHU
+Linux 1.2 alatt simán lehet UHU Linux 1.0-hoz passzoló csomagot fordítani.
+
+A szkript először felépít egy chroot környezetet, amelyben a csomag
+fordításához szükséges csomagok lesznek telepítve, beleértve a függősek
+miatt szükségessé váló csomagokat is, de semmi több. Amennyiben egy
+használható chroot környezet már létezik a fájlrendszer megadott pontján, az
+esetben azt pofozza ki az új igényeknek megfelelően, tehát nem nulláról
+kezdi azt felépíteni.
+
+A chroot környezetnek mindenképpen része lesz az uhubuild-here csomag, amely
+létrehoz ott egy uhubuild nevű felhasználót és annak /var/uhubuild home
+könyvtárát.
+
+Következő lépésben szkriptünk csatolja a /proc és /dev fájlrendszereket a
+chroot rendszer alá, valamint egy ``mount --bind'' hívással a ccache
+könyvtárat, a fordítandó forrás könyvtárát és a snapshot fájlt (ha van) is
+elérhetővé teszi.
+
+Ezt követően végrehajt egy chroot hívást, a chroot rendszeren belül uhubuild
+felhasználóvá vált, és meghívja az uhubuild-build szkriptet (gy.k. a belső
+réteget), amely itt elvégzi majd a fordítást.
+
+Végezetül leválasztja a csatolt fájlrendszereket, és kimásolja az elkészült
+eredményt.
+
+<sect2>Az s szkript szerepe<p>
+
+Míg az előző két réteg teljes mértékben offline fordításról szólt (az összes
+adatnak elérhetőnek kellett lennie a fájlrendszerben), addig ez a réteg szól
+az adatok megfelelő helyről leszippantásáról.
+
+A csomag adminisztrációs adatainak egy részét közvetlenül fájlként szedi ki
+az SVN-ből, más részét SVN-metaadatokból nyeri.
+
+
+
+<sect>uhubuild-pack<p>
+
+A program az uhubuild-here csomag része.
+
+A dpkg szemlélete szerint a csomagkészítés legbelső lépését a ``dpkg
+--build'' (avagy ``dpkg-deb --build'') lépés adja. Ez a parancs a
+fájlrendszer megadott helyén lévő könyvtárszerkezetet, valamint az ott
+található adminisztratív fájlokat csomagolja össze egy .deb fájllá, és mit
+sem törődik azzal, hogy ezek a fájlok hogyan álltak elő.
+
+Ennek a megközelítésnek hátránya az, hogy semmi nem garantálja, hogy
+bizonyos adatok, melyeknek minden csomagban kötelező jelleggel szerepelniük
+kellene, valóban szerepelni fognak és valóban helyes tartalommal.
+
+Az uhubuild-pack pontosan ezeket a lépéseket hajtja végre, garantálva, hogy
+nem fog téves adat szerepelni a csomagban.
+
+Lássuk a részleteket:
+
+<descrip>
+
+<tag/md5sums/ A program előállítja a DEBIAN/md5sums fájlt, melybe a csomagba
+bekerülő közönséges fájlok ellenőrző összege kerül, kivéve a
+DEBIAN/conffiles alatt megnevezett konfigurációs fájlokat.
+
+<tag/stat/ A DEBIAN/stat fájlba stat információ kerül a csomag fájljairól. A
+csomagba kerülő összes nem-könyvtár entitás megjelenik itt (ez a közönséges
+fájlokon túl tipikusan a szimlinkeket jelenti), de a könyvtárak közül is
+bizonyosak részei a csomagnak az UHU értelmezése szerint, így bizonyos
+könyvtárak stat információját is feltüntetjük itt. Ez a következőképpen
+történik.
+
+Ha létezett már DEBIAN/stat fájl, akkor kigyűjtjük az ebben szereplő
+könyvtárakat. Továbbá ha létezik DEBIAN/dirs fájl (soronként egy
+bejegyzéssel), akkor ezt is kiolvassuk. Minden olyan könyvtár, amely
+valamelyik helyen a két lehetséges közül meg volt említve, és a most
+becsomagolandó könyvtárrendszerben is megtalálható, része lesz a csomagnak,
+tehát szerepelni fog a stat fájlban. Továbbá az összes ilyen könyvtárra a
+rekurzíve alattuk szereplő összes könyvtár is a csomag része lesz, vagyis
+szerepelni fog a DEBIAN/stat fájlban.
+
+A DEBIAN/stat fájl előállítása után a DEBIAN/dirs fájlt, ha létezett,
+töröljük, a régi DEBIAN/stat fájlt meg értelemszerűen felülírjuk.
+
+Ez a kettős megközelítés (két helyre is írhatjuk a könyvtárak nevét) azért
+jó, mert az első csomagolás során a készítő szkriptnek nem kell bonyolult
+szintaxisú fájlt készítenie, egyszerűen csak a csomagneveket kell
+felsorolnia, viszont később egy újracsomagolás esetén sem kell bonyolítani
+az életet, hanem az ebben az esetben már létező stat fájlt újrahasznosítjuk.
+
+<tag/Installed-Size/ Az Installed-Size sorok értékét számítja ki és írja be
+a control fájlba. A tipikus csatolási pontokra (például /usr, /usr/share) is
+kiszámítja ezt az értéket, és beteszi a control fájlba, amennyiben pakol az
+adott csatolási pont alá a csomag. Ez arra jó, hogy a telepítő meg tudja
+határozni, mennyi hely marad üresen az egyes partíciókon bizonyos csomagok
+telepítése után.
+
+A Debian a ``du -s'' parancs kimenetét használja. Ennek hátránya, hogy függ a
+csomagolás során használt fájlrendszertől és egyéb körülményektől, így
+azonos csomagra is adhat más-más eredményt.
+
+Az RPM csomagkezelő a közönséges fájlok méretének össz hosszát tárolja le,
+ami nyilván kisebb a telepített méretnél.
+
+Köztes megoldásként az UHU-ban minden egyes fájlra annak hosszát 4096 byte
+többszörösére felfelé kerekítve számoljuk, valamint 4096 byte-ot számolunk
+minden könyvtárra, amely ténylegesen része a csomagnak. Az egyéb dolgok
+(szimlinkek, nem ténylegesen a csomag részét képező könyvtárak, nulla hosszú
+fájlok stb.) nem számítanak. Ez a módszer viszonylag reálisan közelíti meg a
+diszken elfoglalt terület méretét, ugyanakkor következetes: azonos csomagra
+mindig azonos értéket ad.
+
+</descrip>
+
+Az uhubuild-pack program az első argumentumban megadott könyvtár alatt
+hajtja végre a változtatásokat, majd meghívja a ``dpkg-deb --build -z 9''
+parancsot az összes kapott argumentummal. Ily módon nem tudjuk a tömörítési
+arányt megváltoztatni, és nem tudunk ``--nocheck'' opciót sem adni a
+``dpkg-deb''-nek, viszont azt megválaszthatjuk, hogy második argumentumot
+adunk-e egyáltalán, és ha igen, akkor közönséges fájlt vagy könyvtárat
+nevezünk-e meg ott. Ezzel már csak a ``dpkg-deb'' fog törődni.
+
+Amennyiben a sortdir library telepítve van, a ``dpkg-deb'' programot ezen
+keresztül hívjuk meg, így a deb csomag részét képző tar fájl ábécérendben
+fogja tárolni a fájlokat, nem össze-vissza kiszámíthatatlan sorrendben.
+Ennek akkor látjuk hasznát, ha később ``mc''-ben F3-mal ránézünk a .deb
+fájlra, vagy ha telepítése után kiadjuk a ``dpkg -L csomagnév'' parancsot.
+
+Az uhubuild-pack program tökéletesen alkalmas arra, hogy ha például egy
+CD-re helyhiány miatt a már elkészített UHU csomagokat mondjuk dokumentáció
+nélkül szeretnénk feltenni, akkor ily módon átdolgozzuk a csomagokat. Egy
+ilyen újracsomagolás során ha nem root-ként dolgozunk (márpedig miért is
+dolgoznánk root-ként?), akkor javasolt (sőt, mondjuk inkább, hogy kötelező)
+a pretendroot függvénykönyvtár használata a ki- és az újra becsomagolás
+során annak érdekében, hogy a tar fájlban (illetve a DEBIAN/stat fájlban is)
+ne az aktuális igazi felhasználó neve alatt, hanem a tényleges kívánt
+felhasználó (általában root) neve alatt látszódjanak a fájlok.
+
+A progit vagy root-ként, vagy a pretendroot könyvtáron keresztül kell
+futtatni, különben a keletkező csomagokban az igazi felhasználóneved lesz a
+fájlok tulaja, ami nem jó.
+
+Lehetőség van arra, hogy a fájlrendszerstruktúra helyett egyetlen
+data.tar.gz fájlt helyezzünk el a DEBIAN könyvtár mellé. Ekkor ez kerül a
+csomagba. Ez esetben a fenti lépések (md5sum, stat, dirs, installed-size)
+értelemszerűen kimaradnak, ezért vigyáznunk kell, hogy azokat ne módosítsuk.
+A data.tar.gz feltétlenül egy korábbi csomagból kiszedett változat legyen,
+semmiképp se saját kézzel-lábbal készített .tar.gz, mert az könnyen lehet,
+hogy nem jó.
+
+
+<sect1>uhubuild-extract<p>
+
+Kábé az uhubuild-pack ellentéte. A csomagot kipakolja az aktuális könyvtár
+alá. Ajánlott root-ként, vagy a pretendroot könyvtáron keresztül futtatni,
+hogy a tulajok megmaradjanak.
+
+
+<sect1>uhubuild-expand<p>
+
+Mint az uhubuild-extract, de a data.tar.gz-t nem tömöríti ki. Így jóval
+gyorsabb lesz újra becsomagolni, viszont csak a DEBIAN könyvtár fájljain
+tudunk változtatni, a csomag igazi fájljain nem.
+
+
+
+<sect>Környezeti változók<p>
+
+
+Az uhubuild rendszer működését kívülről olyan környezeti változókkal
+szabályozzuk, melyek neve UHUBUILD_ kezdetű.
+
+Az uhubuild rendszer a csomag fordítása során az általa meghívott, általunk
+írt szkripteknek (amelyek a tényleges fordítást és telepítést végzik) UB_
+kezdetű környezeti változókat ad át.
+
+Ezen változók nevével és jelentésével az adott fázis folyamán ismerkedünk
+meg.
+
+
+
+<sect>Könyvtárstruktúra<p>
+
+Fordításhoz az alábbi ismertetett könyvtárstruktúrát kell felépíteni.
+
+Az áttekinthetőség kedvéért könyvtár neve után mindig tettünk / jelet.
+
+A fájl avagy könyvtár neve után álló [!] azt jelenti, hogy kötelező a fájl,
+míg a [?] jelentése az, hogy opcionális. Az opcionális fájlok nagy részénél
+az üres fájl egyenértékű a nem létező fájllal, de ez nem mindig van így.
+
+A futtatható tartalommal bíró fájlokat [x] jelzi. Ezekre nem szükséges x
+bitet adnunk, a csomagkészítő rendszer a másolatukat fogja futtatni, és
+azokra ad x bitet.
+
+
+<sect1>A forráskód<p>
+
+<descrip>
+
+  <tag>addons/ [?]</tag>
+
+	Fájlok, melyek utólag a csomag részét fogják képezni. Például ha van
+	egy addons/etc/foo.conf fájl, akkor az /etc/foo.conf-ként bekerül a
+	telepített fájlok közé. A jogokat ne itt adjuk meg a fájl tényleges
+	jogaként, hanem a perms fájlban vegyük fel. Az addons alatt az
+	összes fájl 644 legyen (könyvtárak meg 755).
+
+  <tag>patches/ [?]</tag>
+
+	A patcheket kell ide tenni. A patchek nevük szerint ábécérendben
+	kerülnek alkalmazásra. A kiterjesztésnek tükröznie kell a fájl
+	típusát, ajánlott a ``.patch'' kiterjesztés használata (ezeket
+	``patch -p1'' paranccsal alkalmazza a rendszer), de léteznek egyéb
+	ismert kiterjesztések, például ``.patch0'' (``patch -p0''
+	alkalmazáshoz), ``.xdelta'' stb. A ``.txt'' és ``.skip''
+	kiterjesztésű fájlok figyelmen kívül lesznek hagyva.
+
+  <tag>sources/ [?]</tag>
+
+	A forráskódokat kell ez a könyvtár alá tenni.
+
+</descrip>
+
+
+<sect1>A készülő alcsomagtól független adatok<p>
+
+<descrip>
+
+  <tag/acquire [?] [x]/
+
+	A forráskód beszerzésével és kicsomagolásával kapcsolatos
+	információkat tárolja. Ajánlott (szinte kötelező) a Pozsy-féle dl
+	szkriptet használni (mivel utóbbi is egy szkript, ezért azt kell
+	írni, hogy ``#!/usr/bin/env dl''). A forrást a ``compile'' könyvtár
+	alá kell kitömörítenie, további alkönyvtár nélkül.
+
+  <tag/build-depends [?]/
+
+	Csomagnevek (soronként egy), amelyekre a program fordításához
+	szükség van. A chroot rendszer felépítésekor használjuk, az
+	uhubuild-build szkript figyelmen kívül hagyja. A ``%'' kezdetű
+	értékek makróként kifejtődnek a /usr/share/uhubuild/config/macros
+	fájl alapján. (Az itt definiált ``%_'' makró csomagjai automatikusan
+	települnek, azt nem kell megemlíteni a build-depends fájlban.) A
+	``-'' kezdetű csomagok a listából a standard csomagok hozzárakása és
+	a ``%'' makrók kifejtése után, de még a függőség miatti tranzitív
+	lezárt keresése előtt kikerülnek a csomaglistából (tehát dependencia
+	miatt visszajöhetnek).
+
+  <tag/changelog [?]/
+
+	A csomag ChangeLogja. További szerepe, hogy a készülő csomagban
+	mindazon fájlokat, melyek időcímkéje ennél újabb volna,
+	visszaállítjuk ennek a fájlnak a dátumára.
+
+  <tag/compile [?] [x]/
+
+	Szkript, amely a tényleges fordítási lépést végzi. A kitömörített
+	forráskódot $UB_COMPILEDIR alatt találja meg a szkript (további
+	alkönyvtár nélkül), ez egyben a szkript kezdeti munkakönyvtára. Az
+	$UB_OBJECTDIR könyvtárat használhatja munkakönyvtárként a szkript,
+	ez például a gcc fordítása során hasznos.
+
+  <tag/distribution [!]/
+
+	A disztribúció neve és verziószáma (például ``UHU Linux 1.0'').
+	Az uhubuild-chrootbuild szkript e szerint építi fel a chroot környezetet.
+
+  <tag/doc [?]/
+
+	A forráskódon belül nevezhetünk meg fájlokat, melyek automatikusan
+	bemásolódnak /usr/share/doc/&lt;sourcename&gt; alá. Könyvtárat is
+	megadhatunk, rekurzíven másolódik. Soronként egy shell pattern.
+
+  <tag/install [?] [x]/
+
+	A telepítést végző szkript. A szkriptnek a lefordított csomagot az
+	$UB_INSTALLDIR változóban kapott könyvtárba kell telepítenie, ahol
+	egy standard könyvtárstruktúra már megtalálható. A szkript kezdeti
+	munkakönyvtára most is az $UB_COMPILEDIR könyvtár.
+	Hiánya esetén az $UB_COMPILEDIR könyvtár tartalma átmásolódik az
+	$UB_INSTALLDIR alá.
+
+  <tag/maintainer [?]/
+
+	A csomag karbantartója valami normális szintaxisban, mint például
+        Teljes Név &lt;e@mail.cím&gt;
+
+  <tag/release [!]/
+
+	A csomag release értéke, az UHU verzió nélkül. Ez az, amit a
+	Debianék Debian-revision névre kereszteltek, tehát ami a mainstream
+	csomag verziója után biggyesztődik, mint saját alverzió.
+
+  <tag/sourcename [!]/
+
+	A fő csomag neve. Az a név, amely alatt az ember intuitív módon
+	keresi a forrást. Általában megegyezik az egyik készülő bináris
+	csomag nevével. Az elkészült *.uhu fájlokban a ``Source:'' mezőben
+	jelenik meg a tartalma, valamint a doksi
+	/usr/share/doc/&lt;sourcename&gt; alá pakolódik.
+
+  <tag/version [!]/
+
+	A mainstream program verziója.
+
+</descrip>
+
+
+<sect1>A készülő alcsomagokra specifikus adatok<p>
+
+Az egyes készülő csomagokra vonatkozó specifikus adatokat minden esetben a
+packages/csomagnév könyvtárba kell tenni. Az alábbiakban a fájlnév elől
+elhagyjuk a packages/csomagnév prefixet.
+
+<descrip>
+
+  <tag>description/hu [?]</tag>
+
+	A hosszú leírás magyarul. Ez fogja a control fájlban szereplő
+	Description érték első sor utáni részét adni. A fájlban épeszű módon
+	szerepel a szöveg, a control fájlt készítő szkript feladata lesz az
+	első oszlopban lévő szóköz, illetve az üres sor helyett lévő pont
+	beszúrása.
+
+  <tag>summary/hu [!]</tag>
+
+	A rövid, egysoros leírás magyarul. Ez lesz a control fájlban a
+	Description első sora.
+
+  <tag>words/hu [?]</tag>
+
+	A nyomdahibák kiküszöbölése érdekében a csomagleírást átfuttatjuk a
+	magyarispellen. Ha ez talál hibásnak vélt szót, akkor ordít. Itt
+	felsorolhatunk szavakat, melyek mégsem hibásak, akkor sem, ha a
+	magyarispell annak véli őket.
+
+  <tag/categories [?]/
+
+	Soronként egy kategória, amely az adott csomagra jellemző.
+
+  <tag/conffiles [?]/
+
+	Konfig fájlok, soronként egy. A bevezető / jel opcionális.
+
+  <tag/depends [?]/
+
+	A csomag control fájljának Depends opciója egészül ki az itt
+	felsorolt értékekkel. Soronként egy csomagnév. A szokásos operátorok
+	használhatók, melyeknek ha üres a jobb oldala, akkor az adott csomag
+	éppen telepített verziója kerül oda. Például:
+	<itemize>
+		<item><tt>coreutils</tt>
+		<item><tt>qt &gt;=</tt>
+	</itemize>
+
+  <tag/dirs [?]/
+
+	Könyvtárak, melyek részei lesznek a készülő csomagnak. Soronként egy
+	könyvtárnév. A bevezető / jel opcionális. Két jelentése is van az
+	itt felsorolt könyvtáraknak: egyrészt létrejönnek, másrészt az itt
+	felsorolt könyvtárak, valamint a rekurzíven alatta lévő könyvtárak
+	bekerülnek a ``stat'' fájlba, így azok tulajdonosát és módját ismeri
+	és konfiguráláskor beállítja a rendszer. Tulajdonképpen saját
+	dpkg-kiegészítésként leadminisztráljuk, hogy ezek a könyvtárak ehhez
+	a csomaghoz tartoznak.
+
+  <tag/files [?!]/
+
+	Azok a fájlok illetve könyvtárak, amelyek a csomagba kerülnek.
+	Minden sorban opcionálisan pár kontrol szimbólum, majd
+	whitespace-ekkel elválasztva a fájlnév. Kontrol szimbólum egyelőre
+	csak a @ jel lehet, ami szimlinkekre passzol. Fájlnévben három shell
+	pattern jellegű dolog használható. A * és a ? jelentése a szokásos.
+	A /**/ jel (az rsync exclude/include listájához kicsit hasonlóan)
+	tetszőleges számú könyvtárat jelent (akár 0 darabot is).
+	Tehát a ``@ /usr/lib/**/*.so'' jelentése az, hogy vagy közvetlen a
+	/usr/lib alatt, vagy akár nagyon sok könyvtárral
+	lejjebb lévő, *.so nevű szimlinkek. Ha egy adott sorra nem
+	illeszkedik egyetlen fájl sem, akkor semmi nem történik, megy tovább
+	az élet. Így tehát a legtöbb -dev csomaghoz egy közös standard
+	``files'' fájl megfelel.
+
+	A bináris csomagok közül legfeljebb egynek szabad files fájl nélkülinek
+	lennie.
+  <tag/excludes [?]/
+
+	Kihagyandó fájlok, soronként egy.
+	A files kiegészítője arra az esetre, ha az abban csoportosan megadott
+	fájlok közül egy vagy több mégsem tartozik az adott csomagba.
+
+  <tag/groups [?]/
+
+	Amennyiben a csomag csoporto(ka)t hoz létre, az(oka)t ide tehetjük.
+	Egy sor szintaxisa az alábbi:
+	<itemize>
+		<item>csoportnév gidszám (egyéb_groupadd_argumentumok)
+	</itemize>
+
+  <tag/libpath [?]/
+
+	Az automatikus dependencia keresés fázis az újonnan készülő csomagok
+	itt felsorolt könyvtárain belül is találja meg a libeket. Például a
+	qt csomag készítésekor ide kell írni, hogy /usr/lib/qt/lib.
+
+  <tag/options [?]/
+
+	A konkrét csomag tartalmát befolyásoló kulcsszavakat írhatunk ide,
+	soronként egyet. Jelenleg az alábbi kulcsszavaknak van jelentésük:
+
+	<descrip>
+	  <tag/skip-autodepend/
+		Az automatikus függőség keresés lépés kihagyása.
+	  <tag/skip-fhs/
+		Az fhs ellenőrzés lépés kihagyása.
+	  <tag/skip-postinst/
+		Nem készít automatikusan postinst szkriptet.
+	  <tag/skip-prerm/
+		Nem készít automatikusan prerm szkriptet.
+	  <tag/skip-postrm/
+		Nem készít automatikusan postrm szkriptet.
+	</descrip>
+
+  <tag/perms [?]/
+
+	A fordítást követő telepítési fázis (make install jellegű lépés),
+	könyvtárak létrehozása (dirs) és az addons-beli fájlok másolása után
+	az itt lévő módon átállítja a felsorolt fájlok tulaját, csoportját
+	és módját. Mínusz jel esetén az adott értéket változatlanul hagyja.
+	Például:
+	<itemize>
+		<item><tt>root shadow 2755 /usr/bin/passwd</tt>
+		<item><tt>gdm  -      +x   /bin/foobar*</tt>
+	</itemize>
+
+	A bevezető / jel opcionális. Soronként egy shell pattern, előtte
+	tulaj, csoport és jog.
+
+  <tag/postinst [?] [x]/
+
+	Post-install szkript.
+
+  <tag/postrm [?] [x]/
+
+	Post-remove szkript.
+
+  <tag/prerm [?] [x]/
+
+	Pre-remove szkript.
+
+  <tag/priority [?]/
+
+	A csomag priority mezője. Lehetséges értékek:
+	required, important, standard, optional, extra.
+	Ha nem adjuk meg, akkor optional.
+	Ha required, akkor automatikusan Essential is lesz a csomag.
+	Ezen értékek jelentéséről a dokumentáció során még szólunk.
+
+  <tag/section [!]/
+
+	A csomag section mezője.
+
+  <tag/suid_wrapper [?]/
+
+	Felsorolhatunk /sbin vagy /usr/sbin kezdetű fájlokat, melyekre jó
+	volna, ha lenne /bin illetve /usr/bin alatt root jelszót kérő wrapper.
+
+  <tag/users [?]/
+
+	Amennyiben a csomag felhasználó(ka)t hoz létre, az(oka)t ide
+	tehetjük. Egy sor szintaxisa az alábbi:
+
+	<itemize>
+		<item>felhasználónév uidszám gidszám (egyéb_useradd_argumentumok)
+	</itemize>
+
+</descrip>
+
+
+
+<sect>uhubuild-check<p>
+
+A program az uhubuild-common csomag része.
+
+A fordításhoz használt fájlok terén jó adag rugalmasságot megengedünk.
+Nyilván elképzelhetetlen, hogy mondjuk a perms fájlt kézzel szerkesztő
+embert kötelezzük a szép tabulálás vagy az ábécérend tartására.
+
+Ugyanakkor úgy illendő, hogy SVN-be commit, valamint csomagfordítás előtt
+ezeket a fájlokat áteresztjük egy ellenőrző és kipofozó fázison. A
+csomagfordítás során egyébként is sokat egyszerűsít az életen, ha már
+számíthatunk arra, hogy a fájlok egységes alakra vannak hozva.
+
+A szkriptnek tehát egyszerre két célt is kell szolgálnia.
+
+Amennyiben ``--copy'' kapcsoló nélkül indítjuk, az esetben helyben hozza
+egységes alakra a fájlokat. (Egyébként átmásolja egy ideiglenes könyvtárba,
+mintha lenne ``--copy'' kapcsoló, majd visszamásolja, de ez most lényegtelen.)
+Ily módon azok jobban átláthatók lesznek, ha tovább akarunk velünk dolgozni,
+valamint készen fognak állni az SVN rendszerbe berakásra. Csak azoknak a
+fájloknak változik meg az időcímkéje, amelyek ténylegesen megváltoztak. Nem
+hoz létre eddig nem létező fájlt, és nem is töröl már létezőt. Ez a
+futtatási mód tehát kézzel indítva is gyönyörűen használható.
+
+Ha viszont adunk egy ``--copy'' kapcsolót, akkor a fájlokat a kiindulási
+helyen változatlanul hagyja, és az $UHUBUILD_SRC2DIR alatt megadott
+könyvtárba másolja azok kipofozott változatát. Ennek csomagfordítás
+kezdetekor vesszük hasznát (az uhubuild-build szkript hívja meg, kézzel
+valószínűleg nem akarjuk indítani). Ilyenkor a szkript az $UHUBUILD_SRC2DIR
+könyvtár alatt szimlinket hoz létre az általa nem piszkált könyvtárakhoz
+(sources, patches, addons), hogy $UHUBUILD_SRC2DIR alatt is egy teljes
+értékű forrás fa látszódjék. Sőt, a csomagfordító szkriptek életének
+megkönnyítése érdekében ad x bitet a szkriptekre (acquire, compile,
+install), és az opcionális fájlok legtöbbjét is létrehozza, általában nulla
+hosszúsággal. Egyszóval megtesz minden tőle telhetőt az uhubuild-build szkript
+életének megkönnyítése érdekében.
+
+A forrás könyvtárfát az argumentumban megadott könyvtárban keresi. Ha nincs
+ilyen argumentum, akkor az $UHUBUILD_SRCDIR jön be a játékba. Ha ez sincs
+beállítva, akkor az aktuális munkakönyvtárral dolgozik.
+
+
+
+<sect>Az uhubuild-build szkript<p>
+
+A program az uhubuild-here csomag része.
+
+Az uhubuild-build szkript végzi a tényleges csomagkészítést.
+
+Az alábbi környezeti változókat kell megadnunk:
+
+<descrip>
+
+  <tag/UHUBUILD_SRCDIR/
+
+	Ebben a könyvtárban keresi a lefordítandó csomag forrás fáját. A
+	változó értékét felülbírálja a szkriptnek adott argumentum. Ha se
+	argumentum, se ilyen változó, akkor az aktuális munkakönyvtár
+	játszik.
+
+  <tag/UHUBUILD_WORKDIR/
+
+	Itt zajlik a fordítás teljes egésze. Ha nincs megadva, akkor egy
+	ideiglenes könyvtárat választ magának a szkript /tmp alatt.
+
+  <tag/UHUBUILD_COMPILESNAPSHOTDIR/
+
+	Ezen könyvtár alá kerül a compile snapshot. Ha nincs ilyen változó,
+	vagy üres az értéke, akkor nem készül compile snapshot.
+
+  <tag/UHUBUILD_INSTALLSNAPSHOTDIR/
+
+	Ugyanez, csak az install snapshotra.
+
+  <tag/UHUBUILD_SNAPSHOTDIR/
+
+	Közös default érték adható meg a compile és az install snapshot
+	helyére.
+
+  <tag/UHUBUILD_CCACHE_DIR/
+
+	A ccache progi cache könyvtárának útvonala. Ha nincsen megadva, nem
+	használunk ccache-t.
+
+  <tag/UHUBUILD_RESULTDIR/
+
+	Ide kerülnek az elkészült bináris csomagok. Ha nincs megadva, nem
+	készülnek bináris csomagok.
+
+  <tag/UHUBUILD_LOGPACKDIR/
+
+	Ezen könyvtár alá kerül a fordítás naplócsomagja. Ha nincs
+	beállítva, nem készül ilyen naplócsomag.
+
+</descrip>
+
+A forrás fát csak olvashatónak tételezi fel, ezért egy ``uhubuild-check
+--copy'' paranccsal nemcsak leellenőrzi, hogy szintaktikailag helyesek-e a
+fájlok, és megvan-e minden szükséges fájl, hanem rögtön át is másolja azokat
+$UHUBUILD_WORKDIR/.src alá. Mostantól ezt a könyvtárat hívjuk
+$UHUBUILD_SRCDIR-nek.
+
+Ezt követően nincs más hátra, mint adott sorrendben végrehajtani a
+/usr/lib/uhubuild/steps alatti kis progikat, amelyek a teljes
+csomagkészítést végzik. Ezek a szkriptek a következő környezeti változókat
+kapják meg:
+
+<descrip>
+
+<tag/UB_SOURCENAME/ Source Name.
+
+<tag/UB_VERSION, UB_RELEASE, UB_DISTRIBUTION/ Értelemszerűen.
+
+<tag/UB_PACKAGES/ Whitespace-szel elválasztva a készítendő bináris csomagok
+nevei.
+
+<tag/UB_WORKDIR/ Ahol dolgozunk.
+
+<tag/UB_SRCDIR/ Az átmásolt forrás fa kezdete.
+
+<tag/UB_TMPDIR/ Ideiglenes cuccokat tárolhat itt egy szkript. Az itteni
+fájlokat lehetőleg csak az a szkript használja, amelyik elhelyezte azokat
+ott. Két szkript egymás közötti kommunikációra használja az UB_ADMINDIR-t.
+
+<tag/UB_ADMINDIR/ Olyan dolgokat tárolhat itt egy szkript, amelyre később
+másik szkript által még szükség lehet, például telepített csomagok listája
+vagy fordítási idő, illetve egyéb adminisztratív adatok.
+
+<tag/UB_COMPILEDIR/ A forráskód ide tömörítődik ki. Általában itt zajlik a
+fordítás, de ha nem, akkor
+
+<tag/UB_OBJECTDIR/ itt.
+
+<tag/UB_INSTALLDIR/ Ide kell telepíteni a fájlokat.
+
+<tag/UB_COMPILESNAPSHOTDIR, UB_INSTALLSNAPSHOTDIR/ Ide kerülnek a
+snapshotok.
+
+<tag/UB_PACKAGEDIR/ Az UB_INSTALLDIR alatti fájlok lesznek alcsomagokra
+szétrobbantva ide mozgatva.
+
+<tag/UB_MAKE_PROCS/ Maximális fordítási szálak megadása. Alapértelmezett
+érteke a rendszeren elérhető online processzormagok száma. Amennyiben a
+build szkriptünkben szeretnénk ezt felülbírálni, akkor az 
+UHUBUILD_MAKE_PROCS változó beállításával tehetjük ezt meg.
+
+</descrip>
+
+A fentiek közül egy konkrét csomagot készítő embernek valószínűleg csak
+keveset kell ismernie. Egy tipikus ``compile'' szkript a fentiek egyikét sem
+használja, míg egy tipikus ``install'' szkript csak az $UB_INSTALLDIR értéket
+veszi figyelembe: ide kell a fájlokat telepítenie.
+
+A szkriptek, amelyek meghívódnak, időrendi sorrendben a következők:
+
+<descrip>
+
+  <tag/acquire/
+	A forrás kicsomagolása, patch-ek alkalmazása.
+
+  <tag/compile/
+	A compile szkript meghívása, vagyis a tényleges fordítás.
+
+  <tag/compile-snapshot/
+	Snapshot készítése a compile utáni helyzetről (admin, compile és
+	object könyvtárak, valamint egy-két egyéb adminisztratív infók),
+	hogy lehessen itt folytatni a csomagkészítést.
+
+  <tag/install/
+	Az install szkript meghívása, vagyis a tényleges telepítés az
+	$UB_INSTALLDIR-ként átadott könyvtár alá. $UB_INSTALLDIR alatt a
+	leggyakoribb könyvtárak már létre vannak hozva.
+
+  <tag/strip/
+	Strip.
+
+  <tag/doc/
+	A forráskód alól a doc fájlban alatt megnevezett fájlok telepítése
+	/usr/share/doc/&lt;sourcename&gt; alá. Ezt muszáj az
+	install-snapshot-create előtt csinálni, különben egy snapshot-ból
+	visszaállítás után a doksi fájlokat már nem tudnánk elérni.
+
+  <tag/install-snapshot/
+	Második snapshot készítése, ezúttal az install könyvtárról, plusz
+	adminisztratív infók. Innen is lehet folytatni a csomagkészítést. Ez
+	a snapshot általában jóval kisebb méretű az előzőnél (nyilván), és
+	pont emiatt van a strip fázis mögé rakva. Mostantól a compile és
+	object könyvtárak alatti fájlokhoz nem nyúlunk (hiszen azok ott
+	sincsenek egy install snapshot visszaállítás után).
+
+  <tag/addons/
+	Az addons alatti cuccok bemásolása.
+
+  <tag/split/
+	A files konfigurációs fájl alapján a csomag szétrobbantása. A DEBIAN
+	könyvtár létrehozása.
+
+  <tag/dirs/
+	A dirs fájlban felsorolt könyvtárak létrehozása.
+
+  <tag/users-groups/
+	Ha van users és/vagy groups fájl, bemásoljuk a DEBIAN könyvtár alá.
+
+  <tag/suid_wrapper/
+	Ha van suid_wrapper fájl, bemásolja a DEBIAN könyvtár alá, és
+	ellenőrzi, hogy csak létező fájlnevek legyenek benne.
+
+  <tag/perms/
+	Tulajdonos, csoport és hozzáférési jog megváltoztatása a perms
+	fájlban felsorolt fájlokra és könyvtárakra.
+
+  <tag/scripts/
+	Standard postinst, prerm és postrm szkript készítése minden
+	csomaghoz. Az egyéni postinst, prerm és postrm szkript átmásolása,
+	ha van ilyen.
+
+  <tag/man/
+	man page-ek rendberakása.
+
+  <tag/info/
+	info fájlok rendberakása, /usr/share/info/dir törlése.
+
+  <tag/depends/
+	Dependencia keresése: ki kell ennek a csomagnak.
+
+  <tag/shlibs/
+	shlibs fájl készítése: milyen library-ket tartalmaz ez a csomag.
+	(Fogalmam sincs, hogy ez mire jó, de a Debian csinál ilyet, úgyhogy
+	csinálunk mi is.)
+
+  <tag/fhs/
+	A kapott fájlrendszer FHS-nek megfelel-e.
+
+  <tag/conffiles/
+	A conffiles fájl bemásolása.
+
+  <tag/uhuinfo/
+	Az uhuinfo fájl előállítása.
+
+  <tag/control/
+	A control fájl elkészítése.
+
+  <tag/pack/
+	Utolsó simítás a jogok terén, csomagolás, a kész csomag .deb-ről
+	.uhu-ra átkeresztelése.
+
+  <tag/logpack/
+	Ez az utolsó lépés, ez akkor is lefut, ha valahol előbb hiba volt. A
+	napló csomagot készíti el.
+
+</descrip>
+
+
+
+<sect>uhubuild-depends<p>
+
+A program az uhubuild-under-chroot csomag része. Nem fontos megismerni,
+közvetlenül aligha indítjuk.
+
+Chroot környezethez szükséges csomagok felsorolása.
+
+Felsorolja, hogy mely csomagokra van szükség az adott program
+lefordításához.
+
+A forrást a szokásos módon az első argumentumban adjuk meg. Ennek hiánya
+esetén az $UHUBUILD_SRCDIR változó értéke számít. Ha ez sincs beállítva,
+akkor az aktuális munkakönyvtárral dolgozunk.
+
+Az eredményként stdout-ra kiköpött lista nem feltétlenül teljes: a
+függőségek még nincsenek feloldva. Ezt az uhubuild-prepare-chroot fogja
+megtenni.
+
+A program tehát gyakorlatilag a build-depends fájl megemésztését, és egy
+standard csomaglistával kibővítését végzi el.
+
+
+
+<sect>uhubuild-prepare-chroot<p>
+
+A program az uhubuild-under-chroot csomag része. Nem fontos megismerni,
+közvetlenül aligha indítjuk.
+
+Ez a szkript az argumentumban felsorolt csomagok használatával felépít egy
+chroot rendszert.
+
+Root-ként kell indítani.
+
+A chroot környezet kezdő könyvtárát az $UHUBUILD_CHROOTDIR környezeti
+változóban adjuk meg. Ennek a változónak kötelező léteznie. Ha az adott
+könyvtár alatt már létezik egy chroot rendszer, akkor azt alakítja tovább az
+igényeknek megfelelően. Így általában sokkal gyorsabban végez, mintha minden
+alkalommal elölről építené fel a rendszert. Több könyvtárat is megadhatunk
+kettősponttal elválasztva, az uhubuild-prepare-chroot megkeresi az első épp
+használaton kívülit.
+
+A chroot rendszer felépítéséhez szükséges csomagokat az apt-get program
+szedi le. Amennyiben az alap értelmezett /etc/apt/sources.list fájltól
+eltérő fájlt kívánunk használni, annak nevét az UHUBUILD_APT_SOURCES
+környezeti változóban adhatjuk meg. A fájl nevét az igazi éles rendszerhez
+képest adjuk meg, tehát a fájlt nem kell a chroot gyökere alá varázsolnunk.
+
+Parancssori argumentumként kell megadni azon csomagok nevét, melyeknek
+szerepelniük kell a chroot környezetben. Ez kiegészül a dependencia
+okokból szükségessé váló csomagokkal. Minden más csomagot, ha esetleg már
+korábban telepítve is volt, letörlünk.
+
+A legtöbb uhubuild-* szkripttel ellentétben ezt nem érdekli az
+UHUBUILD_SRCDIR változó, illetve az aktuális munkakönyvtár tartalma. Ez a
+program nem a szokásos forrás fa struktúrával dolgozik, kizárólag az
+argumentumaira, a chroot rendszer alatt talált kezdeményre, és az apt-get
+által látott csomagokra koncentrál.
+
+
+
+<sect>Az uhubuild-chrootbuild szkript<p>
+
+A program az uhubuild-under-chroot csomag része.
+
+Chroot rendszert épít fel, és azon belül fordítást végez.
+
+Root-ként kell indítani.
+
+Az alábbi környezeti változókat kell megadnunk:
+
+<descrip>
+
+  <tag/UHUBUILD_SRCDIR/
+
+	Már ismerjük.
+
+  <tag/UHUBUILD_SNAPSHOTFILE/
+
+	Amennyiben egy snapshotot szeretnénk folytatni, annak nevét kell itt
+	megadnunk.
+
+  <tag/UHUBUILD_APT_SOURCES/
+
+	Annak a sources.list fájlnak a neve, amely a disztribhez passzoló
+	csomagokhoz vezet minket.
+
+  <tag/UHUBUILD_CHROOTDIR/
+
+	A chroot környezet induló könyvtára, vagy akár több ilyen könyvtár
+	kettősponttal elválasztva.
+
+  <tag/UHUBUILD_COMPILESNAPSHOTDIR/
+
+	Már ismerjük.
+
+  <tag/UHUBUILD_INSTALLSNAPSHOTDIR/
+
+	Már ismerjük.
+
+  <tag/UHUBUILD_SNAPSHOTDIR/
+
+	Már ismerjük.
+
+  <tag/UHUBUILD_CCACHE_DIR/
+
+	Már ismerjük. Ajánlott a /var/cache/uhubuild/ccache könyvtár
+	választása, mivel ez a könyvtár pont ezen célra lett létrehozva a
+	kinti fájlrendszerben uhubuild tulajdonossal.
+
+  <tag/UHUBUILD_RESULTDIR/
+
+	Már ismerjük.
+
+  <tag/UHUBUILD_LOGPACKDIR/
+
+	Már ismerjük.
+
+  <tag/UHUBUILD_SKIP_CHROOT_CLEAN/
+
+	Ha definiálva van (értéke tetszőleges), akkor nem próbálja meg kipucolni a hibás chrootot.
+
+</descrip>
+
+A fenti változók legnagyobb része úgy viselkedik, hogy ha nem volt
+beállítva, akkor az uhubuild-build szkript számára sem lesznek beállítva, de
+ha be voltak állítva, akkor egy, a régi értéktől független új értékre fogja
+azokat beállítani az uhubuild-chrootbuild, mielőtt az uhubuild-build-et
+meghívja. Például ha UHUBUILD_RESULTDIR be volt állítva, akkor a chroot
+alatt futó uhubuild-build szkript ezen változó értékeként mindenképp a
+/var/uhubuild/work/result könyvtárat fogja megkapni, és majd az
+uhubuild-build lefutása után másolja át innen a fájlokat a
+uhubuild-chrootbuild program az UHUBUILD_RESULTDIR változóban megadott
+helyre.
+
+Az uhubuild-chrootbuild szkript először felépíti a chroot rendszert, ami az
+uhubuild-depends és az uhubuild-prepare-chroot szkriptek meghívásából áll.
+
+A chroot rendszer felépítése után ott biztosan lesz egy uhubuild
+felhasználó, valamint neki egy /var/uhubuild nevű home könyvtára. Itt fog
+zajlani a fordítás.
+
+A /proc és /dev fájlrendszereket csatoljuk a chroot rendszeren belülre.
+Ugyancsak csatoljuk (mount --bind) a forrás könyvtárat (ugyebár
+$UHUBUILD_SRCDIR), méghozzá a /mnt/src könyvtár alá. Ha snapshotból
+folytatjuk a csomagkészítést, azt is csatoljuk /mnt/snapshot alá (mount
+--bind segítségével sima fájl is csatolható, nemcsak könyvtár).
+
+Az $UHUBUILD_CCACHE_DIR könyvtárat is csatoljuk ily módon a belső
+/var/cache/uhubuild/ccache alá. Ha nincs megadva ez a változó, akkor nem
+használunk ccache-t.
+
+Most következik a chroot rendszeren belül uhubuild felhasználóként a
+tényleges fordítás indítása. Ezt a már jól ismert uhubuild-build szkript
+végzi. Munkakönyvtárként a /var/uhubuild/work könyvtárat használja, a
+végeredmény csomagokat is ide pakolja (/var/uhubuild/work/result).
+
+Az uhubuild-build szkript futásának végén két dolog van hátra. Az egyik a
+csatolt fájlrendszerek leválasztása. A másik az elkészült eredmények
+(bináris csomag, forráscsomag, napló stb.) kimásolása a chroot rendszeren
+belülről a környezeti változókban megadott könyvtárakba.
+
+
+
+<sect>UHU csomag újrafordítása<p>
+
+Ebben a fejezetben megnézzük, hogy egy UHU csomag lefordítását hogyan lehet
+otthon újra lejátszani, beizzítva ezzel a fordító környezetet.
+
+
+<sect1>Letöltés<p>
+
+Először is be kell szerezni az UHU forráscsomagot, vagyis azon szabályokat,
+amelyek alapján az UHU csomagok elkészültek. Erre két lehetőségünk is lesz.
+Mielőtt azonban nekivágunk, ki kell derítenünk a forráscsomag nevét. Egy
+forráscsomagból több bináris is készülhet. Általában elég könnyű a bináris
+csomag neve alapján kitalálni a forráscsomag nevét, de nem mindig. Például a
+terminfo nevű csomag az ncurses forrásból készül. Ezt hogyan lehet
+kideríteni? Szerencsére ez az információ minden UHU csomag control fájljában
+benne van, a Source kezdetű sorban. A fájlként létező csomagra F3-at
+üthetünk mc-ben, vagy használhatjuk a <tt>dpkg -f fájlnév Source</tt> avagy
+a <tt>dpkg -I fájlnév</tt> parancsokat is. Telepített csomagra a <tt>dpkg -s
+csomagnév</tt> parancs kimenetében keressünk rá a Source sorra, például
+<tt>dpkg -s terminfo | grep Source</tt>.
+
+Megfigyelhetjük, hogy míg az UHU bináris csomagjainak release értéke két
+szám ponttal elválasztva, addig a forrás csomag ebből csak az első számot
+tartalmazza. Ez pontosan azért van így, mert a release első számát növeljük,
+ha a forráson, patch-eken, lefordítási szabályokon, becsomagolás módján,
+vagy bármi ilyesmin változtatunk, míg a második szám olyankor nő, amikor
+teljesen ugyanazt a forráscsomagot fordítjuk le újra.
+
+A letöltés egyik lehetséges módja, hogy az ftp.uhulinux.hu-n megkeressük a
+forráscsomagot, amelynek neve .ub.tar.gz kiterjesztést visel, ez előtt
+természetesen a fent kiderített csomagnevet, verziószámot és fő release
+értéket is tartalmazza, például <tt>ncurses_5.3-7.ub.tar.gz</tt>. A
+.tar.gz-t ki kell bontanunk egy tetszés szerinti könyvtár alá.
+
+A másik lehetséges mód az SVN verziókezelő rendszerből történő kiszedés.
+Ehhez szükség lesz a ``<tt/subversion/'' és az ``<tt/s/'' csomagokra. Utóbbi
+egy előtét program az svn (subversion) elé, amely az uhubuild
+forráscsomagokra van kihegyezve. A forrás leszedése ezután az alábbi
+paranccsal történhet: <tt/s co uhuverzió csomagnév/, ahol az uhuverzió lehet
+például ``1.0'', vagy ``dev'' az instabil(!!!) fejlesztői ágat
+jelölendő. Például <tt/s co 1.0 ncurses/.
+
+Amit mostanáig letöltöttünk, az a hivatalos forráskódot még nem tartalmazza,
+csak azt, amit az UHU köré épített. A hivatalos forrást az acquire fájlban
+írtak alapján a csomagkészítő szkript (uhubuild-chrootbuid) le fogja szedni
+a netről, de ha nagyon akarjuk, letölthetjük az ub_download paranccsal is,
+vagy elhelyezhetjük a másmilyen módon már beszerzett változatot az acquire
+fájl melletti sources nevű könyvtárban.
+
+
+<sect1>Lefordítás<p>
+
+A fordításhoz néhány környezeti változót be kell állítanunk. Érdemes ezeket
+egy ``<tt/build/'' nevű szkriptben rögzíteni, hogy a későbbiekben egyszerűen
+mondhassuk azt, hogy ``<tt/build ncurses/'', és már forduljon is a csomag.
+
+Az UHUBUILD_APT_SOURCES változóban egy olyan sources.list fájlt kell
+megneveznünk, amelyet a fordító környezetet felépítő apt program használni
+fog. Megadhatjuk az /etc/apt/sources.list fájlt is, de választhatunk más
+fájlt is.
+
+Az itt megadott sources.list fájl akár több különböző UHU verzióhoz tartozó
+csomagokhoz is tartalmazhat bejegyzést. Azonban minden ilyen hivatkozott
+helyen a Packages mellett egy Release fájlnak is kell szerepelnie, ilyen
+tartalommal:
+<verb>
+Version: 1.0
+Label: UHU Linux
+Origin: UHU Linux
+</verb>
+
+A Version után értelemszerűen az ott megtalálható UHU disztribúció
+verziószámát kell írni. A chroot felépítése során csak azok a könyvtárak
+lesznek figyelembe véve, amelyekben lévő Release fájl tartalma passzol a
+beszerzett forráscsomag ``distribution'' fájljához.
+
+Az UHUBUILD_CHROOTDIR változóban kell megnevezni azt az egy vagy több
+könyvtárat, amelyek a fordító rendszer nyitó könyvtárai lehetnek. Ha több
+könyvtárat adunk meg, azokat kettősponttal kell elválasztani. A fordítás az
+első olyan könyvtárban történik a listából, amely éppen szabad, vagyis nem
+folyik alatta már egy fordítás. Így nem tudunk véletlenül tönkretenni egy
+már futó fordítást. Ha esetleg beragad a lock fájl, akkor azt kézzel kell
+kitörölnünk, megtaláljuk a chroot nyitó könyvtárában.
+
+A chroot könyvtárban legalább 200 MB-nak lennie kell szabadon, de komolyabb
+programok fordításakor 1--2 GB-ra is szükség lehet. Ez a chroot rendszer a
+fordítás után ott marad, kézzel bármikor törölhetjük, de a következő
+fordítást teszi gyorsabbá, ha otthagyjuk.
+
+Az UHUBUILD_CCACHE_DIR változóban a ccache könyvtárat nevezhetjük meg.
+(Ennek a változónak a neve kivételesen tartalmaz aláhúzást a DIR előtt,
+mivel sok köze lesz a CCACHE_DIR nevű változóhoz, melyet a ccache használ.)
+Nem kötelező a ccache használata, de erősen ajánlott, mivel egy csomag
+újrafordítását nagy mértékben meggyorsítja. A megadott könyvtárnak uhubuild
+tulajdonosúnak kell lennie. Egy lehetséges, már létező, uhubuild tulajdonosú
+könyvtár a <tt>/var/cache/uhubuild/ccache</tt>, de választhatunk ettől
+különbözőt is. Ha sokat fordítunk, nem árt, ha itt is van többszáz mega
+hely; a komplett disztrib végigfordítása néhány GB-nyi cache fájlt eredményez.
+Az itt lévő fájlok, vagy egy részük (például a túl régi hozzáférési
+időcímkéjűek) persze bármikor gond nélkül törölhetők. Ha nagyon sokat
+akarunk fordítani, vigyázzunk, a ccache alapból csak 1 GB-nyi adatot tárol
+el, utána elkezd törölni is.
+
+Az UHUBUILD_COMPILESNAPSHOTDIR és UHUBUILD_INSTALLSNAPSHOTDIR változókat
+akkor állítsuk be, ha compile vagy install snapshotot szeretnénk kérni a
+fordítás során. A fordítás egy ilyen snapshotból később folytatható. A
+snapshotok elkészítése azonban időt vesz igénybe, magyarul lassítja a csomag
+elkészültét. A változó értéke egy olyan könyvtár neve, ahol ezeket a
+snapshotokat látni szeretnénk. Ha mindkét típusú snapshotból kérünk,
+méghozzá ugyanazon könyvtár alá, akkor elég egyszerűen az
+UHUBUILD_SNAPSHOTDIR változót beállítani.
+
+Az UHUBUILD_LOGPACKDIR változót állítsuk egy olyan könyvtárra, ahol a fordítási
+naplót a végén látni szeretnénk. Ezt mindenképp érdemes beállítani.
+
+Az UHUBUILD_RESULTDIR változóban adjuk meg, hogy az elkészült csomagok mely
+könyvtár alá kerüljenek. Ezt nyilván be akarjuk állítani. :-)
+
+Ha a készülő bináris csomag release értékében nemcsak a forrás release
+értékét szeretnénk látni, hanem ponttal elválasztva valami olyasmit is, mint
+amilyen a hivatalos UHU csomagok esetén is van, akkor azt az
+UHUBUILD_EXTRARELEASE változóban adjuk meg (a pont nélkül). Otthoni fordítás
+esetén érdemes lehet vagy a dátumot belerakni (például <tt>export
+UHUBUILD_EXTRARELEASE="$(date '+%Y%m%d.%H%M%S')"</tt>), vagy írni egy kis
+programocskát, amely egyesével növel egy értéket. A lényeg, hogy jobban
+járunk, ha minden egyes fordítás során ``magától'' nő a release szám, nem
+kell nekünk kézzel növelni, és nem is fordítunk kétszer azonos release
+értékű csomagot.
+
+Mindezek után a fordításhoz adjuk ki root-ként az <tt>uhubuild-chrootbuild
+forráscsomag</tt> parancsot, ahol forráscsomag helyére azt az útvonalat
+írjuk, ahol a kitömörített forrás csomag található. Ez az argumentum
+elhagyható, ha ebben a könyvtárban állunk. Ha a változók beállítását egy
+<tt>build</tt> nevű szkriptben rögzítettük, akkor a parancs természetesen
+<tt>build forráscsomag</tt>. Ha minden jól ment, nincs más hátra, mint
+gyönyörködni abban, ahogyan készül a csomag.
+
+
+<sect1>Egyszerű példa build szkript<p>
+
+<verb>
+#!/bin/bash
+
+export UHUBUILD_APT_SOURCES=/etc/apt/sources.list
+export UHUBUILD_CCACHE_DIR=/var/cache/uhubuild/ccache
+export UHUBUILD_CHROOTDIR=/tmp/chroot
+export UHUBUILD_LOGPACKDIR=/usr/src/LOGPACK
+export UHUBUILD_SNAPSHOTDIR=/usr/src/SNAPSHOT
+export UHUBUILD_RESULTDIR=/usr/src/PACKAGES
+
+exec uhubuild-chrootbuild "$@"
+</verb>
+
+
+<sect1>Összetettebb példa build szkript<p>
+
+<verb>
+#!/bin/bash
+
+if [ $# != 1 ]; then
+	echo "Egy argumentumot kérek!" &gt;&amp;2
+	exit 1
+fi
+
+if [ ! -d /root/SRC/$1 ]; then
+	echo "Nincs ilyen forrás" &gt;&amp;2
+	exit 1
+fi
+
+if [ $1 = gcc ]; then
+	echo "Figyelem! A gcc újrafordítása nem biztos, hogy jót tesz" &gt;&amp;2
+	echo "a szép nagy ccache könyvtárnak!" &gt;&amp;2
+fi
+
+export UHUBUILD_APT_SOURCES=/etc/apt/sources-build.list
+export UHUBUILD_CCACHE_DIR=/ccache # /root/ccache nem jó,
+                                   # uhubuild-nek nincs joga a /root-hoz
+if [ -z "$UHUBUILD_CHROOTDIR" ]; then
+	# Kívülről felülbírálható
+	export UHUBUILD_CHROOTDIR=/root/chroot1:/root/chroot2:/root/chroot3
+fi
+export UHUBUILD_LOGPACKDIR=/root/LOGPACK
+
+# Az eredményt ideiglenes könyvtár alá rakjuk, mert így könnyebb lesz
+# törölni a régi változatokat a fordítás végén.
+export UHUBUILD_RESULTDIR=$(mktemp -d /tmp/RESULT.XXXXXX)
+trap 'rm -rf $UHUBUILD_RESULTDIR' EXIT
+
+# Kiszedjük a forrás verzióját és release értékét, ezek és a
+# /root/EXTRARELEASE alapján kitaláljuk az extrarelease értékét.
+ver=$(&lt;/root/SRC/$1/version)
+rel=$(&lt;/root/SRC/$1/release)
+if [ -f /root/EXTRARELEASE/${1}_${ver}-${rel} ]; then
+	extrarel=$(&lt;/root/EXTRARELEASE/${1}_${ver}-${rel})
+	extrarel=$((extrarel+1))
+else
+	extrarel=1
+fi
+export UHUBUILD_EXTRARELEASE="$extrarel"
+
+# Hajrá, fordítunk...
+uhubuild-chrootbuild /root/SRC/$1 || {
+	# Hiba
+	touch /root/FAILED/$1
+	exit 1
+}
+
+# Siker.
+rm -f /root/FAILED/$1
+echo $extrarel &gt; /root/EXTRARELEASE/${1}_${ver}-${rel}
+
+# A kész csomagokat /root/PACKAGES alá másoljuk, de töröljük onnan a régebbi
+# példányokat.
+for pkg in $(ls $UHUBUILD_RESULTDIR); do
+	rm -f /root/PACKAGES/${pkg%%_*}_*
+done
+cp -a $UHUBUILD_RESULTDIR/* /root/PACKAGES/
+
+# Packages fájl is kell nekünk.
+cd /root/PACKAGES
+uhu-scanpkgs
+</verb>
+
+
+
+<sect>Saját csomag készítése<p>
+
+Ebben a fejezetben azt vizsgáljuk meg, hogy aki már sikeresen reprodukálta
+egy-két hivatalos UHU csomag lefordítását, vagyis megismerkedett a build
+rendszer használatával, az hogyan essen neki teljesen új, saját csomag
+elkészítésének.
+
+Első lépésként töltsük le a forrást, és (amíg még nincs nagy tapasztalatunk
+a csomagkészítésben, addig mindenképp) uhubuild-en kívül kézzel-lábbal
+fordítsuk le a csomagot, hogy lássuk, megy-e, és tapasztalatot szerezzünk a
+konkrét csomaggal kapcsolatban.
+
+Ha ezzel megvagyunk, akkor fel kell építenünk egy, többi csomagéhoz hasonló
+szerkezetű könyvtárstruktúrát. Ennek lépéseit vesszük most sorra.
+
+
+<sect1>Az acquire fájl, avagy dl --- The Downloader<p>
+
+Az acqurie fájlba írjuk a csomag letöltésével és kicsomagolásával
+kapcsolatos információkat. Interpreterként a ``<tt>#!/usr/bin/env dl</tt>''
+sztringet adjuk meg. A dl (download) szkript végzi a forrás letöltését és
+kicsomagolását a fájlban megadott szabályok szerint.
+
+Speciális esetben előfordulhat, hogy nincsen szükség forrás letöltésére
+(például a csomag csak addons alatt szállított fájlokból készül). Ez esetben
+nincs szükség acquire fájlra.
+
+A fájlban üres sor választja el egymástól az egyes részeket, általában csak
+egy ilyen rész van, de ha több forráscsomagunk van, akkor több.
+
+Minden ilyen rész első sora a beszerzendő fájl nevét és kibontási módját
+adja meg. A sorban lehet egy kettőspont, először a kettőspont előtti részre
+koncentrálunk.
+
+Az első sztring a letöltendő fájl neve, lehetőség szerint a beleírt
+verziószám helyett az UB_VERSION sztring használatával (ami a version fájl
+tartalmára helyettesítődik). Ha nincs második szó, akkor egyszerűen ezt a
+fájl másolja a dl szkript; általában nem erre van szükségünk, hanem valamit
+ki akarunk belőle csomagolni. Ezt a második szóban adjuk meg. A
+kicsomagolandó dolog a normális csomagokra ``csomagnév-${UB_VERSION}/'', de
+ettől könnyen eltérhet. Érdemes a letöltött csomagra mc-ben F3-at vagy
+Enter-t ütni, abból ez kiderül. Ha egy könyvtár tartalmát akarjuk
+kicsomagolni (általában ezt akarjuk), akkor annak végére tegyünk ``/''
+jelet. Példa:
+<verb>
+#!/usr/bin/env dl
+
+bash-${UB_VERSION}.tar.gz bash-${UB_VERSION}/
+</verb>
+
+Egyes elkefélt csomagokban szükség van arra, hogy a kicsomagolandó
+könyvtárat ``./könyvtárnév'' alakban adjuk meg, a bevezető ``./''
+szükségességét észrevesszük, ha F3-at ütünk a .tar.gz vagy .tar.bz2 fájlra
+mc-ben.
+<verb>
+util-linux-${UB_VERSION}.tar.gz ./util-linux-${UB_VERSION}/
+</verb>
+
+Ha a forrásban ömlesztve vannak a fájlok, bevezető könyvtárkomponens
+nélkül, akkor a kicsomagolandó dolog helyére egyszerűen egy ``.'' karaktert
+teszünk.
+<verb>
+nc110.tgz .
+</verb>
+
+A második mező után állhat egy harmadik (negyedik stb.), ha tömörített
+fájlon belüli tömörített fájlból akarunk valamit kicsomagolni, például ha
+.src.rpm-en belüli .tar.gz-n belülről akarunk kicsomagolni egy könyvtárat,
+akkor az első szó az .src.rpm fájlneve, a második szó ezen belül a .tar.gz
+fájl neve (esetleg elérési útvonallal), a harmadik szó pedig ez utóbbin
+belül a kibontandó könyvtár neve.
+<verb>
+usermode-1.63-1.src.rpm usermode-1.63.tar.gz usermode-1.63/
+</verb>
+
+Mindezek után jöhet opcionálisan egy kettőspont, majd egy könyvtárnév,
+ilyenkor a kicsomagolás az itt megadott könyvtár alá történik.
+<verb>
+shape-jedi.tar.gz . :XBlast-TNT/image/sprite/
+</verb>
+
+A következő sor(ok)ban egy vagy több letöltési helyet adhatunk meg, ahonnan
+az első sor első szavában megadott fájl beszerezhető. http://, https:// és
+ftp:// URL-eken esetén azt a könyvtárat kell megadnunk, ``/'' jellel a
+végén, amelyikből a fent említett fájl letölthető. cvs:// és svn://
+szintaxissal verziókezelő rendszerből is ki tudjuk szedni a fájlokat. Az
+URL-eket illik egy TAB karakterrel beljebb tabulálni.
+
+Sourceforge-ról letöltés esetén használjuk a
+``http://download.sourceforge.net/programneve/'' URL-t, például
+<verb>
+http://download.sourceforge.net/lgames/
+</verb>
+
+Ne teljes fájlnevet adjunk meg, mert ez esetben fölöslegesen ismételnénk meg
+az előző sorban már megadott adatot. Elsőként lehetőleg mindig elsődleges
+letöltési forrást adjunk meg, ezt követheti néhány mirror.
+
+Az URL-ben is használjuk az $UB_VERSION makrót, ha az útvonal már tartalmaz
+verziószámot. Ily módon a program újabb verziójára frissítéskor az acquire
+fájlt nem kell piszkálni, csak a version fájlt átírni. Ha a
+fájl nevében vagy a letöltési útvonalban
+részleges verziószám van, használjuk a /usr/lib/uhubuild/uhubuild-build
+szkriptben definiált makrókat, például UB_VERSION_MAJOR (első pont előtti
+rész), UB_VERSION_MINOR (első és második pont közti rész), UB_VERSION_MICRO
+(második és harmadik pont közti rész), UB_VERSION_HEADn (n = 1, 2, 3...) (az
+első ennyi szegmens, például ha a verziószám 8.7.6, akkor
+UB_VERSION_HEAD2=8.7), UB_VERSION_TAILn (az utolsó ennyi szegmens).
+Ezeket a változókat majd a compile és install szkriptekben is használhatjuk,
+ha szükségünk van rá.
+
+Néhány szoftverből mindig csak a legfrissebb verzió érhető el egy adott
+könyvtár alól, és valahol máshol található meg az összes verzió. Ilyenkor ez
+utóbbi URL-t (is) vegyük fel. Ha az utóbbi URL alatt az aktuális verzió nem
+lelhető fel, csak a régebbiek (például egy old könyvtár alá mozgatják mindig
+a nem épp legújabb változatot), akkor vegyük fel a friss csomag URL-jét és
+az old könyvtárat is, hogy a letöltés később is sikeres legyen.
+
+Az acquire fájl helyes kitöltése után az <tt>ub_download</tt> parancs
+letölti a forrást és elhelyezi a sources könyvtár alatt. Ha ezt nem tesszük
+meg kézzel, semmi gond, a csomagkészítés első lépéseként le fog futni ez a
+parancs. Mindenképpen fontos, hogy a forrást ne kézzel helyezzük el a
+sources könyvtár alá, hanem az ub_download parancsot használjuk, hiszen így
+ellenőrizhető le, hogy az acquire fájlban az URL-t tényleg helyesen
+töltöttük-e ki.
+
+
+<sect1>Fordítás és telepítés áttekintése<p>
+
+A fordítás menetét a compile, a telepítés menetét pedig az install fájlban
+kell leírnunk. Egy kis ismeretterjesztő áttekintéssel kezdjük.
+
+<sect2>autoconf<p>
+
+A letöltött programok túlnyomó többségének fordítását egy jól
+felparaméterezett ./configure parancs futtatásával kell kezdenünk. A
+./configure szkript feladata az, hogy a megadott paraméterek és a rendszer
+jellemzői függvényében előkészítse a terepet a fordításhoz.
+
+A ./configure szkriptet általában nem kézzel írják meg a szerzők, hanem
+automatikusan állítják elő a configure.in fájl alapján az autoconf csomag
+programjaival. Az autoconffal készült configure szkriptek futásuk során a
+Makefile és config.h fájlokat készítik el a Makefile.in és config.h.in nevű
+sablonok alapján. Kézzel készített configure szkript esetén ez nem
+szükségszerű, de ott is elképzelhető, hogy ezeket a fájlneveket választotta
+a szerző.
+
+Autoconf segítségével készített configure fájlról a fájl első néhány sorában
+található egyértelmű autoconf-utalás, valamint configure.in, Makefile.in,
+config.h.in fájlok létezése tanúskodnak.
+
+Ezen információk alapján el tudjuk dönteni, hogy egy adott forrást a szerzők
+az autoconf segítségével készítettek-e. Önmagában a lefuttatandó configure
+szkript létezése, mint láttuk, még nem elegendő ehhez.
+
+<sect2>automake<p>
+
+Az autoconffal készített csomagok nagy része ráadásul automake-kel is
+készült. Automake használata esetén a szerzőnek a configure szkript
+bemeneteként használt Makefile.in-t sem kell kézzel előállítania, hanem azt
+a Makefile.am-ből az automake csomag programjaival készíti el. Az automake
+használatáról a Makefile.in elején található utalás, valamint a Makefile.am
+fájl létezése árulkodik.
+
+<sect2>automake, autoconf, cvs<p>
+
+Tisztességes program esetén az automake és autoconf parancsokat csak a
+fejlesztő futtatja le, a felhasználónak (csomagkészítőnek) erre nincsen
+szüksége, hiszen ő már csak az általuk elkészített configure, Makefile.in és
+config.h.in fájlokat használja. A csomagfordítást végző chroot rendszerben
+azonban alapból megtalálható ez a két csomag, hátha mégis kell.
+
+Vannak programok, melyekről ránézésre nem egyértelmű, de a fordítás során
+mégis használják a fenti két programot. CVS-ből szedett forráskód esetén
+pedig gyakorlatilag biztos, hogy (egy ott mellékelt útmutató szerint) nekünk
+kell lefuttatnunk ezeket, hogy előállítsuk a configure szkriptet. Itt
+kezdődnek a bonyodalmak. Az automake és autoconf program fejlődése során
+ugyanis több ízben történt inkompatibilitást eredményező változás, és
+gyakran még a legújabb szoftverek készítői és régi automake-et vagy
+autoconfot használnak.
+
+<sect2>libtool<p>
+
+Ha az autoconf és automake nem lett volna kellően bonyolult, akkor jön egy
+újabb, még kacifántosabb sztori.
+
+Függvénytárat (libraryt) szállító autoconfos program sok esetben a libtoolt
+használja ezek előállításához és telepítéséhez. A libtool, hasonlóan az
+automake/autoconf-hoz, fájlokat másol be a fejlesztő telepített rendszeréről
+a forráskódba, ezúttal ltconfig és/vagy ltmain.sh nevű fájlokat. Ezeket a
+fájlokat a fordítás során futtatni fogja a gép.
+
+Sajnos a hivatalos libtool-ban számtalan hiba található, amely miatt az
+olyan környezetben sok esetben nem működik, ahogyan nekünk a csomagkészítés
+során működnie kellene. (A hibák általában destdir-es telepítés során jönnek
+elő, márpedig mindjárt látni fogjuk, hogy nekünk erre lesz szükségünk.)
+
+Az UHU-ban lévő libtool sok javítást tartalmaz, ezek nagy részét a neten
+vadásztuk össze, de vannak saját készítésűek is. A fordítás menete azonban
+nem a rendszeren telepített, hanem a forráskóddal szállított libtool-t
+használja. Nagyon sok programnál szükség van tehát arra, hogy a fordítás
+megkezdése előtt a kibontott forráskódban a libtool-t az ott lévő
+változatról kicseréljük a saját változatunkra. Vannak azonban olyan
+programok is, ahol épp ez rontja el a fordítást, csak a forrással szállított
+libtoollal megy jól a fordítás (az 1.0-ban ez leginkább a KDE alkalmazásokra
+jellemző, 1.1-ben már általában nem kell trükközni a KDE programok esetén).
+
+
+<sect1>Fordítás (compile)<p>
+
+A compile szkriptben kell rögzítenünk a lefordítás menetét. A szkript első
+sora ``<tt>#!/bin/sh -eux</tt>'' legyen. Speciális esetekben nincsen szükség
+fordításra (általában kereskedelmi szoftver, illetve szkript, grafika
+esetén), ilyenkor nem kell létrehoznunk compile szkriptet.
+
+A fordítás menete szerencsés esetben egyetlen ``ub_compile'' parancsból áll.
+Ez megpróbálja kitalálni a szükséges lépéseket, és azok segítségével
+lefordítani a programot. Például autoconf-os cucc esetén egy ub_configure,
+majd egy ub_make parancsot hajt végre, az argumentumokat az előbbinek adva
+át, míg perl cucc esetén egy ``perl Makefile.pl'' paranccsal kezd.
+
+Az ``ub_'' szkriptek működésével kapcsolatban érdemes egy pillantást vetni
+rájuk a /usr/bin könyvtár alatt. Bizonyos esetekben szükség lehet az
+``ub_configure'' és ``ub_make'' parancsok külön használatára, de ha
+lehetséges, inkább egyszerűen az ``ub_compile''-t használjuk.
+
+Az ub_configure szkript a ./configure-t hívja meg előre beállított alap
+értelmezett argumentumokkal, mint például --prefix=/usr,
+--mandir=/usr/share/man és még néhány ilyen. További argumentumokat is
+megadhatunk, illetve felülbírálhatjuk a beépített alap argumentumokat.
+
+Ha a programot /bin, /sbin és/vagy /lib alá akarjuk telepíteni, akkor
+használjuk a --bindir=/bin, --sbindir=/sbin, --libdir=/lib kapcsolókat, és
+ne azt írjuk, hogy --prefix=/, mert ez aztán a /usr/share helyett is
+/share-t fog használni, stb.
+
+Ha a csomag tartalmaz configure szkriptet, de az nem autoconffal készült,
+akkor az ub_configure jó eséllyel nem fog működni, ilyenkor használjuk
+közvetlenül a ./configure parancsot olyan argumentumokkal, amilyenekkel
+szeretnénk. Ha nincs is ./configure szkript, akkor egyszerűen úgy kell
+lefordítanunk, ahogyan az adott csomag megkívánja.
+
+Az ub_make makró lényegében egyszerűen csak a make-et hívja meg a forrás
+lefordítására.
+
+Az argumentumok adása terén tartsuk magunkat ahhoz a szintaxishoz, hogy
+minden sorban csak egy argumentum áll (a parancs nevével egy sorban egy
+sem), minden argumentumot egy TAB vezet be, és a sortörő backslash előtt egy
+szóköz áll:
+<verb>
+#!/bin/sh -eux
+
+ub_compile<szóköz>\
+<tab>--bindir=/bin<szóköz>\
+<tab>--sbindir=/sbin<szóköz>\
+<tab>--with-installed-zlib
+</verb>
+
+Ha a fordítás elszáll libtool-ra utaló, vagy egyéb extrém hibaüzenettel (ez
+régi programoknál könnyen elképzelhető), megoldás lehet a libtool frissítése
+a configure szkript futtatása során. Ehhez állítsuk be az UB_UPDATELIBTOOL
+környezeti változót:
+<verb>
+UB_UPDATELIBTOOL=yes ub_compile
+</verb>
+
+
+<sect1>Telepítés (install)<p>
+
+Az install szkriptnek a lefordított fájlokat kell telepítenie az
+$UB_INSTALLDIR környezeti változóban kapott könyvtár alá (tehát nem a
+végleges helyükre) olyan könyvtárstruktúrában, ahogyan azt a készülő
+csomagban látni szeretnénk. A telepítést úgy kell elvégeznie, hogy a
+telepített fájlokban az UB_INSTALLDIR változó értéke ne látszódjék, tehát
+összecsomagolás és onnan kimásolás esetén már ne akarjon semmit sem kezdeni
+ezzel az útvonallal.
+
+Az $UB_INSTALLDIR könyvtár, és alatta egy standard könyvtárstruktúra már
+létre van hozva.
+
+A nem végleges helyre, hanem más könyvtár alá történő telepítésekhez
+bizonyos csomagok jó támogatást adnak, míg bizonyosak semmilyent sem, így
+elképzelhető, hogy nem lesz könnyű rábeszélni erre a programot. Általában
+azonban viszonylag sima ügy.
+
+Az automake/autoconf párossal készült csomagok mind támogatják ezt, méghozzá
+a Makefile-ba betekintve láthatjuk, hogy a DESTDIR környezeti változót kell
+számukra megfelelően beállítani. Ezt az ub_install program magától
+kideríti, a telepítés tehát kinézhet így:
+<verb>
+#!/bin/sh -eux
+
+ub_install
+</verb>
+
+A fenti egyszerű parancs perl cuccok és még sok más program esetén is jól
+telepít. Fehér holló az olyan program, amelyik automake/autoconf progival
+készült, és mégis elszáll hibával a fenti parancsra.
+
+Az ub_install parancs kiírja, hogy DESTDIR-t ismerő Makefile-t talált-e.
+Ha ezt rosszul detektálja, az UB_MAKEINSTALL_USE_DESTDIR környezeti
+változónak ``yes'' vagy ``no'' értéket adva lebeszélhetjük őt az
+autodetektálásról.
+<verb>
+#!/bin/sh -eux
+
+UB_MAKEINSTALL_USE_DESTDIR=yes ub_install
+</verb>
+
+A nem automake-kel készült csomagok nagy része is támogatja ezt, a
+Makefile-ba beletekintve találkozhatunk olyannal, hogy az összes fájlt
+DESTDIR, ROOT, ROOTDIR, INSTALL_ROOT, INSTALL_DIR, RPM_BUILD_ROOT,
+PERL_INSTALL_ROOT vagy ehhez hasonló nevű könyvtár alá akar telepíteni. Ha
+mondjuk INSTALL_ROOT a változó neve, akkor ilyesmi parancsot használhatunk:
+<verb>
+make \
+	INSTALL_ROOT="$UB_INSTALLDIR" \
+	install
+</verb>
+
+Ha ez sem nyert, sok esetben van még lehetőségünk egyes változók külön-külön
+felülbírálásával, valahogy így:
+<verb>
+make \
+	prefix="$UB_INSTALLDIR"/usr \
+	bindir="$UB_INSTALLDIR"/usr/bin \
+	mandir="$UB_INSTALLDIR"/usr/share/man \
+	install
+</verb>
+
+Természetesen ilyenkor már mindig tanulmányoznunk kell a Makefile-t, hogy
+milyen változókat kell beállítanunk.
+
+Extrém esetekben szükség lehet a Makefile patch-elésére, vagy esetleg
+kézzel-lábbal (cp vagy install paranccsal) történő telepítésre.
+
+Az install fázis is sima felhasználóként fut, mint a compile fázis, de egy
+speciális pretendroot nevű programon keresztül. Ily módon a ténylegesen root
+tulajdonú helyekre (például /usr alá) nyilván nem tud írni, de az általa
+$UB_INSTALLDIR alatt létrehozott fájlokat látszólagosan alap értelmezésben
+root tulajdonosúként mutatja a programok számára, de másmilyen felhasználó
+is választható. Ha tehát egy programban a Makefile például egy ``install -o
+root -g lp'' paranccsal akar telepíteni egy fájlt, nem kell paráznunk,
+tökéletesen sikerülni fog a parancs, és a telepített fájl root tulajdonnal,
+lp csoporttal fog megjelenni a csomagban. Alap esetben a telepített fájlok
+mind látszólagosan root tulajdonúak és root csoportúak lesznek.
+
+Természetesen sok esetben szükség van egyéb teendőkre is a telepítés után.
+Például gyakran létrehozunk szimbolikus linkeket. Fontos, hogy tisztában
+legyünk az ``ln -s'' parancs két argumentumának gyökeresen különböző
+jelentésével, és lássuk, hogy az első (``hova'') argumentumba nem szabad
+berakni az UB_INSTALLDIR értékét (és lehetőség szerint minél egyszerűbb
+relatív útvonalat adjunk meg), míg a másodikba (``honnan'') be kell tennünk.
+<verb>
+ln -s tcsh "$UB_INSTALLDIR"/bin/csh
+</verb>
+
+
+<sect1>Chroot környezet (build-depends)<p>
+
+A build-depends fájlban soronként egy csomagot nevezhetünk meg, melyek
+szükségesek a fordításhoz, és így részét fogják képezni a fordítást végző
+chroot rendszernek. Általában ha egy csomagra szükség van, és ahhoz van
+külön dev csomag is, akkor mindkettőt fel kell venni a build-depends fájlba.
+Ha egy -dev csomagot megemlítünk, mindenképpen említsük meg -dev nélküli
+változatát is, és viszont.
+
+Lehet makrózni, % jellel kezdődően vannak előre definiált csomagnév-makrók,
+ezek jelentése a /usr/share/uhubuild/config/macros alól kipuskázható.
+Egy-egy ilyen makró általában egy felhasználói-fejlesztői csomagpárt takar,
+például a %png makró a libpng és libpng-dev csomagot húzza be.
+
+A makrókkal vigyázzunk: ha nem létező makrót adunk meg, azt figyelmeztetés
+nélkül lenyeli a build rendszer, nem anyázik miatta (egyelőre).
+
+Sajnos egyelőre még nincs kész az a szolgáltatás, hogy ha a foo csomagnak
+kell a bar, akkor a foo-dev csomagnak is kelljen a bar-dev. Emiatt könnyen
+kimaradhat egy-két fontos dev csomag a build rendszerből, ami miatt nem
+sikerül a fordítás. Például a fordítás szól, hogy nincs esound. Ekkor
+felvesszük az esound és esound-dev csomagokat, a chroot-ba bekerül az
+audiofile is (mert kell az esound-nak), és a fordítás még mindig elszáll,
+hogy nincs esound. Valójában a fejlesztői csomag tényleg még nem működik,
+mert kellene az audiofile-dev is. Ilyenkor általában a config.log fájlban
+tudunk a hiba oka után vadászni. Tervezzük javítani a build rendszer ezen
+hiányosságát.
+
+Ha egy alapból települő csomagot ki szeretnénk szedni a build rendszer alól
+(leginkább azért, hogy egy vele ütköző másikat telepíteni tudjunk), annak
+neve elé tegyünk egy mínusz jelet, például:
+<verb>
+-autoconf
+-automake
+autoconf2.13
+automake1.4
+</verb>
+
+
+<sect1>Dokumentációk (doc)<p>
+
+A doc fájlban felsorolt fájlok vagy könyvtárak a
+/usr/share/doc/Packages/csomagnév könyvtár alá fognak kerülni.
+
+Egy csomag sokféle dokumentációt hozhat magával.
+
+Bizonyos dokumentációk bele vannak égetve a bináris programba, vagy például
+.mo fájlokból szedi őket. Ezzel nincs semmi különös teendő.
+
+Ha man page-eket vagy info fájlokat hoz magával a program, azok helye is
+adott, man page-eket a /usr/share/man
+könyvtárba kell rakni, info fájlokat a /usr/share/info alá.
+
+A nehezebb kérdés azon fájlok listája, melyek ``csak úgy'' ott vannak a
+forrásban. Ezek általában a README, TODO, COPYING, ChangeLog, ilyesmi
+fájlok, de sok esetben a csomagról szóló dokumentációk txt vagy ilyesmi
+formátumban. Ezekkel kapcsolatban a teendő az alábbi.
+
+Minden olyan dokumentációt, amely a program által nem elérhető vagy nem
+látható, a /usr/share/doc/Packages/csomagnév könyvtár alá kell pakolni,
+lehetőség szerint oly módon, hogy a doc fájlban megnevezzük őt -- semmi más
+teendőnk nincs vele.
+
+A programoknak semmilyen módon nem szabad tudniuk a /usr/share/doc/Packages
+könyvtár létezéséről, így minden olyan dokumentációt, amely a programból is
+elérhető (mondjuk a help menün keresztül), vagy a /usr/share/csomagnév,
+vagy pedig a /usr/share/doc/csomagnév könyvtár alá kell tenni. Ajánlott az
+utóbbi használata, hogy a dokumentációk egy helyen legyenek. Ezen
+dokumentációknak sem szabad semmilyen módon hivatkozniuk a
+/usr/share/doc/Packages könyvtárra, szimlink révén sem. A
+/usr/share/doc/Packages/csomagnév viszont tartalmazhat szimlinket, amely a
+/usr/share/csomagnév, /usr/share/doc/csomagnév vagy ilyesmi könyvtár alatt
+lévő, az alkalmazás által is használt dokumentációra mutat.
+
+Ha az alkalmazás a doc fájlban megemlített fájlokat is telepíteni akarja
+valahova, akkor erről egy, az install szkriptben jól irányzottan elhelyezett
+``rm'' paranccsal beszéljük le.
+
+A doc fájlba NE vegyük fel a következő típusú fájlokat:
+
+<itemize>
+<item>Olyan dolgokat, melyek a disztribúció használói számára nem érdekesek,
+legfeljebb csak olyanok számára, akik már úgyis letöltötték a forrást.
+Például INSTALL, HACKING. Sokszor a README is ilyen.
+<item>Azokat a doksikat, melyek nem kapcsolódnak az adott forráshoz,
+tipiusan az ABOUT-NLS fájl.
+<item>Más platformokról vagy architektúrákról szóló leírásokat: README.WNT,
+README.BSD, README.Linux-PPC.
+<item>Egyértelműen csak más disztribúcióról szóló, UHU esetén érdektelen
+leírásokat.
+<item>Nagyon régi, vagy nem karbantartott changelog fájlokat.
+<item>Üres (nulla hosszú) fájlokat (a NEWS fájl sokszor ilyen).
+<item>Magyartól és angoltól különböző nyelven írt fájlokat.
+</itemize>
+
+Viszont vegyük fel a következőket:
+
+<itemize>
+<item>Általában az AUTHORS, BUGS, ChangeLog, COPYING, KNOWN-ISSUES, LICENSE,
+NEWS, THANKS, TODO fájlok ide valók. Többnyire a README is.
+</itemize>
+
+Röviden tehát azokat vegyük fel, amik érdekelhetik a csomagot felhasználó
+UHU-zó embert, aki nem akar tovább bütykölni a csomagon.
+
+Ha egy adott leírás többféle formátumban is elérhető, csak egyet vegyünk
+fel, azt, amelyik konzolról jobban olvasható, és lehetőleg a méretre is
+figyeljünk. Például az azonos tartalmú foobar.html és foobar.pdf közül a
+html-t vegyük fel.
+
+
+<sect1>Egyéb fájlok<p>
+
+<sect2>homepage<p>
+
+A csomag hivatalos honlapjának teljes (nem pongyola) URL-e, tehát http://
+vagy ilyesmi bevezető, és ha egy webhely nyitó lapjáról, vagy egy
+könyvtárról van szó, akkor az URL / jelre végződik (mint ahogyan a kulturált
+böngészők maguktól átírják). Például:
+
+<verb>
+http://www.uhulinux.hu/
+</verb>
+
+<sect2>maintainer<p>
+
+A csomag karbantartójának neve és e-mail címe a szokásos formában, például:
+
+<verb>
+Gipsz Jakab <gipsz@jakab.hu>
+</verb>
+
+<sect2>distribution<p>
+
+A disztribúció neve és verziószáma, például:
+
+<verb>
+UHU Linux 1.0
+</verb>
+
+<sect2>vendor<p>
+
+A forgalmazó, például:
+<verb>
+ACME Inc.
+</verb>
+
+<sect2>sourcename<p>
+
+Írjuk ide a forráscsomag nevét. Ez általában az egyik készülő bináris csomag
+neve, de nagyritkán valami más.
+
+<sect2>version<p>
+
+A hivatalos eredeti csomag verziószáma. Persze ha csúnya a verziószám, akkor
+át kell alakítanunk. Mínusz jelet nem használhatunk; ha ilyen lenne a
+verziószámban, azt például ponttal helyettesítsük. Pre, RC, alpha, béta stb.
+verziók esetén egy &tilde; jelet tegyünk ezen kulcsszavak elé, mert a dpkg a &tilde;
+karaktert kisebbnek tekinti annál, mintha véget érne a verziószám. Így
+garantálható a sima frissítés majd ha megjelenik a végleges verzió. Tehát
+például 1.0&tilde;pre1 < 1.0&tilde;pre2 < 1.0&tilde;pre3 < 1.0.
+
+<sect2>release<p>
+
+Első fordítás során írjunk ide 1-et. Azonos verzióból történő újabb UHU
+csomag készítésekor növeljük meg mindig 1-gyel (feltéve, hogy a korábbi
+csomagot kiadtunk kezünk közül). Ha a program verziója is megnőtt, állítsuk
+vissza 1-re.
+
+
+<sect1>Foltok (patches)<p>
+
+A forráson esetleg elvégzendő változtatásokat patch-ek formájában a patches
+könyvtár alá helyezzük el.
+
+Ha az eredeti forráson módosítanunk kell, tegyük a következőt. Csomagoljuk
+ki a forrást két példányban egymás mellé, például a /tmp/foo-0.99 és
+/tmp/foo-0.99.orig könyvtárba. A /tmp/foo-0.99 könyvtárban végezzük el a
+szükséges módosításokat. Ez után a /tmp-ben állva adjuk ki a ``<tt>diff -Naur
+foo-0.99.orig foo-0.99 &gt; /útvonal/01-valami.patch</tt>'' parancsot. Ez
+elkészíti a 01-valami.patch nevű fájlt, melyet a patches könyvtár alá
+rakhatunk. Feltétlenül nézzünk bele a fájlba, hogy jó-e, ami benne van.
+
+Ha több patch-et is készítünk, a későbbieket lehetőleg úgy készítsük el,
+hogy a /tmp/foo-0.99 és a /tmp/foo-0.99.orig könyvtárban is már alkalmazva
+legyenek a korábbi patch-ek. (Ezt a megfelelő könyvtárba belépve a
+``<tt>patch -p1 &lt; /útvonal/01-valami.patch</tt>'' paranccsal érhetjük
+el.)
+
+A patch-ek ábécérendben kerülnek alkalmazásra. Kövessük azt, hogy minden
+patch neve különböző kétjegyű számmal kezdődik, ekkor alkalmazási sorrendjük
+teljesen egyértelmű. Ne csináljunk egy- és kétjegyű, vagy két- és háromjegyű
+számokat is, mivel ekkor a számítógép szerinti ábécérend eltér a számok
+nagyság szerinti sorrendezésétől. Ne csináljunk azonos sorszámmal több
+patch-et, mivel nevük ábécérendbe rendezése függhet az aktuális locale-től.
+
+A patch-ek neve lehetőleg arról szóljon (angolul pár szóban), hogy mi célt
+szolgál a patch, és ne arról, hogy ezt mi módon teszi meg, vagy hogy mely
+fájlt patch-eli meg. Természetesen egy patch fájl a forrás több fájlját is
+módosíthatja, vagy létre is hozhat új fájlokat. Lehetőleg kerüljön egy
+patch-be mindaz, ami funkcionálisan egy változtatást hajt végre a forráson,
+míg külön-külön patch-be azok, amik egymástól független módosításokat
+végeznek el.
+
+A .patch kiterjesztés használata fontos. Ha -p0 módon alkalmazandó patch-et
+szerzünk be valahonnan, annak .patch0 kiterjesztést adjunk, de mi ne
+készítsünk ilyen patch-eket. Ha egy patch-et (ideiglenesen) ki akarunk
+hagyni, nevezzük át a fájlt .skip kiterjesztésűre.
+
+Ha egy programhoz vannak saját patch-eink és vannak netről letöltött, mások
+által karbantartott patch-ek is, akkor általában az a megközelítés jár
+kevesebb munkával, ha először a mások által készített patch-eket
+alkalmazzuk, majd ezt követően a saját készítésűeket.
+
+
+<sect1>Plusz fájlok (addons)<p>
+
+Az addons könyvtárat hozzuk létre, és az igazi könyvtárstruktúrának
+megfelelően rakjunk alá fájlokat, ha azokat a bináris csomagban látni
+szeretnénk. Például egy addons/etc/foo.conf fájl létrehozása esetén a
+csomagban meg fog jelenni egy /etc/foo.conf. Ha 644-estől különböző joggal,
+vagy root.root-tól különböző tulajdonossal szeretnénk felvenni a fájlt, azt
+itt nem tudjuk megadni a fájl jogaival, a perms fájlban kell majd
+megemlítenünk.
+
+Addons alá tehetünk olyan fájlt, amely egyáltalán nem található meg az
+eredeti forrásban. Például ha egy szerver program nem hoz magával semmilyen
+példa konfigurációs fájlt sem, de mi mégis szeretnénk szállítani egyet. Az
+addons akkor is jól használható, ha egy, a csomagban lévő szövegfájlt
+gyökeresen új változatra újraírunk, amelynek ez után semmi köze nem lesz az
+eredeti változathoz.
+
+NE használjuk az addons-t egy, a csomag által szállított fájl egy-két
+opciójának átírásához, ilyenkor az eredeti forrást patch-eljük meg
+igényeinknek megfelelően. Például tegyük fel, hogy az alkalmazás szállít egy
+konfigurációs fájlt, amelyben 3 opciót át akarunk írni. Ha ezt patch-ben
+tesszük meg, akkor egyrészt átláthatóan, az utókor számára dokumentáltan
+cselekedtünk, hiszen rögzítettük, hogy mi az, amin változtattunk, mi az, ami
+másképpen jó nekünk, mint ahogyan a program készítője gondolta. Ha frissül a
+program, és vele együtt a konfigurációs fájl, az újonnan megjelenő opciók a
+mi konfigurációs fájlunkban is mind megjelennek, illetve ha a patch-ek nem
+alkalmazódnak, akkor szerencsére rá leszünk kényszerítve a kézzel történő
+korrigálásra.
+
+Ezzel szemben mi történik, ha addonsból szállítjuk a saját konfigurációs
+fájlunkat? Első körben az történik, hogy ahogy frissebb és frissebb lesz a
+program, és változik a konfig fájl szintaxisa és default értékei, úgy le
+fogunk maradni, elfelejtjük frissíteni a saját konfig fájlunkat,
+félrevezetjük a felhasználót az elavult megjegyzésekkel és azzal, hogy
+nincsenek feltüntetve az újonnan megjelent értékek, majd az idő múlásával
+szép lassan a programunk elkezd nem a kívánt módon, esetleg egyenesen
+hibásan működni a rossz konfig fájl miatt. Mi történik második körben,
+amikor sok fölösleges szívás után nekiállunk átdolgozni a saját konfig
+fájlunkat? Valamekkora (nem túl nagy) eséllyel elő tudjuk szedni azt az
+eredeti konfig fájlt, amelyiket anno átdolgoztunk (ennek legfőbb akadálya,
+hogy valószínűleg nem tudjuk kideríteni, a progi melyik verziója mellett
+csináltuk ezt meg), és ekkor jónéhány percnyi plusz munkával elő tudjuk
+állítani a patch-et. Sokszor ezt nem tudjuk megtenni, és ott állunk a saját
+konfig fájlunk előtt, amely nem az általunk elvégzett munka menetét (vagyis
+a változtatásokat) rögzítette, hanem a munka végeredményét, amely nem
+elegendő ahhoz, hogy újra elvégezzük a munkát. Ott állunk saját régi
+konfigurációs fájlunk előtt, nem emlékszünk, hogy mely opciókat változtattuk
+meg szándékosan, melyekhez nem nyúltunk hozzá, csak épp a fő programban
+változtak meg, stb. Gyakorlatilag képtelenség ilyenkor karbantartani a
+konfigurációs fájlt, és rengeteg hibalehetőséget is tartalmaz ez a
+hozzáállás.
+
+Tehát ha nem vadonatúj fájlt készítünk, hanem a program egyik fájlján
+módosítunk, akkor azt ennek megfelelően patch formájában dokumentáljuk, ne
+az elkészült fájl eltárolásával, vagyis igyekezzünk minden esetben az
+általunk elvégzett munka folyamatát dokumentálni, nem pedig az elvégzett
+munka végeredményét.
+
+Ha a konfig fájl kellően széthúzott szintaxisú (például gconf schema fájlok,
+agyon kommentezett konfigok), akkor érdemes a funkcionálisan jól
+elkülöníthető változtatásokat külön-külön patch-ekbe szedni, annak ellenére,
+hogy ugyanazt a fájlt patch-elik meg.
+
+
+<sect1>Készülő csomagok (packages)<p>
+
+Nyissunk egy packages könyvtárat, és azon belül minden egyes készítendő
+bináris csomag nevével egy-egy újabbat.
+
+<sect2>packages/csomagnév/summary/hu<p>
+
+A csomag egysoros leírása.
+
+<sect2>packages/csomagnév/description/hu<p>
+
+A csomag hosszú leírása.
+
+<sect2>packages/csomagnév/words/hu<p>
+
+Az uhubuild-check szól, hogy a summary és description fájlokból mely
+szavakat vélte hibásnak. Ami mégis helyes, azt vegyük fel ide. Fontos, hogy
+ne copy-paste módszerrel vegyük fel, hanem gépeljük be őket újra, különben
+nem vesszük észre, ha tényleg elgépeltük a szót.
+
+<sect2>packages/csomagnév/priority<p>
+
+A csomag priority értéke. A lehetséges értékek a Debian Policy Manuallal
+nagyjából összhangban, gyengülő sorrendben:
+
+<descrip>
+
+  <tag/required/
+
+	Ilyen csomag eltávolítása esetén a rendszer akár teljesen
+	használhatatlanná is válhat, és helyreállítása sem triviális
+	feladat. Például bash, coreutils, dpkg, glibc, util-linux (mount).
+
+  <tag/important/
+
+	A fontos csomagok, többek között azok, melyek gyakorlatilag minden
+	Unix-típusú rendszeren megtalálhatóak, hiányuk rendkívüli és
+	szokatlan eseménynek minősülhet, de nem teszi használhatatlanná a
+	rendszert. Például sysklogd, man, file, bzip2, cpio, apt, at, cron.
+
+  <tag/standard/
+
+	Továbbra is karakteres (X11-et nem igénylő) programok, melyek egy
+	ésszerű normális alap rendszer részét képezik. Például bc, gcc,
+	glibc-locales, glibc-timezones.
+
+  <tag/optional/
+
+	Az alkalmazások legnagyobb része, amelyek semelyik másik kategóriába
+	nem tartoznak.
+
+  <tag/extra/
+
+	Azon csomagok, melyeket az éles rendszerbe nem lehet gond nélkül
+	telepíteni, mert mondjuk ütköznek egy alap csomaggal. Például
+	autoconf2.13, rar.
+
+</descrip>
+
+Egy csomag priority értéke nem lehet erősebb egyetlen általa igényelt
+csomagénál sem.
+
+Amennyiben nincsen határozott okunk másképp cselekedni, az optional
+prioritás értéket kell választanunk. Ehhez nem is kell létrehozni a priority
+fájlt. Jelen sorok írásakor a hivatalos UHU csomagok kb. 90%-a optional, és
+mivel az alap rendszer már össze van rakva, ezért új csomag készítésekor
+igencsak valószínűtlen, hogy másmilyen prioritás értékre lenne szükségünk.
+
+<sect2>packages/csomagnév/section<p>
+
+A csomag section értéke.
+
+<sect2>packages/csomagnév/categories<p>
+
+Soronként egy kategória, amely jellemző az adott csomagra. Jelenleg a GNOME,
+KDE és XFce kategóriákat használjuk.
+
+<sect2>packages/csomagnév/files<p>
+
+Az egyes bináris csomagok között legfeljebb egy kivételével kell szerepelnie
+files nevű fájlnak. Ez a fájl írja le, hogy hogyan darabolunk, kik kerülnek
+az adott csomagba. Ha egy fő és egy -dev csomag készül, akkor általában az
+alábbi, 279 byte hosszú fájlt használjuk a -dev csomag számára:
+
+<verb>
+    /lib/*.a
+    /lib/*.la
+@   /lib/*.so
+    /usr/bin/*-config
+    /usr/include
+    /usr/lib/**/*.a
+    /usr/lib/**/*.la
+@   /usr/lib/**/*.so
+    /usr/lib/*/include
+    /usr/lib/*Conf.sh
+    /usr/lib/pkgconfig
+    /usr/share/aclocal
+    /usr/share/gtk-doc
+    /usr/share/man/**/man1/*-config.1*
+    /usr/share/man/**/man3
+</verb>
+
+A fájlban minden sorban legyen valami, és az utolsó sor is tisztességesen
+newline-ra végződjön. A sor elején TAB van, nem szóköz.
+
+Ha az egyik csomagnak nincsen files fájlja, akkor az kapja a szétosztás
+során megmaradt fájlokat. Ha mindegyik csomaghoz van files fájl, akkor a
+darabolás során nem szabad kimaradnia egyetlen fájlnak sem, ellenkező
+esetben hibával leáll a csomagkészítés.
+
+<sect2>További fájlok<p>
+
+A további lehetséges fájlokról, illetve a korábbiak egészen pontos
+szintaxisáról lásd a korábbi fejezeteket.
+
+
+<sect1>Saját forrás lefordítása<p>
+
+A forrás nyitó könyvtárában állva adjuk ki az uhubuild-check parancsot. Ha
+kiír bármi hibát, vagy akár olyan warningot, melynek jelentésével nem
+vagyunk tökéletesen tisztában, akkor javítsuk ki a hibát, szüntessük meg a
+warningot. Addig változtassunk a fájlokon, mígnem egyszer csak immár hiba
+nélkül lefut az uhubuild-check (vagyis nem ír ki semmit). Ez után nézzünk
+meg még egyszer minden fájlt, hogy úgy néz-e ki, ahogyan szeretnénk. (Az
+uhubuild-check ugyanis helyes lefutás esetén változtathat is egyes
+fájlokon.) Ha újra változtatunk egy fájlon, mindig futtassunk újra
+uhubuild-check-et.
+
+Ha elszáll a fordítás, és nem egyértelmű a hibaüzenet, akkor itt tudunk
+utánanézni annak, hogy mi történt: A chroot rendszer nyitó könyvtára alatti
+var/uhubuild/work könyvtárban zajlik a fordítás. Itt az admin alatt a log
+fájlban megtalálunk mindent, ami a képernyőn megjelent a fordítás során. A
+compile könyvtárban folyik a fordítás, itt tudjuk szükség esetén
+megtekinteni a config.log fájlt. (A compile könyvtár előbb-utóbb
+átkeresztelődik compile.moved-ra.) Az install fázis innen az install
+könyvtár alá pakolja át a cuccokat, majd az alcsomagokra bontás megszünteti
+az install könyvtárat, annak tartalmát a package/csomagnév könyvtárak alá
+bontja szét.
+
+
+
+<sect>Vegyes tanácsok<p>
+
+
+<sect1>Könyvtárnév végén / jel<p>
+
+Olyan parancsoknál, ahol az utolsó argumentum lehet fájl vagy könyvtár is
+(cp, mv, install, ln -s), ha könyvtár az utolsó argumentum, akkor tegyünk a
+végére / jelet. Például
+
+  ne ezt írjuk:  install -m 755 foobar "$UB_INSTALLDIR"/usr/bin
+
+  hanem ezt:     install -m 755 foobar "$UB_INSTALLDIR"/usr/bin/
+
+Mire jó ez?
+
+Egyrészt a / jel sugallja, hogy ``ide bele'', egyértelművé teszi a kód
+olvasója számára, hogy az egy könyvtár neve, és nem egy fájlé.
+
+Másrészt amennyiben az említett könyvtár még nem létezik, az esetben a
+program a hibaüzenettel leállást fogja választani, nem pedig szép csöndes
+hibás működést (a foobar progi bemásolását az $UB_INSTALLDIR/usr könyvtárba
+bin néven).
+
+Olyan parancsokra, amelyek kötelezően könyvtárnévvel foglalkoznak (cd,
+mkdir, rmdir) ez a tanács nem vonatkozik, bár ott sem árthat a / jel.
+
+
+<sect1>* wildcard<p>
+
+Kerüljük a * wildcardot, ha csak lehet. Gáz van vele, ha épp nincs egyetlen
+fájl sem, valamint nem illeszkedik a . kezdetű fájlokra. Ha a foobar
+könyvtáron belüli minden fájlt át akarunk másolni, akkor ne azt írjuk, hogy
+
+cp -a foobar/* ide/
+
+hanem azt, hogy
+
+cp -a foobar/. ide/
+
+Jó kis trükk, bejön :-)
+
+
+<sect1>#!/bin/sh -eux<p>
+
+A compile és install szkripteket kezdjük így.
+
+-e: Hiba esetén azonnal kilép.
+
+-u: Hibát jelez, ha nem létező változónévre hivatkozunk. Elgépelések ellen
+nagyon jó. Ha nem tudjuk, hogy adott változó be van-e állítva, használhatjuk
+a ${VALAMI:-} alakot.
+
+-x: kiírja a képernyőre, hogy mit csinál.
+
+
+<sect1>idézőjelek<p>
+
+Használjunk idézőjeleket minél gyakrabban a bash szkriptekben!
+Ha változót használunk, akkor azt mindenképpen idézőjelek között tegyük!
+
+
+<sect1>---<p>
+
+Ha egy parancs első nem-opció argumentuma valami változó, akkor használjuk a
+-- kapcsolót a további argumentum-értelmezés letiltására. Például:
+
+cp -a -- "$mit" "$hova"
+
+
+
+<sect1>printf<p>
+
+echo-val nem lehet 100%-os biztonsággal kiírni egy változó értékét, mert ha
+a változó értéke "-n" vagy "-e" vagy ilyesmi, azt az echo kapcsolóként
+értelmezi, és sajnos nem ismeri a "--" kapcsolót. Ha atombiztosan akarjuk
+egy változó értékét kiírni, használjuk a printf beépített shell parancsot:
+
+printf '%s\n' "$valtozo"
+
+
+
+<sect1>Változó tesztelése<p>
+
+bash-ben nagyon nehézkes azt tesztelni, hogy egy környezeti változó
+létezik-e egyáltalán. A "${valtozo+boci}" szerkezetet kell használni, ennek
+értéke boci lesz, ha a változó létezik (akár üres), és üres érték, ha a
+változó nem létezik.
+
+Emiatt általában megelégszünk azzal, hogy azt teszteljük, adott változó
+rendelkezik-e nemüres értékkel. Ezt így tehetjük meg:
+
+[ -n "$valtozo" ]
+
+vagy
+
+[ "$valtozo" = "" ]
+
+vagy
+
+[ "x$valtozo" = "x" ]
+
+Mindegyik esetben fontos az idézőjel a $valtozo körül! A harmadik
+megoldásban az a szép, hogy nyilván akkor is helyesen működik, ha a változó
+értéke mínusz jellel kezdődik. De a másik kettő is jó. Érdemes a legelső,
+``-n'' alakra rászokni olvashatósága miatt.
+
+Elvileg helyes az is, hogy
+
+[ "$valtozo" ]
+
+de ennek inkább kerüljük a használatát, mert a ``-n''-es megközelítésnél is
+kevésbé triviális, hogy minden esetben jól működik, másrészt ezt a konstrukciót
+nem lehet ``-o'' illetve ``-a'' kapcsolókkal logikai kapcsolatba fűzni.
+
+
+
+<sect1>find<p>
+
+A find első argumentuma mindig / jelre végződjön (kivéve ha ``.''). Ez arra
+jó, hogy ha ez az argumentum egy szimlink egy könyvtárra, akkor belemászik a
+find, és nem adja fel.
+
+
+
+<sect>UHU konvenciók<p>
+
+
+<sect1>Fájlrendszer<p>
+
+<sect2>/opt<p>
+
+Az UHU csomagjaiban a /opt könyvtárat nem használjuk.
+
+Indoklás:
+
+A /usr/lib vagy ilyesmi könyvtárba pakoláshoz képest az /opt-nak előnyét
+még nem sikerült felfedeznünk, hátrányát viszont már többet is:
+
+- Számtalan progi csomagolása előtt fölösleges újabb filozófiai kérdést
+tesz fel nekünk, hogy vajon /usr vagy /opt alá rakjuk-e. Jobban szeretjük
+az olyan rendszereket, ahol ilyen ``értelmetlen'' kérdéseket nem kell
+eldöntenünk, hanem adott, hogy hogyan kell cselekednünk.
+
+- Kínszenvedéssé teszi a particionálást mindazon emberek számára, akik
+pici (bőven 100MB alatti) gyökér partíciót szeretnének, és külön /usr-t.
+Hiszen ekkor /opt-ot is illik külön szedni a gyökértől, különben semmi
+értelme nem volt, viszont szegényke honnan tudja, hogy az egybe jó nagy
+/usr helyett hol kell meghúznia a határt a /usr és a /opt között - vajon
+mennyi adat fog ide menni és mennyi oda. Vesd össze előző pont, mely
+szerint még mi sem tudjuk, hogy mennyi menne ide es mennyi oda.
+
+- Csomó rendszergazda erre azt csinálja, hogy /opt-ot egy szimlinkké teszi
+/usr/opt alá. Na ez aztán a gány netovábbja, nehézkessé teszi a
+telepítést, megerőszakolja a csomagkezelő rendszert stb. Ne hozzuk ilyen
+helyzetbe szegény rendszergazdát.
+
+- Keresztbe tesz a /usr/lib és /usr/share jól megszokott definíciójának,
+mely szerint az előbbi architektúrafüggő, utóbbi viszont
+architektúrafüggetlen, hálózaton simán megosztható adatokat kell hogy
+tartalmazzon. Keresztbe tesz mindenkinek, aki hálózati fájlrendszert
+szeretne, ahol például a kliens gépek diszkhiány vagy egyéb ok miatt a
+/usr/share partíciót, helyesebben a teljes fájlrendszer minél nagyobb részét
+hálózaton szeretnék felszedni.
+
+- Kényelmetlenné teszi a PATH és társai (MANPATH stb.) változók beállítását.
+Vagy beletesszük PATH-ba a csomó /opt/akarmi/bin könyvtárat, vagy /usr/bin
+alól csinálunk rengeteg szimlinket. Például az UHU 1.0rc1 egyik hibája az
+volt, hogy az acroread futtatható progi nem volt benne a PATH-ban (/opt alá
+volt telepítve a progi).
+
+
+<sect1>Változó fájlok<p>
+
+Olyan fájlnak, amely a rendszer normális használata során magától változik
+(naplófájl, adatbázis stb.) semmiképp nem szabad csomagban szerepelnie,
+hiszen a csomag újabb verziójára történő frissítéskor tartalma megsemmisül.
+Az ilyen fájloknak konfig fájlként sem szabad csomagban szerepelniük.
+
+Az alkalmazásnak tudnia kell létrehoznia ezt a fájlt a számára megfelelő
+tartalommal, amennyiben ez a fájl még nem létezik. Ha ezt reménytelen
+megoldani, akkor elfogadható, ha a postinst szkript hozza létre egy sablon
+(vagy másik fájl) alapján, ha még nem létezett az a fájl.
+
+
+<sect1>Jogosultságok<p>
+
+Minden csomagban ellenőrizzük (például mc-ben F3), hogy a fájlok tulajdonosa
+és csoportja root-e, valamint hogy a fájlok joga 644 vagy 755 legyen, a
+könyvtárak joga pedig 755. A fájlok közül 755-ös joga csak a ténylegesen
+végrehajtható fájloknak, illetve .so és .la libeknek szabad hogy legyen,
+például szövegfájl esetén hiba a végrehajtási jog. A 644-es és 755-ös
+jogoktól eltérni csak indokolt esetben, az alábbiak betartásával szabad.
+
+Az olvasási jogot csak olyan esetben szabad korlátozni, ha konfigurációs
+fájlról van szó, amelyet valószínűleg a rendszergazda át fog szerkeszteni,
+és titkos információkat tartalmaz. Ilyen fájl aligha érkezik csomagban, az
+ilyen fájlokat futási időben szokás generálni (például /etc/shadow,
+/etc/ssh/ssh_host_key). Minden más esetben az olvasási jog korlátozása csak
+téves biztonságérzethez vezethet, hiszen a felhasználó be tudja szerezni
+egyéb forrásból az UHU csomagot, és azon belül megnézni a fájl tartalmát.
+
+A végrehajtási jogot korlátozni legfeljebb setuid/setgid binárisok esetén
+van értelme. Ellenkező esetben a felhasználó ugyanis át tudja másolni
+valahova a fájlt, jogot adni rá, és futtatni onnan. Tehát például az /sbin
+és /usr/sbin könyvtárak fájljaira is 755 a helyes jog.
+
+A fentiek szellemében annak például lehet értelme, hogy az XFree86 program
+tulajdonosa root, csoportja video legyen, joga pedig 4754. Ez esetben csak a
+video csoport tagjai tudják végrehajtani ezt a programot, de ők root
+jogosultsággal. 4754-nél tovább szűkíteni a jogosultságokat (például 4750,
+4710) jelen példában csak értelmetlen paranoia volna, nem növelne a
+biztonságon, hiszen a felhasználó bármikor be tudja szerezni az XFree86 fájl
+tartalmát egy letöltött UHU csomagból, és azt home-jából vagy /tmp-ből
+futtatni, persze nem root jogokkal.
+
+A root tulajdonú fájlokat a root mindig írhatja, akár 444, akár 644 a joguk.
+A 444-es jog fölöslegesen megnehezíti azok dolgát, akik jogosultságot
+megtartó fájlkezelővel átmásolják maguknak a fájlt és szerkeszteni kezdik.
+Ezért ne használjunk 444, 555 jogokat, használjunk 644, 755-öt.
+
+
+<sect1>Indító szkript<p>
+
+Bizonyos programok esetén szükség van egy indító (``wrapper'') szkriptre.
+Ennek több oka lehet. Van, hogy bizonyos argumentumokat vagy környezeti
+változókat mindenképpen be kell állítani. Van, hogy a program csak akkor fut
+helyesen, ha az aktuális könyvtárban találja meg fájljait. Stb...
+
+Ilyen esetekben az indító szkript kerül /usr/bin-be. Az igazi program
+elhelyezésére alapvetően két lehetőség van. Ha egyedülálló végrehajtható
+fájlról van szó, akkor célszerű /usr/bin-ben hagyni, átnevezve valamire.
+Ilyenkor tanácsos .bin kiterjesztést választani az eredeti program számára.
+Semmiképp ne adjunk neki .orig kiterjesztést, mert bizonyos programok
+(például patch) is hagyhatnak ilyet maguk után, így ez megtévesztheti a
+felhasználót. Hasonlóan kerüljük az egyéb félrevezető kiterjesztések (.bak)
+és a magyar szavak (.eredeti) használatát is. A másik lehetőséget főleg
+akkor használjuk, ha a programhoz több fájl is tartozik: /usr/lib/programneve
+könyvtár alá pakolunk mindent. Ekkor nincs szükség a végrehajtható program
+átnevezésére.
+
+Az indító szkript az igazi programnak az argumentumokat változatlanul tovább
+kell, hogy adja. Erre bash-ben a "$@" szolgál, tehát
+idézőjel-dollár-kukac-idézőjel. Akár az idézőjelek elhagyása, akár a kukac
+helyett csillag használata hiba, tévesen adja tovább a rafináltabb (például
+szóközt tartalmazó) argumentumokat.
+
+Az indító szkript neve egyezzen meg az eredeti program nevével. Ne kapjon
+.sh, .pl, .tcl vagy ilyesmi kiterjesztést. A felhasználót ugyanis nem
+érdekli sem az, hogy volt-e szükség valamiféle wrapper szkriptre, sem pedig
+az, hogy azt milyen programnyelven írtuk meg.
+
+A wrapper szkriptet erősen ajánlott bash-ben írni. Egyéb szkriptnyelv csak
+akkor fogadható el, ha nem hoz be új függőséget a csomag számára, de
+ilyenkor is ellenjavallt.
+
+Természetesen szkriptről lévén szó a #!interpreter sorról és a végrehajtható
+engedélyről nem szabad megfeledkeznünk. A szkriptet célszerű addons-ból
+szállítani. A jogot addons alatt nem tudjuk ráadni, erre szolgál a perms
+fájl.
+
+
+<sect1>Terminálra számító X-es programok<p>
+
+Vannak olyan X-es programok, melyek futásához szükség van terminálra
+(például olvasnak stdin-ről), viszont a felhasználó mégis esetleg grafikus
+menüből akarja indítani őket. Ilyenkor a fentiek betartásával írjunk egy
+wrapper szkriptet, amely terminálban indítja a programot, feltéve, hogy
+nincsen alatta már egy terminál. Erre példa található a spectemu és az
+xblast csomagokban.
+
+Ez csak azokra a programokra vonatkozik, amelyeket a rendszerhez nem igazán
+értő emberek is használni szeretnének. Tehát a xev, glxgears és ilyesmi
+profibbaknak szóló progik nyugodtan megkímélhetők a wrapper szkripttől.
+
+
+
+<sect>Preprocesszálás<p>
+
+
+<sect1>Preproc áttekintés<p>
+
+Ebbe a részbe csak az vágjon bele, aki már sikeresen használja az
+uhubuildet egy jó ideje.
+
+Az UHU-Linux 1.1 kiadása után újdonságként a preprocesszálás lehetőségével
+bővült az uhubuild környezet. A történet lényege az, hogy a C nyelv
+preprocesszor rendszeréhez hasonlóan itt is feltételeket szabhatunk, hogy
+csak bizonyos paraméterek beállítása esetén álljon fent ez vagy az.
+
+A szolgáltatást elsősorban az teszi indokolttá, hogy ezentúl több hasonló,
+ámde helyenként mégis eltérő terméket fejlesztünk párhuzamosan. Így például
+szükség lehet arra, hogy egy adott csomaghoz egy adott patch csak a kliens
+disztribúcióban szerepeljen, a szerverben ne. Vagy például a configure
+opcióinak kell eltérniük.
+
+A preprocesszálás lehetősége ugyanakkor azok számára is kényelmes lehet,
+akik párhuzamosan tartanak karban egy csomagot több különböző UHU-Linux
+disztribúcióhoz. Ugyanis ilyenkor is elképzelhető, hogy picit másmilyen
+szabályokkal kell elkészíteni a csomagot, viszont két UB környezetet
+egymástól függetlenül, mégis szinkronban karbantartani fölösleges munkát
+igényel és hibalehetőséget tartalmaz, amely hibalehetőség a preprocesszor
+bevezetésével kiiktatható.
+
+
+<sect1>Általános szintaxis<p>
+
+Preprocesszálásra a cpp-t használjuk, egy hatalmas hack szkripttel
+körülvéve. Ennek megfelelően előnyként jelentkezik a cpp szintaxisának
+hatalmas rugalmassága, ugyanakkor kiiktatjuk a minket hátrányként érintő
+tulajdonságokat.
+
+A cpp parancskészletéből csak az <tt>#if</tt>, <tt>#else</tt>,
+<tt>#elif</tt> és <tt>#endif</tt> kezdetű parancsokat használjuk. A
+``kezdetű'' szóba beleértendő, hogy az <tt>#ifdef</tt>, <tt>#ifndef</tt> is
+természetesen használható.
+
+Megszorítás a cpp-hez képest, hogy ezen preprocesszor direktíváknak a fájl
+legelső oszlopában kell kezdődniük, és a # karaktert sem követheti szóköz.
+
+A preprocesszor nem tekinti sajátjának azokat a sorokat, melyek nem a fent
+felsorolt négy sztringgel kezdődnek, így például egy <tt>#hello</tt> sor nem
+okoz gondot, pontosan ugyanúgy kezeli, mintha nem # karakterrel kezdődne.
+
+A cpp-vel szemben nem követelünk semmilyen egyéb szintaktikai szabályt, így
+például nem jelent gondot, ha egy sorban páratlan sok idézőjel áll.
+
+Míg az eredeti cpp a kiiktatott sorokat üres sorokkal helyettesíti, addig mi
+a kiiktatott sorokat teljesen kiszedjük a fájlból. Ez fontos olyankor,
+amikor több soros shell parancsot backslash karakterrel folytatunk a
+következő sorban, ámde közbeiktatunk egy preprocesszor feltételt.
+
+
+<sect1>Alkalmazás fájlokra<p>
+
+Az uhubuild környezet legtöbb fájljában gond nélkül használhatjuk ezeket a
+direktívákat. Például egy compile szkript kinézhet így:
+
+<verb>
+#!/bin/bash
+
+ub_compile \
+        --bindir=/bin \
+#ifdef SERVER
+        --with-ldap
+#else
+        --with-pam
+#endif
+</verb>
+
+Ez esetben ha a SERVER definiálva van, akkor <tt>--with-ldap</tt>,
+ellenkező esetben <tt>--with-pam</tt> kapcsolóval fordul a program.
+
+Bizonyos fájlokban nem használhatunk preprocesszor parancsokat. Ilyen
+például a version, release, sourcename, distribution.
+
+
+<sect1>Alkalmazás patchekre<p>
+
+Amennyiben egy patchet feltételesen szeretnénk alkalmazni, létre kell
+hoznunk egy fájlt a patch könyvtárban, melynek nevét úgy kapjuk, hogy a
+patch kiterjesztését <tt>preproc</tt>-ra kereszteljük át, és ebben megadjuk
+a feltételt. Csak a nyitó preprocesszor parancso(ka)t írjuk le, ne zárjuk le
+azokat. Például ha a patches/01-foobar.patch fájlt a szerver termékre nem akarjuk
+alkalmazni, akkor a patches/01-foobar.preproc fájlba írjuk ezt:
+
+<verb>
+#ifndef SERVER
+</verb>
+
+
+<sect1>Alkalmazás az addons könyvtárra<p>
+
+A rendszer az összes olyan könyvtárat figyelembe veszi, melynek neve az
+``addons'' szóval kezdődik, így például létrehozhatunk <tt>addons-foo</tt>,
+<tt>addons-bar</tt> stb. könyvtárakat is. Ugyanakkor ezekben a könyvtárakban
+elhelyezhetünk egy <tt>preproc</tt> nevű fájlt is. Ennek a fájlnak a
+tartalma a patcheknél látottal azonos. Ha az ott írt feltétel nem teljesül,
+akkor az egész könyvtárat figyelmen kívül hagyjuk. A megmaradó, vagyis
+feltétel nélküli vagy teljesülő feltétellel rendelkező könyvtárakat
+ábécérendben alkalmazzuk, ütköző fájl esetén a későbbi felülírja a korábbit.
+
+Például ha addons-ból szállítunk egy /etc/foobar.conf fájlt, de a szerverre
+másmilyent, akkor készítsük el a kliens változatát addons/etc/foobar.conf
+néven, míg a szerverét mondjuk addons-server/etc/foobar.conf néven. Az
+addons-server/preproc fájlba írjuk bele, hogy #ifdef SERVER.
+
+Természetesen a csomagba a /preproc fájl nem kerül bele.
+
+
+<sect1>Változók beállítása<p>
+
+Preprocesszor változókat az uhubuild indítása előtt az <tt/UHUBUILD_PREPROC/
+környezeti változóban adhatunk meg. A változó értéke nulla, egy, vagy több
+változó szóközzel elválasztva. A változókat érték is követheti, az
+alapértelmezett érték az 1 (mint a cpp-nél). A <tt/-D/ cpp-kapcsolót ne
+adjuk meg! Példa:
+
+<verb>
+export UHUBUILD_PREPROC="SERVER FOO=39 BAR"
+</verb>
+
+Több szóból álló értékek definiálása valószínűleg nem működik. Idézőjeles
+(sztring) értékek definiálása is könnyen lehet, hogy nem megy.
+
+Az általunk definiálható értékeken túl az uhubuild rendszer is automatikusan
+definiálja azt a változót, amit úgy kapunk, hogy a distribution fájl
+tartalmát nagybetűsítjük és a szóközöket, pontot stb. aláhúzásra cseréljük.
+Példa:
+
+<verb>
+#!/bin/bash
+
+ub_compile \
+#ifdef UHU_LINUX_1_0
+        --with-compatibility-stuff
+#endif
+</verb>
+
+
+<sect1>Megjegyzések<p>
+
+Úgy fest, hogy a bash tökéletesen boldog, ha egy parancs végén szerepel egy
+backslash, de a parancs mégsem folytatódik (véget ér a fájl, vagy legalábbis
+egy üres sor jön). Ez tök jó.
+
+
+
+<sect>Hibakeresés<p>
+
+
+<sect1>Package uhubuild-config has no installation candidate<p>
+
+Lásd az "UHU csomag újrafordítása" fejezetben a "Lefordítás" alfejezetet.
+
+A sources.list-ben megnevezett helyen, ahol a csomagok forrásához tartozó
+Packages fájl található, kell lennie egy Release nevű fájlnak is, az
+említett fejezetben ismertetett tartalommal. A lefordítandó csomag fájljai
+közül a distribution nevű fájlban található verziószámnak meg kell egyeznie
+a Release fájlban szereplő Version értékkel.
+
+Előfordulhat, hogy az apt nem veszi észre a Release fájl megváltozását,
+mivel megjegyezte a régi tartalmát és azt veszi figyelembe. Ez esetben a
+használt sources.list fájlban írjuk át az útvonalat oly módon, hogy más
+legyen a sztring, de ugyanarra a könyvtárra mutasson, például az egyik /
+jelet, ami a könyvtárak elválasztására szolgál, duplázzuk meg (mondjuk "deb
+file:/mnt/packages ./" helyett "deb file:/mnt//packages ./").
+
+
+
+</article>

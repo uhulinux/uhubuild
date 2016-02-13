@@ -1,0 +1,206 @@
+
+_myname="$(basename "$0")"
+
+shopt -s nullglob
+
+# színek ----------------------------------------------------------------------
+
+   red="$(echo -ne '\e[01;31m')"
+  blue="$(echo -ne '\e[01;34m')"
+ green="$(echo -ne '\e[00;32m')"
+normal="$(echo -ne '\e[00;00m')"
+
+# Azert jobb igy ellenorizni, mert lehet hogy a kimenet at van iranyitva,
+# igy viszont mindig az aktualis kimenetet tudjuk leellenorizni.
+colorecho ()
+{
+	if [ -t 1 ]; then
+		echo -ne "$1"
+	fi
+	shift
+	echo "$@"
+	if [ -t 1 ]; then
+		echo -ne "$normal"
+	fi
+}
+
+redecho   () { colorecho "$red"   "$@"; }
+blueecho  () { colorecho "$blue"  "$@"; }
+greenecho () { colorecho "$green" "$@"; }
+
+# Hibakezeles -----------------------------------------------------------------
+errors=0
+warnings=0
+
+die ()
+{
+	if [ -n "$*" ]; then
+		redecho "$*" >&2
+	fi
+	exit 1
+}
+
+error ()
+{
+	errors=$(($errors+1))
+	if [ $errors -gt 100 ]; then
+		die "Tul sok hiba!"
+	fi
+	redecho "Error: $*" >&2
+}
+
+warn ()
+{
+	warnings=$(($warnings+1))
+	blueecho "Warning: $*" >&2
+}
+
+# tmp -------------------------------------------------------------------------
+unset __tmp || true
+declare -a __tmp
+tmpfile()
+{
+	local i
+	local _tmp
+	if [ "$#" -gt 0 ]; then
+		for i in "$@"; do
+			_tmp="$(mktemp -t "$_myname".XXXXXX)"
+			if ! [ -f "$_tmp" ]; then
+				die "could not create temp file!"
+			fi
+			__tmp[${#__tmp[@]}]="$_tmp"
+			eval "$i"="$_tmp"
+		done
+	fi
+}
+
+tmpdir ()
+{
+	local i
+	local _tmp
+	if [ "$#" -gt 0 ]; then
+		for i in "$@"; do
+			_tmp="$(mktemp -d -t "$_myname".XXXXXX)"
+			if ! [ -d "$_tmp" ]; then
+				die "could not create temp dir!"
+			fi
+			__tmp[${#__tmp[@]}]="$_tmp"
+			eval "$i"="$_tmp"
+		done
+	fi
+}
+
+# -----------------------------------------------------------------------------
+declare -a _exit_hooks
+exit_hook ()
+{
+	_exit_hooks[${#_exit_hooks[@]}]="$1"
+}
+
+_exit ()
+{
+	_r=$?
+	if [ ${_r} -gt 0 ]; then
+		retval=${_r}
+	else
+		retval=$errors
+	fi
+	trap - EXIT
+	if [ $warnings -gt 0 ]; then
+		blueecho -n "$warnings warning"
+		if [ $warnings -gt 1 ]; then
+			blueecho -n "s"
+		fi
+		blueecho "."
+	fi
+	if [ $errors -gt 0 ]; then
+		redecho -n "$errors error"
+		if [ $errors -gt 1 ]; then
+			redecho -n "s"
+		fi
+		redecho "."
+	fi
+	if [ ${#__tmp[@]} -gt 0 ]; then
+		rm -rf "${__tmp[@]}"
+	fi
+	if [ ${#_exit_hooks[@]} -gt 0 ]; then
+		set "${_exit_hooks[@]}"
+		while [ $# -gt 0 ]; do
+			"$1"
+			shift
+		done
+	fi
+	exit $retval
+}
+trap _exit EXIT
+
+diepoint ()
+{
+	if [ $errors -gt 0 ]; then
+		exit $errors
+	fi
+}
+
+# -----------------------------------------------------------------------------
+_hostname ()
+{
+	cat /proc/sys/kernel/hostname
+}
+
+warnifroot ()
+{
+	if [ "$UID" == 0 ]; then
+		warn "Ne root-ként indíts!"
+	fi
+}
+
+warnifuser ()
+{
+	if [ "$UID" != 0 ]; then
+		warn "Root-ként indíts!"
+	fi
+}
+
+dieifroot ()
+{
+	if [ "$UID" == 0 ]; then
+		die "Ne root-ként indíts!"
+	fi
+}
+
+dieifuser ()
+{
+	if [ "$UID" != 0 ]; then
+		die "Root-ként indíts!"
+	fi
+}
+
+
+# -----------------------------------------------------------------------------
+_procs ()
+{
+	if [ -x /usr/bin/getconf ]; then
+		_PROCS="$(/usr/bin/getconf "_NPROCESSORS_ONLN")"
+		if [ "$_PROCS" -lt 1 ]; then
+			_PROCS=1
+		fi
+	else
+		_PROCS=1
+	fi
+	echo "${_PROCS}"
+}
+
+# -----------------------------------------------------------------------------
+preprocess ()
+{
+	sed -e 's/"/\x1f/g' -e 's/\\/\x1e/g' -e 's/^\(.*\)$/"\1"/' \
+	  -e 's/^"\(#\(if\|else\|elif\|endif\).*\)"$/\1/' | \
+	cpp -P "$@" | \
+	grep '^"' | \
+	sed -e 's/"//g' -e 's/\x1e/\\/g' -e 's/\x1f/"/g'
+}
+
+has_macro ()
+{
+	egrep '^#(if|else|elif|endif)' "$@" >/dev/null
+}

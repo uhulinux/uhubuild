@@ -1,0 +1,43 @@
+
+. /usr/lib/uhubuild/common
+
+check_uhubuild_variables ()
+{
+	export UHUBUILD_COMPILESNAPSHOTDIR="${UHUBUILD_COMPILESNAPSHOTDIR:-${UHUBUILD_SNAPSHOTDIR:-}}"
+	export UHUBUILD_INSTALLSNAPSHOTDIR="${UHUBUILD_INSTALLSNAPSHOTDIR:-${UHUBUILD_SNAPSHOTDIR:-}}"
+	unset  UHUBUILD_SNAPSHOTDIR || true
+
+	if [ -z "${UHUBUILD_I_AM_UNDER_CHROOT:-}" ]; then
+		if [ -z "${UHUBUILD_CCACHE_DIR:-}" ]; then
+			echo 'FYI: Nem használunk ccache-t!' >&2
+			echo '     ($UHUBUILD_CCACHE_DIR nincs beállítva)' >&2
+		fi
+		if [ -z "${UHUBUILD_COMPILESNAPSHOTDIR:-}" ]; then
+			echo 'FYI: Compile snapshot nem fog készülni!' >&2
+			echo '     ($UHUBUILD_COMPILESNAPSHOTDIR nincs beállítva)' >&2
+		fi
+		if [ -z "${UHUBUILD_INSTALLSNAPSHOTDIR:-}" ]; then
+			echo 'FYI: Install snapshot nem fog készülni!' >&2
+			echo '     ($UHUBUILD_INSTALLSNAPSHOTDIR nincs beállítva)' >&2
+		fi
+		if [ -z "${UHUBUILD_RESULTDIR:-}" ]; then
+			echo 'FYI: Bináris csomag nem fog készülni!' >&2
+			echo '     ($UHUBUILD_RESULTDIR nincs beállítva)' >&2
+		fi
+		if [ -z "${UHUBUILD_LOGPACKDIR:-}" ]; then
+			echo 'FYI: LogPack nem fog készülni!' >&2
+			echo '     ($UHUBUILD_LOGPACKDIR nincs beállítva)' >&2
+		fi
+	fi
+}
+
+logdate ()
+{
+	printf '%-26s %s\n' "$1:" "$(date '+%a %h %e %H:%M:%S %Z %Y (%s)')" >> "$UB_ADMINDIR"/timestamps
+}
+
+listpackages ()
+{
+	dpkg-query -W -f='${Package}_${Version}\n' \* > $1
+}
+

@@ -1,0 +1,44 @@
+#!/bin/bash -eu
+
+#
+# Tulaj, csoport, illetve jogok megváltoztatása.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+for pkg in $UB_PACKAGES; do
+	cd "$UB_PACKAGEDIR/$pkg"
+	for i in etc/init.d/* etc/rc.boot/* etc/rc.halt/*; do
+		if [ ! -L "$i" ]; then
+			chmod 755 "$i"
+		fi
+	done
+	for i in {,usr/}{,s}bin/*; do
+		if [ ! -L "$i" ]; then
+			chmod u+rwx,g+rx,o+rx,g-w,o-w "$i"
+		fi
+	done
+	if [ ! -f "$UB_SRCDIR/packages/$pkg/perms" ]; then
+		continue
+	fi
+	while read -r owner group mode pattern rest; do
+		for file in $(eval echo ${pattern#/}); do
+			if [ ! -e "$file" -a ! -L "$file" ]; then
+				error "$pkg csomag: $pattern: nincs ilyen fájl!"
+				break
+			fi
+			if [ "$owner" != "-" -a "$owner" != "" ]; then
+				pretendroot \
+				  chown -h "$owner" "$file"
+			fi
+			if [ "$group" != "-" -a "$group" != "" ]; then
+				pretendroot \
+				  chgrp -h "$group" "$file"
+			fi
+			if [ "$mode" != "-" -a "$mode" != "" ]; then
+				pretendroot \
+				  chmod "$mode" "$file"
+			fi
+		done
+	done < "$UB_SRCDIR/packages/$pkg/perms"
+done

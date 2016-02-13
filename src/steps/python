@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+
+find "$UB_INSTALLDIR" -name "*.py" | while read f; do
+	echo "${f}c"
+	echo "${f}o"
+done | xargs -r rm -f

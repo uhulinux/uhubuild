@@ -1,0 +1,18 @@
+#!/bin/bash -eu
+
+#
+# Átmásoljuk a users és a groups fájlt, ha van. Komoly munka...
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+cd "$UB_PACKAGEDIR"
+
+for pkg in $UB_PACKAGES; do
+	if [ -f "$UB_SRCDIR/packages/$pkg/users" ]; then
+		cp "$UB_SRCDIR/packages/$pkg/users" "$pkg/DEBIAN/"
+	fi
+	if [ -f "$UB_SRCDIR/packages/$pkg/groups" ]; then
+		cp "$UB_SRCDIR/packages/$pkg/groups" "$pkg/DEBIAN/"
+	fi
+done

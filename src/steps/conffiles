@@ -1,0 +1,43 @@
+#!/bin/bash -eu
+
+#
+# Debian csomagokban a conffiles abszolút útvonalat tartalmaz (tök logikus,
+# miután minden más fájlba relatív útvonalat írnak). Mindegy, nyeljük le a
+# békát, és a békesség kedvéért kövessük mi is ezt. Ki tudja, hol szívjuk
+# meg, ha másképp csináljuk.
+#
+# Ideiglenesen azonban csinálunk egy olyan fájlt is, amelyik bevezető "/"
+# jel nélkül sorolja fel a konfig fájlokat. Ez azért kell, hogy az "md5sums"
+# fájlból a konfig fájlokat egyszerűen ki tudjuk hagyni (ismét a Debiant
+# követjük). Sőt, akkor már a "stat" fájlból is ugyanúgy kihagyjuk őket.
+#
+# Ezt a "conffiles-noslash" fájlt majd a "pack" fázis törli csak, hogy a
+# lehető legtovább ott legyen.
+#
+# A .service fájlok kapcsán gányolunk egy plusz kört.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+for pkg in $UB_PACKAGES; do
+	cd "$UB_PACKAGEDIR/$pkg"
+	{
+	if [ -f "$UB_SRCDIR/packages/$pkg/conffiles" ]; then
+		while read -r conffile; do
+			echo "${conffile#/}"
+		done < "$UB_SRCDIR/packages/$pkg/conffiles"
+	fi
+	for i in etc/runlevel.d/default/*.service; do
+		j="${i/default/custom}"
+		mkdir -p etc/runlevel.d/custom
+		true >"$j"
+		echo "$j"
+	done
+	} | sort -u > "$UB_ADMINDIR/conffiles-noslash-$pkg"
+
+	rm -f DEBIAN/conffiles
+	if [ -s "$UB_ADMINDIR/conffiles-noslash-$pkg" ]; then
+		sed -e 's@^@/@' < "$UB_ADMINDIR/conffiles-noslash-$pkg" \
+		  > DEBIAN/conffiles
+	fi
+done

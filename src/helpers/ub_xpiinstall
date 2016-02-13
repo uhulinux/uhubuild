@@ -1,0 +1,29 @@
+#!/bin/bash -eu
+
+if [ ! -f install.rdf ]; then
+	echo "Nem talaltam install.rdf-et!"
+	exit 1;
+fi
+
+app_id=`grep "em:id=\".*\"$" install.rdf | head -n 1 | sed -e 's|.*em:id="||' -e 's|".*||'`
+if [ $app_id == "" ]; then
+	app_id=`grep "<em:id>.*</em:id>" install.rdf | head -n 1 | sed -e 's|.*<em:id>||' -e 's|</em:id>.*||'`
+fi
+
+firefox_id="ec8030f7-c20a-464f-9b0e-13a3a9e97384"
+thunderbird_id="3550f703-e582-4d05-9a08-453d09bdfdc6"
+seamonkey_id="92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a"
+install=0
+for i in firefox thunderbird seamonkey; do
+	prog="${i}_id"
+	if grep -q "<em:id>{${!prog}}</em:id>" install.rdf; then
+		mkdir -pv "$UB_INSTALLDIR/usr/lib/$i/extensions/$app_id/"
+		cp -av . "$UB_INSTALLDIR/usr/lib/$i/extensions/$app_id/"
+		let install++ 1
+	fi
+done
+
+if [ $install -eq 0 ]; then
+	echo "Ugy nez ki, hogy ez nem egy firefox/thunderbird/seamonkey plugin."
+	exit 1;
+fi

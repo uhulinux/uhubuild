@@ -1,0 +1,54 @@
+#!/bin/sh -eu
+
+unset tmpdir || true
+
+trap '[ -n "${tmpdir:-}" ] && rm -rf "$tmpdir"' EXIT
+
+function die() {
+	echo "$1" >&2
+	exit 1
+}
+
+[ "$#" -le 1 ] || die "usage: ub_download [--check] [dir]"
+
+if [ "${1:-}" == "--check" ]; then
+	do_check=1
+	shift
+else
+	unset do_check || true
+fi
+
+[ -z "${1:-}" ] || cd "$1"
+
+[ -f acquire ] || die "nincs acquire fájl!"
+[ -f version ] || die "nincs version fájl!"
+[ -f release ] || die "nincs release fájl!"
+
+export UB_VERSION="$(<"version")"
+export UB_VERSION_MAJOR="$(cut -d. -f1 "version")"
+export UB_VERSION_MINOR="$(cut -d. -f2 "version")"
+export UB_VERSION_MICRO="$(cut -d. -f3 "version")"
+export UB_VERSION_HEAD1="$(cut -d. -f-1 "version")"
+export UB_VERSION_HEAD2="$(cut -d. -f-2 "version")"
+export UB_VERSION_HEAD3="$(cut -d. -f-3 "version")"
+export UB_VERSION_HEAD4="$(cut -d. -f-4 "version")"
+export UB_VERSION_HEAD5="$(cut -d. -f-5 "version")"
+export UB_VERSION_HEAD6="$(cut -d. -f-6 "version")"
+export UB_VERSION_TAIL1="$(rev "version"|cut -d. -f-1|rev)"
+export UB_VERSION_TAIL2="$(rev "version"|cut -d. -f-2|rev)"
+export UB_VERSION_TAIL3="$(rev "version"|cut -d. -f-3|rev)"
+export UB_VERSION_TAIL4="$(rev "version"|cut -d. -f-4|rev)"
+export UB_VERSION_TAIL5="$(rev "version"|cut -d. -f-5|rev)"
+export UB_VERSION_TAIL6="$(rev "version"|cut -d. -f-6|rev)"
+export UB_RELEASE="$(<release)"
+
+tmpdir="$(mktemp -d -t dl.XXXXXX)"
+[ -d "$tmpdir" ] || die "could not create tmpdir"
+cp acquire "$tmpdir"/
+chmod 700 "$tmpdir/acquire"
+
+if [ "${do_check:-}" ]; then
+	die "not yet implemented :("
+else
+	"$tmpdir/acquire" -d -a sources
+fi

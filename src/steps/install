@@ -1,0 +1,92 @@
+#!/bin/bash -eu
+
+#
+# A telepítési fázis.
+#
+# A telepítő szkriptnek az $UB_INSTALLDIR könyvtár alá kell a cuccot pakolnia.
+#
+
+. /usr/lib/uhubuild/uhubuild-common
+
+listpackages "$UB_ADMINDIR/install-with"
+_hostname  > "$UB_ADMINDIR/install-host"
+logdate "Install-Started"
+
+mkdir -p "$UB_INSTALLDIR"
+if [ -f "$UB_SRCDIR/install" ]; then
+	cd "$UB_INSTALLDIR"
+	# Az alábbi listát tartsd szinkronban a split szkriptben lévővel!
+	pretendroot \
+	  mkdir -p \
+	    bin etc/{pam.d,sysconfig,init.d} lib sbin \
+	    usr/{bin,include,lib/applications,libexec,sbin} \
+	    usr/share/{applications,doc,info,locale,pixmaps} \
+	    usr/share/man/man{1,2,3,4,5,6,7,8,9,n} \
+	    usr/lib/systemd/system
+
+	cd "$UB_COMPILEDIR"
+	pretendroot "$UB_SRCDIR/install"
+else
+	cp -alv "$UB_COMPILEDIR/." "$UB_INSTALLDIR/"
+fi
+
+chmod -R u+r "$UB_COMPILEDIR" "$UB_OBJECTDIR" "$UB_INSTALLDIR"
+
+logdate "Install-Finished"
+
+times > "$UB_ADMINDIR/install-time"
+sec="$(tail -n 1 "$UB_ADMINDIR/install-time" | sed -e 's/m/\*60\+/g' -e 's/\....s//g' -e 's/ /\+/g')"
+cpu="$(grep 'cpu MHz' /proc/cpuinfo | head -n 1 | cut -d: -f2 | cut -d. -f1)"
+echo "$(((sec)*cpu/1000))" > "$UB_ADMINDIR/install-time"
+
+# Sanity checks
+
+if [ -d "${UB_INSTALLDIR}/${UB_WORKDIR}" ]; then
+	error "A csomagba belekerült egy $UB_WORKDIR könyvtár."
+fi
+
+for i in $(find "$UB_INSTALLDIR" \
+		-name CVS        -o \
+		-name RCS        -o \
+		-name SCCS       -o \
+		-name .cvsignore -o \
+		-name .gitignore -o \
+		-name "#*#"      -o \
+		-name "*~"       -o \
+		-name "*.rej"    -o \
+		-name .svn); do
+	error "Ilyet nem rakunk csomagba: $i"
+done
+
+for i in $(find "$UB_COMPILEDIR" "$UB_OBJECTDIR" -name "lib*.so.*U" -type f); do
+	error "GÁÁÁZ VAN, szar a libtool: $i"
+done
+
+for i in $(find "$UB_INSTALLDIR" -name "*.la" -type f -perm +111); do
+	if ! grep '^installed=yes$' -q -- "$i"; then
+		error "hibás .la file (nincs benne installed=yes): $i"
+	fi
+done
+
+diepoint
+
+info=0
+while read link; do
+	end="$(readlink "$link")"
+	case "$end" in
+		"$UB_INSTALLDIR"/*)
+			pretendroot rm "$link"
+			ln -s "${end#$UB_INSTALLDIR}" "$link"
+			if [ $info = 0 ]; then
+				echo "szimlink hegesztés (ne \$UB_INSTALLDIR alá mutasson):"
+				info=1
+			fi
+			echo "  ${link#$UB_INSTALLDIR}"
+			;;
+		"$UB_WORKDIR"*)
+			error "A $link -> $end link az $UB_WORKDIR alá mutat!"
+			;;
+		*)
+			;;
+	esac
+done < <(find "$UB_INSTALLDIR" -type l)
