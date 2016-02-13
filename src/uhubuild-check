@@ -240,10 +240,10 @@ done
 
 for file in packages/*/*; do
 	case "${file##*/}" in
-	  categories|conffiles|depends|dirs |\
-	  excludes  |files    |groups |options|perms   |\
-	  postinst |postrm |prerm  |priority|\
-	  section  |users  |\
+	  categories|conffiles|conflicts|depends|dirs |\
+	  excludes|files|groups|obsoletes|options|perms|\
+	  postinst |postrm |prerm  |priority|pre-depends|\
+	  provides|replaces|section  |users  |\
 	  keep-old-timestamps|suid_wrapper|libpath)
 		must_be_file "$file"
 		;;
@@ -592,6 +592,28 @@ for pkg in packages/*; do
 		fi
 	fi
 
+	#############################
+	### packages/*/conflicts ###
+	#############################
+	if [ -f $pkg/conflicts ]; then
+		pp < $pkg/conflicts
+	fi > $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/conflicts
+		rm $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp
+		while read package op version; do
+			case "$op" in
+				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+					;;
+				*)
+					error "Ismeretlen verzió-operátor ($op) a $pkg/conflicts fájlban."
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/conflicts
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp $UHUBUILD_SRC2DIR/$pkg/conflicts
+	fi
+
 	##########################
 	### packages/*/depends ###
 	##########################
@@ -697,6 +719,28 @@ for pkg in packages/*; do
 		mv $UHUBUILD_SRC2DIR/$pkg/libpath.tmp $UHUBUILD_SRC2DIR/$pkg/libpath
 	fi
 
+	#############################
+	### packages/*/obsoletes ###
+	#############################
+	if [ -f $pkg/obsoletes ]; then
+		pp < $pkg/obsoletes
+	fi > $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/obsoletes
+		rm $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp
+		while read package op version; do
+			case "$op" in
+				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+					;;
+				*)
+					error "Ismeretlen verzió-operátor ($op) a $pkg/obsoletes fájlban."
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/obsoletes
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp $UHUBUILD_SRC2DIR/$pkg/obsoletes
+	fi
+
 	##########################
 	### packages/*/options ###
 	##########################
@@ -787,6 +831,72 @@ for pkg in packages/*; do
 		fi
 	else
 		echo "optional" >"$UHUBUILD_SRC2DIR"/"$pkg"/priority
+	fi
+
+	##############################
+	### packages/*/pre-depends ###
+	##############################
+	if [ -f $pkg/pre-depends ]; then
+		pp < $pkg/pre-depends
+	fi > $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/pre-depends
+		rm $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp
+		while read package op version; do
+			case "$op" in
+				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+					;;
+				*)
+					error "Ismeretlen verzió-operátor ($op) a $pkg/pre-depends fájlban."
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/pre-depends
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp $UHUBUILD_SRC2DIR/$pkg/pre-depends
+	fi
+
+	#############################
+	### packages/*/provides ###
+	#############################
+	if [ -f $pkg/provides ]; then
+		pp < $pkg/provides
+	fi > $UHUBUILD_SRC2DIR/$pkg/provides.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/provides.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/provides.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/provides
+		rm $UHUBUILD_SRC2DIR/$pkg/provides.tmp
+		while read package op version; do
+			case "$op" in
+				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+					;;
+				*)
+					error "Ismeretlen verzió-operátor ($op) a $pkg/provides fájlban."
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/provides
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/provides.tmp $UHUBUILD_SRC2DIR/$pkg/provides
+	fi
+
+	#############################
+	### packages/*/replaces ###
+	#############################
+	if [ -f $pkg/replaces ]; then
+		pp < $pkg/replaces
+	fi > $UHUBUILD_SRC2DIR/$pkg/replaces.tmp
+	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/replaces.tmp; then
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/replaces.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/replaces
+		rm $UHUBUILD_SRC2DIR/$pkg/replaces.tmp
+		while read package op version; do
+			case "$op" in
+				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+					;;
+				*)
+					error "Ismeretlen verzió-operátor ($op) a $pkg/replaces fájlban."
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/replaces
+	else
+		mv $UHUBUILD_SRC2DIR/$pkg/replaces.tmp $UHUBUILD_SRC2DIR/$pkg/replaces
 	fi
 
 	##########################
@@ -973,7 +1083,8 @@ else
 
 	# Esetleges fölösleges (0 méretű) fájlok törlése
 	for f in acquire build-depends compile doc install options \
-	  packages/*/{{description,words}/hu,depends,perms,conffiles,categories,options,suid_wrapper,users,groups}; do
+	  packages/*/{{description,words}/hu,depends,perms,conffiles,categories,options,suid_wrapper,users,groups \
+					conflicts,obsoletes,pre-depends,provides,replaces}; do
 		if [ -f "$f" -a ! -s "$f" ]; then
 			rm -f "$f"
 		fi

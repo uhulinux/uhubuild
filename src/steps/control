@@ -34,6 +34,59 @@ for pkg in $UB_PACKAGES; do
 			echo
 		fi
 
+		if [ -s "$UB_SRCDIR/packages/$pkg/pre-depends" ]; then
+			sep=''
+			echo -n "Pre-Depends:"
+			while read -r line; do
+				echo -n "$sep" "$line"
+				sep=','
+			done < "$UB_SRCDIR/packages/$pkg/pre-depends"
+			echo
+		fi
+		if [ -s "$UB_SRCDIR/packages/$pkg/conflicts" ]; then
+			sep=''
+			echo -n "Conflicts:"
+			while read -r line; do
+				echo -n "$sep" "$line"
+				sep=','
+			done < "$UB_SRCDIR/packages/$pkg/conflicts"
+			echo
+		fi
+		if [ -s "$UB_SRCDIR/packages/$pkg/replaces" ]; then
+			sep=''
+			echo -n "Conflicts:"
+			while read -r line; do
+				echo -n "$sep" "$line"
+				sep=','
+			done < "$UB_SRCDIR/packages/$pkg/replaces"
+			echo
+			sep=''
+			echo -n "Replaces:"
+			while read -r line; do
+				echo -n "$sep" "$line"
+				sep=','
+			done < "$UB_SRCDIR/packages/$pkg/replaces"
+			echo
+		fi
+		if [ -s "$UB_SRCDIR/packages/$pkg/obsoletes" ]; then
+			sep=''
+			echo -n "Obsoletes:"
+			while read -r line; do
+				echo -n "$sep" "$line"
+				sep=','
+			done < "$UB_SRCDIR/packages/$pkg/obsoletes"
+			echo
+		fi
+		if [ -s "$UB_SRCDIR/packages/$pkg/provides" ]; then
+			sep=''
+			echo -n "Provides:"
+			while read -r line; do
+				echo -n "$sep" "$line"
+				sep=','
+			done < "$UB_SRCDIR/packages/$pkg/provides"
+			echo
+		fi
+
 		echo "Distribution: ${UB_DISTRIBUTION/ dev/ 3}"
 		if [ -f "$UB_SRCDIR/vendor" ]; then
 			echo "Vendor: $(cat "$UB_SRCDIR/vendor")"
