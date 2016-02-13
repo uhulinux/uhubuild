@@ -30,5 +30,5 @@ for pkg in $UB_PACKAGES; do
 	  uhubuild-pack "$UB_PACKAGEDIR/$pkg" "$UB_RESULTDIR"
 done
 for pkg in "$UB_RESULTDIR"/*.deb; do
-	mv "$pkg" "${pkg%.deb}.uhu"
+	mv "$pkg" "${pkg%.deb}.ubk.uhu"
 done
