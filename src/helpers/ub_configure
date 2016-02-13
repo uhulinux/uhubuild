@@ -25,10 +25,6 @@ if [ -z "${UB_CONFIGURE_NO_DISABLE_STATIC:-}" ]; then
 		argx[${#argx[@]}]="--disable-static"
 fi
 
-if [ ! -f ./configure ] || ! grep -q "autoconf version 2.13" ./configure; then
-		argx[${#argx[@]}]="CFLAGS=$UB_CFLAGS"
-fi
-
 shopt -s extglob
 
 configure="${UB_CONFIGURE_SCRIPT:-${UB_CONFIGURE_DIR:-.}/configure}"
