@@ -211,6 +211,7 @@ done
 echo -n 'dev '
 mkdir -p "$UHUBUILD_CHROOTDIR/dev"
 mount --bind /dev  "$UHUBUILD_CHROOTDIR/dev"
+mount -t tmpfs -o rw,nosuid,nodev,mode=1777 none "$UHUBUILD_CHROOTDIR"/dev/shm
 
 echo -n $'\b, proc '
 mkdir -p "$UHUBUILD_CHROOTDIR/proc"
