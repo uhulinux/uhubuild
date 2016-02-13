@@ -80,6 +80,5 @@ function u2dcpan() {
 
 function u2dpypi() {
 	project="$1"
-	first=${project:0:1}
-	urllist "https://pypi.python.org/packages/source/$first/$project/" | parsever | sort -V | tail -n 1
+	urllist "https://pypi.python.org/simple/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
 }
