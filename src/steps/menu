@@ -12,7 +12,7 @@ for pkg in $UB_PACKAGES; do
 		if [ ! -d "$dir" ]; then
 			continue
 		fi
-		for f in "$dir"/*; do
+		for f in "$dir"/*.desktop; do
 			if [ ! -f "$f" ]; then
 				continue
 			fi
