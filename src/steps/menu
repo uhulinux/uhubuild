@@ -26,7 +26,8 @@ for pkg in $UB_PACKAGES; do
 			fgrep -q '${' "$f" \
 			  && error "$f: maradt benne '\${', szar a configure vagy a Makefile!" \
 			  || true
-			desktop-file-validate "$f" || warn "$f: hibás desktop fájl!" \
+			desktop-file-validate "$f" | grep 'error:' \
+			  && error "$f: hibás desktop fájl!" \
 			  || true
 		done
 	done
