@@ -172,7 +172,7 @@ for pkg in $UB_PACKAGES; do
 						name="${lib#\$\{ORIGIN\}\/}"
 						echo "$dir/$name" >> "$UB_TMPDIR/file-atleast"
 						continue 2
-					else 
+					else
 						for p in $LP2; do
 							if [ -e "$p/$lib" ]; then
 								echo "$p/$lib" >> "$UB_TMPDIR/file-atleast"

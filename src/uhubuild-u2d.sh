@@ -62,10 +62,10 @@ function splitver() {
 	fi
 	if [ "$#" -eq 0 ]; then
 		pattern='.*-([0-9.]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$'
-	else 
+	else
 		pattern="$1"
 	fi
-	
+
 	grep -E "$pattern" | sed -r 's/'"$pattern"'/\'"$num"'/'
 }
 

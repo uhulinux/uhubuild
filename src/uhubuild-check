@@ -1079,7 +1079,7 @@ else
 				rm -rf "$file"
 			fi
 		done
-		
+
 	fi
 
 	# optional priority törlése

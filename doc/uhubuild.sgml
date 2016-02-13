@@ -972,7 +972,7 @@ szétrobbantva ide mozgatva.
 
 <tag/UB_MAKE_PROCS/ Maximális fordítási szálak megadása. Alapértelmezett
 érteke a rendszeren elérhető online processzormagok száma. Amennyiben a
-build szkriptünkben szeretnénk ezt felülbírálni, akkor az 
+build szkriptünkben szeretnénk ezt felülbírálni, akkor az
 UHUBUILD_MAKE_PROCS változó beállításával tehetjük ezt meg.
 
 </descrip>

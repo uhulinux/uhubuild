@@ -27,7 +27,7 @@ done
 if [ "$s" == "" ]; then
 	die "cannot find any suitable separator"
 fi
-	
+
 tmpfile F
 
 sed -e "s${s}$1${s}$2${s}g" <"$3" >"$F"

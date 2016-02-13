@@ -24,7 +24,7 @@ fi
 if [ -z "${UHUBUILD_CHROOTDIR:-}" ]; then
 	die "Nincs beállítva az UHUBUILD_CHROOTDIR változó!"
 fi
-	
+
 # A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
 if [ -z "${UHUBUILD_SRCDIR:-}" ]; then
 	export UHUBUILD_SRCDIR="$(cd "${1:-.}" && pwd -P)"

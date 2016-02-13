@@ -29,7 +29,7 @@ for pkg in $UB_PACKAGES; do
 	if [ -d "$pkg/usr/build" ]; then
 		error "Az FHS nem engedi meg a $pkg/usr/build könyvtárat! (libtool bug?)"
 	fi
-	
+
 	for i in "$pkg"/*; do
 		case "$i" in
 			*/bin)  ;;
@@ -49,7 +49,7 @@ for pkg in $UB_PACKAGES; do
 				;;
 		esac
 	done
-	
+
 	for i in "$pkg"/usr/*; do
 		case "$i" in
 			*/bin)     ;;

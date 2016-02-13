@@ -91,10 +91,10 @@ if [ -f $UHUBUILD_CHROOTDIR/var/lib/dpkg/status ]; then
 			rm -f "$UHUBUILD_CHROOTDIR"/.DIRTY
 			blueecho "újra próbáljuk..."
 			TRIES=1 exec uhubuild-prepare-chroot "$@"
-		 else 
+		 else
 		 	redecho "A chroot helyreállíthatatlan!"
 		 	exit 1
-		 	
+
 		 fi
 	fi
 fi
