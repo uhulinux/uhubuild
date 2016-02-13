@@ -21,7 +21,7 @@ for pkg in $UB_PACKAGES; do
 			grep -vw 'Encoding=UTF-8' "$f" | grep '^Encoding=' >/dev/null \
 			  && error "$f: hibás vagy nem támogatott Encoding sor!" \
 			  || true
-			[ $(grep ^Categories= "$f" | wc -l) -le 1 ] \
+			[ $(grep -c ^Categories= "$f") -le 1 ] \
 			  || error "$f: egynél több Categories sort tartalmaz!"
 			fgrep -q '${' "$f" \
 			  && error "$f: maradt benne '\${', szar a configure vagy a Makefile!" \

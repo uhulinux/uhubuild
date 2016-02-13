@@ -84,7 +84,7 @@ prio=1000
 declare -a versions=()
 for version in $(echo "${distribution##* }"|tr ':' ' '); do
 	versions[${#versions[@]}]="$version"
-	prio="$(($prio + 1))"
+	prio="$((prio + 1))"
 	IFS=":" cat >>"$UHUBUILD_APT_PREFERENCES" <<EOF
 Package: *
 Pin: release v=${versions[*]},l=${distribution% *}

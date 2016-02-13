@@ -123,7 +123,7 @@ for dir in \
   /usr/src \
   /var; do
 	calc_size
-	total_size="$(($total_size + $size))"
+	total_size="$((total_size + size))"
 	if [ "$size" != 0 ]; then
 		printf " %6s %s\n" "$size" "$dir"
 	fi

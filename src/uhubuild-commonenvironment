@@ -3,7 +3,7 @@ exec 0<>/dev/null
 exec 1>&1
 exec 2>&2
 
-unset `bash -c declare | grep -v ^UHUBUILD | grep -v ^BASH_ | cut -d= -f1` 2>/dev/null || true
+unset $(bash -c declare | grep -v ^UHUBUILD | grep -v ^BASH_ | cut -d= -f1) 2>/dev/null || true
 
 for i in /etc/env.d/*.env; do
 	if [ -f "$i" ]; then
