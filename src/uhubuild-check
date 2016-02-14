@@ -401,15 +401,9 @@ fi
 ### maintainer ###
 ##################
 if [ -f maintainer ]; then
-	pp < maintainer > $UHUBUILD_SRC2DIR/maintainer.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/maintainer.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/maintainer.tmp > $UHUBUILD_SRC2DIR/maintainer
-		rm $UHUBUILD_SRC2DIR/maintainer.tmp
-		if [ $(wc -l < $UHUBUILD_SRC2DIR/maintainer) -ne 1 ]; then
-			error "A maintainer fájl nem egysoros!"
-		fi
-	else
-		mv $UHUBUILD_SRC2DIR/maintainer.tmp $UHUBUILD_SRC2DIR/maintainer
+	reformat 0 < maintainer > $UHUBUILD_SRC2DIR/maintainer
+	if [ $(wc -l < $UHUBUILD_SRC2DIR/maintainer) -ne 1 ]; then
+		error "A maintainer fájl nem egysoros!"
 	fi
 fi
 
@@ -482,15 +476,9 @@ fi
 ### vendor ###
 ##############
 if [ -f vendor ]; then
-	pp < vendor > $UHUBUILD_SRC2DIR/vendor.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/vendor.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/vendor.tmp > $UHUBUILD_SRC2DIR/vendor
-		rm $UHUBUILD_SRC2DIR/vendor.tmp
-		if [ $(wc -l < $UHUBUILD_SRC2DIR/vendor) -ne 1 ]; then
-			error "A vendor fájl nem egysoros!"
-		fi
-	else
-		mv $UHUBUILD_SRC2DIR/vendor.tmp $UHUBUILD_SRC2DIR/vendor
+	reformat 0 < vendor > $UHUBUILD_SRC2DIR/vendor
+	if [ $(wc -l < $UHUBUILD_SRC2DIR/vendor) -ne 1 ]; then
+		error "A vendor fájl nem egysoros!"
 	fi
 fi
 
@@ -556,7 +544,7 @@ for pkg in packages/*; do
 		esac
 		tmpfile tmpfile tmpfile2
 		cat "$UHUBUILD_SRC2DIR/$pkg"/{description,summary}/hu | \
-		tr -s '[:space:]' '\n' | grep -v '^&' | \
+		tr -s '[:space:]' '\n' | grep -a -v '^&' | \
 		  $to_utf8_filter | LC_ALL=hu_HU.UTF-8 hunspell -l | $from_utf8_filter | \
 		  LC_ALL=hu_HU.UTF-8 sort | \
 		  LC_ALL=hu_HU.UTF-8 comm -23 - /usr/share/uhubuild/words/hu >"$tmpfile"
