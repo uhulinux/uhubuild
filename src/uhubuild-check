@@ -598,8 +598,8 @@ for pkg in packages/*; do
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/conflicts
 		rm $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp
 		while read package op version; do
-			case "$op" in
-				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+			case "${op#(}" in
+				""|"<"|"<<"|"<="|"="|">="|">>"|">")
 					;;
 				*)
 					error "Ismeretlen verzió-operátor ($op) a $pkg/conflicts fájlban."
@@ -621,7 +621,7 @@ for pkg in packages/*; do
 		  > $UHUBUILD_SRC2DIR/$pkg/depends
 		rm $UHUBUILD_SRC2DIR/$pkg/depends.tmp
 		while read package op version; do
-			case "$op" in
+			case "${op#(}" in
 				""|"<"|"<<"|"<="|"="|">="|">>"|">")
 					;;
 				*)
@@ -725,8 +725,8 @@ for pkg in packages/*; do
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/obsoletes
 		rm $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp
 		while read package op version; do
-			case "$op" in
-				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+			case "${op#(}" in
+				""|"<"|"<<"|"<="|"="|">="|">>"|">")
 					;;
 				*)
 					error "Ismeretlen verzió-operátor ($op) a $pkg/obsoletes fájlban."
@@ -839,8 +839,8 @@ for pkg in packages/*; do
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/pre-depends
 		rm $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp
 		while read package op version; do
-			case "$op" in
-				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+			case "${op#(}" in
+				""|"<"|"<<"|"<="|"="|">="|">>"|">")
 					;;
 				*)
 					error "Ismeretlen verzió-operátor ($op) a $pkg/pre-depends fájlban."
@@ -861,8 +861,8 @@ for pkg in packages/*; do
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/provides.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/provides
 		rm $UHUBUILD_SRC2DIR/$pkg/provides.tmp
 		while read package op version; do
-			case "$op" in
-				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+			case "${op#(}" in
+				""|"<"|"<<"|"<="|"="|">="|">>"|">")
 					;;
 				*)
 					error "Ismeretlen verzió-operátor ($op) a $pkg/provides fájlban."
@@ -883,8 +883,8 @@ for pkg in packages/*; do
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/replaces.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/replaces
 		rm $UHUBUILD_SRC2DIR/$pkg/replaces.tmp
 		while read package op version; do
-			case "$op" in
-				""|"(<"|"(<<"|"(<="|"(="|"(>="|"(>>"|"(>")
+			case "${op#(}" in
+				""|"<"|"<<"|"<="|"="|">="|">>"|">")
 					;;
 				*)
 					error "Ismeretlen verzió-operátor ($op) a $pkg/replaces fájlban."
