@@ -187,11 +187,14 @@ _procs ()
 {
 	if [ -x /usr/bin/getconf ]; then
 		_PROCS="$(/usr/bin/getconf "_NPROCESSORS_ONLN")"
-		if [ "$_PROCS" -lt 1 ]; then
-			_PROCS=1
-		fi
 	else
+		_PROCS="$(grep ^processor /proc/cpuinfo | wc -l)"
+	fi
+	if [ "$_PROCS" -lt 1 ]; then
 		_PROCS=1
+	fi
+	if [ "$_PROCS" -gt 4 ]; then
+		_PROCS=4
 	fi
 	echo "${_PROCS}"
 }

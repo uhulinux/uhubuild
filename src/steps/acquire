@@ -77,6 +77,4 @@ find "$UB_COMPILEDIR"/ '(' \
 		-name .cvsignore -o \
 		-name .gitignore -o \
 		-name "#*#"      -o \
-		-name .svn       -o \
-		-name .git          \
 		')' -print0 | xargs -r0 rm -rvf --
