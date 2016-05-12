@@ -231,3 +231,11 @@ find $UHUBUILD_CHROOTDIR/var/tmp/ -mindepth 1 -maxdepth 1 \
   -print0 | xargs -r0 rm -rf --
 find $UHUBUILD_CHROOTDIR/var/uhubuild/ -mindepth 1 -maxdepth 1 \
   -print0 | xargs -r0 rm -rf --
+
+# check /tmp perms under chroot 
+perm=$(stat -c %a "$UHUBUILD_CHROOTDIR/tmp")
+
+if [ "$perm" != "777" ] || [ "$perm" != "1777" ]; then
+    chmod 777 $UHUBUILD_CHROOTDIR/tmp
+fi
+

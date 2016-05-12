@@ -17,11 +17,11 @@ if [ -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz" ]; then
 	fi
 fi
 
-touch "$UB_ADMINDIR/.ccache_exctacted"
+touch "$UB_ADMINDIR/.ccache_extracted"
 
 # make sure new files are newer than this one
 touch "$UB_ADMINDIR/.timestamp.tmp"
-while [ ! "$UB_ADMINDIR/.timestamp.tmp" -nt "$UB_ADMINDIR/.ccache_exctacted" ]; do
+while [ ! "$UB_ADMINDIR/.timestamp.tmp" -nt "$UB_ADMINDIR/.ccache_extracted" ]; do
 	sleep 0.1
 	touch "$UB_ADMINDIR/.timestamp.tmp"
 done

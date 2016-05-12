@@ -14,7 +14,6 @@ fi
 find "$UB_CCACHE_DIR" -depth -mindepth 1 -type d -print0 | \
   xargs -0 -r rmdir --ignore-fail-on-non-empty
 
-export GZIP="-1 --rsyncable"
 if type -p sortdir >/dev/null; then
 	sortdir tar cz --owner=0 --group=0 -C "$UB_CCACHE_DIR" -f "$UHUBUILD_CCACHE_DIR/.${UB_SOURCENAME}_ccache.tar.gz.tmp" .
 else
@@ -22,4 +21,4 @@ else
 fi
 mv "$UHUBUILD_CCACHE_DIR/.${UB_SOURCENAME}_ccache.tar.gz.tmp" "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz"
 
-rm -f "$UB_ADMINDIR/.ccache_exctacted"
+rm -f "$UB_ADMINDIR/.ccache_extracted"
