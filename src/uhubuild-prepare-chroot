@@ -209,7 +209,9 @@ chroot $UHUBUILD_CHROOTDIR /sbin/uhu-pkg postinst +
 
 rm -rf $UHUBUILD_CHROOTDIR/var/lib/dpkg-empty
 dpkg $dpkg_options --clear-avail
-dpkg $dpkg_options --forget-old-unavail
+# --forget-old-unavail deprecated since 1.15.4
+# dpkg $dpkg_options --forget-old-unavail
+apt-get $apt_options autoclean
 
 # /etc/hosts
 
