@@ -49,6 +49,22 @@ function u2dgnome {
 	urllist "ftp://ftp.gnome.org/pub/gnome/sources/$project/$ver" | grep LATEST-IS | sed -r 's/LATEST-IS-//' | sort -V | tail -n 1
 }
 
+# script for perl modules
+function u2dcpan() {
+	ver="$(curl -m 10 -s http://cpanmetadb.plackperl.org/v1.0/package/$1)"
+	if echo $ver | grep -q 'xml version'; then
+		exit 1;
+	fi
+	ver="$(echo "$ver" | grep ^version:)"
+	echo "${ver##*: }"
+}
+
+# script for python modules
+function u2dpypi() {
+	project="$1"
+	urllist "https://pypi.python.org/simple/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
+}
+
 # automatically parse version number from file
 function parsever() {
 	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
@@ -69,16 +85,3 @@ function splitver() {
 	grep -E "$pattern" | sed -r 's/'"$pattern"'/\'"$num"'/'
 }
 
-function u2dcpan() {
-	ver="$(curl -m 10 -s http://cpanmetadb.plackperl.org/v1.0/package/$1)"
-	if echo $ver | grep -q 'xml version'; then
-		exit 1;
-	fi
-	ver="$(echo "$ver" | grep ^version:)"
-	echo "${ver##*: }"
-}
-
-function u2dpypi() {
-	project="$1"
-	urllist "https://pypi.python.org/simple/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
-}
