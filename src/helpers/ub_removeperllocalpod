@@ -1,6 +1,0 @@
-#!/bin/bash -eu
-
-if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
-	find "$UB_INSTALLDIR/usr/lib/perl5" -name "perllocal.pod" -type f -print0 | \
-		xargs -r0 rm --
-fi
