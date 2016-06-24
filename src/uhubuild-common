@@ -38,6 +38,6 @@ logdate ()
 
 listpackages ()
 {
-	dpkg-query -W -f='${Package}_${Version}\n' \* > $1
+	dpkg-query -W -f='${Package} ${Version}\n' \* > $1
 }
 

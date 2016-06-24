@@ -10,6 +10,7 @@ for pkg in $UB_PACKAGES; do
 	cd "$UB_PACKAGEDIR/$pkg"
 	{
 		echo "Package: $pkg"
+		echo "Source: ${UB_SOURCENAME}_$UB_VERSION-$UB_RELEASE"
 		echo "Version: $UB_VERSION-$UB_RELEASE$UB_EXTRARELEASE"
 		echo "Section: $(cat "$UB_SRCDIR/packages/$pkg/section")"
 		if [ -s "$UB_SRCDIR/packages/$pkg/categories" ]; then
@@ -98,7 +99,7 @@ for pkg in $UB_PACKAGES; do
 		if [ -f "$UB_SRCDIR/maintainer" ]; then
 			echo "Maintainer: $(cat "$UB_SRCDIR/maintainer")"
 		fi
-		echo "Source: ${UB_SOURCENAME}_$UB_VERSION-$UB_RELEASE"
+
 		echo "Description: $(sed -e 's/\(^\|[[:space:]]\)&/\1/g' "$UB_SRCDIR/packages/$pkg/summary/hu")"
 		sed -e 's/^$/\./' -e 's/^/ /' -e 's/\(^\|[[:space:]]\)&/\1/g' < "$UB_SRCDIR/packages/$pkg/description/hu"
 		if [ -f "$UB_SRCDIR/homepage" ]; then
