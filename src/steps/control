@@ -22,7 +22,7 @@ for pkg in $UB_PACKAGES; do
 		if [ "$prio" = "required" ]; then
 			echo "Essential: yes"
 		fi
-		echo "Architecture: i386"
+		echo "Architecture: ${UB_ARCH}"
 
 		if [ -s "$UB_ADMINDIR/depends-$pkg" ]; then
 			sep=''

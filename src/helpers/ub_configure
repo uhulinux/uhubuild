@@ -2,9 +2,19 @@
 
 . /usr/lib/uhubuild/common
 
-export UB_HOST="i686-uhu-linux"
-export UB_MARCH="i686"
+case "${UB_ARCH}" in
+	i386)
+		export UB_HOST="i686-uhu-linux"
+		export UB_MARCH="i686 -m32"
+		;;
+	amd64)
+		export UB_HOST="x86_64-uhu-linux"
+		export UB_MARCH="core2 -m64"
+		;;
+esac
+
 export UB_MTUNE="generic"
+
 export UB_CFLAGS="-O2 -march=$UB_MARCH -mtune=$UB_MTUNE ${CFLAGS:-}"
 
 export CFLAGS="$UB_CFLAGS"
