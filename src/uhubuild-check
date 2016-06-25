@@ -906,8 +906,57 @@ for pkg in packages/*; do
 			if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/section) -ne 1 ]; then
 				error "Hibás $pkg/section fájl!"
 			else
-				case $(head -c 1 $UHUBUILD_SRC2DIR/$pkg/section) in
-					P|Y|F|G|C|R|L|A|O|E|U|I|D|H|T|N|S|Q|J|K|X|B|M|W|V|Z)
+				case $(< $UHUBUILD_SRC2DIR/$pkg/section) in \
+					Applications/Archiving | \
+					Applications/Configuration | \
+					Applications/Database | \
+					Applications/Editors | \
+					Applications/Edutainment | \
+					Applications/Emulators | \
+					Applications/FileManagers | \
+					Applications/Games | \
+					Applications/Graphics | \
+					Applications/Internet | \
+					Applications/Multimedia | \
+					Applications/Network | \
+					Applications/Networking | \
+					Applications/Office | \
+					Applications/Printing | \
+					Applications/Scientific | \
+					Applications/Tools | \
+					Applications/Typesetting | \
+					Applications/WindowManagers | \
+					Artwork | \
+					Data | \
+					Development | \
+					Development/Compilers | \
+					Development/Headers | \
+					Development/Sources | \
+					Development/Tools | \
+					Documentation | \
+					Firmware | \
+					GNOME | \
+					Interpreters | \
+					KDE | \
+					Libraries | \
+					LXDE | \
+					LXQT | \
+					MATE | \
+					Meta | \
+					Servers | \
+					System/Base | \
+					System/Boot | \
+					System/Daemons | \
+					System/FileSystems | \
+					System/Fonts | \
+					System/Printing | \
+					System/Shells | \
+					System/SoftwareManagement | \
+					System/Tools | \
+					System/X | \
+					UHU | \
+					Web | \
+					XFCE)
 						;;
 					*)
 						error "Hibás vagy régi érték a $pkg/section fájlban!"
