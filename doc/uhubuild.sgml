@@ -840,13 +840,8 @@ elhagyjuk a packages/csomagnév prefixet.
 		<item><tt>Development/Tools</tt>
 		<item><tt>Documentation</tt>
 		<item><tt>Firmware</tt>
-		<item><tt>GNOME</tt>
 		<item><tt>Interpreters</tt>
-		<item><tt>KDE</tt>
 		<item><tt>Libraries</tt>
-		<item><tt>LXDE</tt>
-		<item><tt>LXQT</tt>
-		<item><tt>MATE</tt>
 		<item><tt>Meta</tt>
 		<item><tt>Servers</tt>
 		<item><tt>System/Base</tt>
@@ -861,7 +856,6 @@ elhagyjuk a packages/csomagnév prefixet.
 		<item><tt>System/X</tt>
 		<item><tt>UHU</tt>
 		<item><tt>Web</tt>
-		<item><tt>XFCE</tt>
 	</itemize>	
 
   <tag/suid_wrapper [?]/

@@ -906,7 +906,8 @@ for pkg in packages/*; do
 			if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/section) -ne 1 ]; then
 				error "Hibás $pkg/section fájl!"
 			else
-				case $(< $UHUBUILD_SRC2DIR/$pkg/section) in \
+				sect="$(< $UHUBUILD_SRC2DIR/$pkg/section)"
+				case $sect in \
 					Applications/Archiving | \
 					Applications/Configuration | \
 					Applications/Database | \
@@ -935,13 +936,8 @@ for pkg in packages/*; do
 					Development/Tools | \
 					Documentation | \
 					Firmware | \
-					GNOME | \
 					Interpreters | \
-					KDE | \
 					Libraries | \
-					LXDE | \
-					LXQT | \
-					MATE | \
 					Meta | \
 					Servers | \
 					System/Base | \
@@ -955,11 +951,10 @@ for pkg in packages/*; do
 					System/Tools | \
 					System/X | \
 					UHU | \
-					Web | \
-					XFCE)
+					Web)
 						;;
 					*)
-						error "Hibás vagy régi érték a $pkg/section fájlban!"
+						error "Hibás vagy régi érték a $pkg/section fájlban: $sect"
 						;;
 				esac
 			fi
