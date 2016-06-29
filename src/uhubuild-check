@@ -165,6 +165,11 @@ leading_slash ()
 	sed -e 's@^/*@/@'
 }
 
+no_trailing_slash ()
+{
+	sed -e 's@/$@@'
+}
+
 check ()
 {
 	true
@@ -225,7 +230,7 @@ for file in *; do
 	  u2d)
 		must_be_file "$file"
 		;;
-	  addons*|packages|patches|sources)
+	  addons*|config|packages|patches|sources)
 		must_be_dir "$file"
 		;;
 	  *)
@@ -367,7 +372,7 @@ fi
 if [ -f doc ]; then
 	pp < doc > $UHUBUILD_SRC2DIR/doc.tmp
 	if ! has_macro $UHUBUILD_SRC2DIR/doc.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/doc.tmp | no_leading_slash | sort -u > $UHUBUILD_SRC2DIR/doc
+		reformat 0 < $UHUBUILD_SRC2DIR/doc.tmp | no_leading_slash | no_trailing_slash | sort -u > $UHUBUILD_SRC2DIR/doc
 		rm $UHUBUILD_SRC2DIR/doc.tmp
 	else
 		mv $UHUBUILD_SRC2DIR/doc.tmp $UHUBUILD_SRC2DIR/doc
@@ -379,22 +384,18 @@ fi
 ################
 if [ -f "homepage" ]; then
 	pp < homepage > $UHUBUILD_SRC2DIR/homepage.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/homepage.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/homepage.tmp > "$UHUBUILD_SRC2DIR/homepage"
-		rm $UHUBUILD_SRC2DIR/homepage.tmp
-		if [ "$(wc -l < "$UHUBUILD_SRC2DIR/homepage")" -ne 1 ]; then
-			error "A homepage nem egysoros!"
-		fi
-		case "$(cat homepage)" in
-			ftp://*|http://*|https://*)
-				;;
-			*)
-				error "Ismeretlen URL formátum a homepage fájlban."
-				;;
-		esac
-	else
-		mv $UHUBUILD_SRC2DIR/homepage.tmp $UHUBUILD_SRC2DIR/homepage
+	reformat 0 < $UHUBUILD_SRC2DIR/homepage.tmp > "$UHUBUILD_SRC2DIR/homepage"
+	rm $UHUBUILD_SRC2DIR/homepage.tmp
+	if [ "$(wc -l < "$UHUBUILD_SRC2DIR/homepage")" -ne 1 ]; then
+		error "A homepage nem egysoros!"
 	fi
+	case "$(cat homepage)" in
+		ftp://*|http://*|https://*)
+			;;
+		*)
+			error "Ismeretlen URL formátum a homepage fájlban."
+			;;
+	esac
 fi
 
 ##################
@@ -640,7 +641,7 @@ for pkg in packages/*; do
 		pp < $pkg/dirs
 	fi > $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
 	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/dirs.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/dirs.tmp | leading_slash | sort -u \
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/dirs.tmp | leading_slash | no_trailing_slash | sort -u \
 		  > $UHUBUILD_SRC2DIR/$pkg/dirs
 		rm $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
 	else
@@ -767,7 +768,7 @@ for pkg in packages/*; do
 		pp < $pkg/perms
 	fi > $UHUBUILD_SRC2DIR/$pkg/perms.tmp
 	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/perms.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/perms.tmp > $UHUBUILD_SRC2DIR/$pkg/perms.tmp2
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/perms.tmp | no_trailing_slash > $UHUBUILD_SRC2DIR/$pkg/perms.tmp2
 		while read -r owner group mode file rest; do
 			if [ "$owner" = "" ]; then
 				group="-"
@@ -900,66 +901,61 @@ for pkg in packages/*; do
 	##########################
 	if check $pkg/section; then
 		pp < $pkg/section > $UHUBUILD_SRC2DIR/$pkg/section.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/section.tmp; then
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/section.tmp > $UHUBUILD_SRC2DIR/$pkg/section
-			rm $UHUBUILD_SRC2DIR/$pkg/section.tmp
-			if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/section) -ne 1 ]; then
-				error "Hibás $pkg/section fájl!"
-			else
-				sect="$(< $UHUBUILD_SRC2DIR/$pkg/section)"
-				case $sect in \
-					Applications/Archiving | \
-					Applications/Configuration | \
-					Applications/Database | \
-					Applications/Editors | \
-					Applications/Edutainment | \
-					Applications/Emulators | \
-					Applications/FileManagers | \
-					Applications/Games | \
-					Applications/Graphics | \
-					Applications/Internet | \
-					Applications/Multimedia | \
-					Applications/Network | \
-					Applications/Networking | \
-					Applications/Office | \
-					Applications/Printing | \
-					Applications/Scientific | \
-					Applications/Tools | \
-					Applications/Typesetting | \
-					Applications/WindowManagers | \
-					Artwork | \
-					Data | \
-					Development | \
-					Development/Compilers | \
-					Development/Headers | \
-					Development/Sources | \
-					Development/Tools | \
-					Documentation | \
-					Firmware | \
-					Interpreters | \
-					Libraries | \
-					Meta | \
-					Servers | \
-					System/Base | \
-					System/Boot | \
-					System/Daemons | \
-					System/FileSystems | \
-					System/Fonts | \
-					System/Printing | \
-					System/Shells | \
-					System/SoftwareManagement | \
-					System/Tools | \
-					System/X | \
-					UHU | \
-					Web)
-						;;
-					*)
-						error "Hibás vagy régi érték a $pkg/section fájlban: $sect"
-						;;
-				esac
-			fi
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/section.tmp > $UHUBUILD_SRC2DIR/$pkg/section
+		rm $UHUBUILD_SRC2DIR/$pkg/section.tmp
+		if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/section) -ne 1 ]; then
+			error "Hibás $pkg/section fájl!"
 		else
-			mv $UHUBUILD_SRC2DIR/$pkg/section.tmp $UHUBUILD_SRC2DIR/$pkg/section
+			sect="$(< $UHUBUILD_SRC2DIR/$pkg/section)"
+			case $sect in \
+				Applications/Archiving | \
+				Applications/Configuration | \
+				Applications/Database | \
+				Applications/Editors | \
+				Applications/Edutainment | \
+				Applications/Emulators | \
+				Applications/FileManagers | \
+				Applications/Games | \
+				Applications/Graphics | \
+				Applications/Internet | \
+				Applications/Multimedia | \
+				Applications/Networking | \
+				Applications/Office | \
+				Applications/Printing | \
+				Applications/Scientific | \
+				Applications/Tools | \
+				Applications/Typesetting | \
+				Applications/WindowManagers | \
+				Artwork | \
+				Data | \
+				Development | \
+				Development/Compilers | \
+				Development/Headers | \
+				Development/Sources | \
+				Development/Tools | \
+				Documentation | \
+				Firmware | \
+				Interpreters | \
+				Libraries | \
+				Meta | \
+				Servers | \
+				System/Base | \
+				System/Boot | \
+				System/Daemons | \
+				System/FileSystems | \
+				System/Fonts | \
+				System/Printing | \
+				System/Shells | \
+				System/SoftwareManagement | \
+				System/Tools | \
+				System/X | \
+				UHU | \
+				Web)
+					;;
+				*)
+					error "Hibás vagy régi érték a $pkg/section fájlban: $sect"
+					;;
+			esac
 		fi
 	fi
 

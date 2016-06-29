@@ -100,13 +100,6 @@ for pkg in $UB_PACKAGES; do
 	LP="${LP# }"
 	PCP="${PCP#:}"
 
-	#if [ -n "$LP" ]; then
-	#	echo -e "LP=\t${LP// / \n\t}"
-	#fi
-	#if [ -n "$PCP" ]; then
-	#	echo -e "PCP=\t${PCP//:/:\n\t}"
-	#fi
-
 	rm -f "$UB_TMPDIR/file-atleast" "$UB_TMPDIR/file-noversion"
 
 	if ! grep -qx skip-autodepend "$UB_SRCDIR/packages/$pkg/options"; then
