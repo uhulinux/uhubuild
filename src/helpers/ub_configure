@@ -9,25 +9,30 @@ export UB_CFLAGS="-O2 -march=$UB_MARCH -mtune=$UB_MTUNE ${CFLAGS:-}"
 
 export CFLAGS="$UB_CFLAGS"
 
-argv=() # bash 4.3, declare -a: unbound variable
+argv=()
 argx=(
 	--prefix="/usr"             \
 	--sysconfdir="/etc"         \
 	--localstatedir="/var"      \
 	--mandir="/usr/share/man"   \
 	--infodir="/usr/share/info" \
-	--enable-shared             \
 	--build="$UB_HOST"          \
 	--host="$UB_HOST"           \
 )
 
-if [ -z "${UB_CONFIGURE_NO_DISABLE_STATIC:-}" ]; then
-		argx[${#argx[@]}]="--disable-static"
-fi
-
 shopt -s extglob
 
 configure="${UB_CONFIGURE_SCRIPT:-${UB_CONFIGURE_DIR:-.}/configure}"
+
+if grep -q enable-shared "$configure"; then
+	argx[${#argx[@]}]="--enable-shared"
+fi
+
+if [ -z "${UB_CONFIGURE_NO_DISABLE_STATIC:-}" ]; then
+	if grep -q disable-static "$configure"; then
+		argx[${#argx[@]}]="--disable-static"
+	fi
+fi
 
 # add --disable-schemas-install if the configure script supports it
 if grep -q disable-schemas-install "$configure"; then

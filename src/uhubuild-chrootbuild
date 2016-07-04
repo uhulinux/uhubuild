@@ -81,7 +81,7 @@ tmpfile UHUBUILD_APT_PREFERENCES
 export  UHUBUILD_APT_PREFERENCES
 distribution="$(<"$UHUBUILD_SRCDIR/distribution")"
 prio=1000
-versions=() # bash 4.3, declare -a: unbound variable
+versions=()
 for version in $(echo "${distribution##* }"|tr ':' ' '); do
 	versions[${#versions[@]}]="$version"
 	prio="$((prio + 1))"
