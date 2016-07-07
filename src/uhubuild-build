@@ -67,6 +67,7 @@ mkdir -p "$PRETENDROOTDIR" "$UB_TMPDIR"
 export UB_PACKAGES=$(cd "$UB_SRCDIR/packages"; echo *)
 export UB_SOURCENAME="$(<"$UB_SRCDIR/sourcename")"
 export UB_DISTRIBUTION="$(<"$UB_SRCDIR/distribution")"
+export UB_ARCH="${UHUBUILD_ARCH:-$(_arch)}"
 export UB_VERSION="$(<"$UB_SRCDIR/version")"
 export UB_VERSION_MAJOR="$(cut -d. -f1 "$UB_SRCDIR/version")"
 export UB_VERSION_MINOR="$(cut -d. -f2 "$UB_SRCDIR/version")"
