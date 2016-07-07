@@ -239,7 +239,7 @@ for pkg in $UB_PACKAGES; do
 		fi
 
 		case "$file" in
-		  ./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
+		  ./lib/pkgconfig/*.pc|./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
 			# .pc fájlok:
 			# Kétféle függőséget is figyelünk. Az egyik a Libs sorban lévő,
 			# ezt szépen kiírja a pkg-config, először a -L kapcsolókat, ami
@@ -248,7 +248,7 @@ for pkg in $UB_PACKAGES; do
 			libpath="/lib /usr/lib"
 			for L in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-L "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-L "$file"); do
 				if [ "$L" = "${L#-L/}" ]; then
-					error "invalid pkg-config output"
+					error "$file: invalid pkg-config output"
 					continue
 				fi
 				L="${L#-L}"
@@ -257,7 +257,7 @@ for pkg in $UB_PACKAGES; do
 			need_libc=0
 			for l in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-l "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-l "$file"); do
 				if [ "$l" = "${l#-l}" ]; then
-					error "invalid pkg-config output"
+					error "$file: invalid pkg-config output"
 					continue
 				fi
 				l="${l#-l}"
