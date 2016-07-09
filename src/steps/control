@@ -88,10 +88,10 @@ for pkg in $UB_PACKAGES; do
 			echo
 		fi
 
-		if [ "$UHUBUILD_DISTR" = "dev" ]; then
-			echo "Distribution: ${UB_DISTRIBUTION/ dev/ 3.1}"
+		if [ "$UHUBUILD_DISTR" = "3.1" ] || [ "$UHUBUILD_DISTR" = "dev" ]; then
+			echo "Distribution: UHU Linux UBK-1"
 		else
-			echo "Distribution: UHU Linux ${UHUBUILD_DISTR}"
+			echo "Distribution: ${UB_DISTRIBUTION}"
 		fi
 		if [ -f "$UB_SRCDIR/vendor" ]; then
 			echo "Vendor: $(cat "$UB_SRCDIR/vendor")"
