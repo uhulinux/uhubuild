@@ -89,7 +89,7 @@ for pkg in $UB_PACKAGES; do
 		fi
 
 		if [ "$UHUBUILD_DISTR" = "3.1" ] || [ "$UHUBUILD_DISTR" = "dev" ]; then
-			echo "Distribution: UHU Linux UBK-1"
+			echo "Distribution: UHU Linux UBK1"
 		else
 			echo "Distribution: ${UB_DISTRIBUTION}"
 		fi
