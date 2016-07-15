@@ -100,13 +100,6 @@ for pkg in $UB_PACKAGES; do
 	LP="${LP# }"
 	PCP="${PCP#:}"
 
-	#if [ -n "$LP" ]; then
-	#	echo -e "LP=\t${LP// / \n\t}"
-	#fi
-	#if [ -n "$PCP" ]; then
-	#	echo -e "PCP=\t${PCP//:/:\n\t}"
-	#fi
-
 	rm -f "$UB_TMPDIR/file-atleast" "$UB_TMPDIR/file-noversion"
 
 	if ! grep -qx skip-autodepend "$UB_SRCDIR/packages/$pkg/options"; then
@@ -121,13 +114,6 @@ for pkg in $UB_PACKAGES; do
 			case "$(file -b "$file")" in
 			# ELF file (bevezető * a setuidos cuccok miatt)
 			  *ELF*dynamically*|*ELF*shared*)
-				#echo "  file=[$file]"
-				#if objdump -p "$file" 2>/dev/null | grep '^[ \t]*RPATH[ \t]' >/dev/null; then
-				#	warn "a $file tartalmaz RPATH bejegyzést!"
-				#fi
-				#if objdump -p "$file" 2>/dev/null | grep '^[ \t]*RUNPATH[ \t]' >/dev/null; then
-				#	warn "a $file tartalmaz RUNPATH bejegyzést!"
-				#fi
 				LP2=""
 				for rpath in $(objdump -p "$file" 2>/dev/null | grep '^[ \t]*RPATH[ \t]' | tr -s ' ' | cut -d" " -f3 | tr ':' ' '); do
 					if [ "$rpath" = '$ORIGIN' ]; then
@@ -162,9 +148,6 @@ for pkg in $UB_PACKAGES; do
 					fi
 				done
 				LP2="${LP2# }"
-				#if [ "$LP" != "$LP2" ]; then
-				#	echo -e "LP2=\t${LP2// / \n\t}"
-				#fi
 
 				for lib in $(objdump -p "$file" 2>/dev/null | grep '^[ \t]*NEEDED[ \t]' | tr -s ' ' | cut -d" " -f3); do
 					if [ "${lib#\$\{ORIGIN\}\/}" != "$lib" ]; then # ha ugy kezdodik hogy ${ORIGIN}/
@@ -256,20 +239,16 @@ for pkg in $UB_PACKAGES; do
 		fi
 
 		case "$file" in
-		  ./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
+		  ./lib/pkgconfig/*.pc|./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
 			# .pc fájlok:
 			# Kétféle függőséget is figyelünk. Az egyik a Libs sorban lévő,
 			# ezt szépen kiírja a pkg-config, először a -L kapcsolókat, ami
 			# alapján majd megtudjuk, hogy mely könyvtárakban kell utána a
 			# -l kapcsolók libjeit keresni, ...
-			if ! PKG_CONFIG_PATH="$PCP" pkg-config --exists "$file"; then
-				error "Unmet dependencies in $file"
-				continue
-			fi
 			libpath="/lib /usr/lib"
 			for L in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-L "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-L "$file"); do
 				if [ "$L" = "${L#-L/}" ]; then
-					error "invalid pkg-config output"
+					error "$file: invalid pkg-config output"
 					continue
 				fi
 				L="${L#-L}"
@@ -278,7 +257,7 @@ for pkg in $UB_PACKAGES; do
 			need_libc=0
 			for l in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-l "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-l "$file"); do
 				if [ "$l" = "${l#-l}" ]; then
-					error "invalid pkg-config output"
+					error "$file: invalid pkg-config output"
 					continue
 				fi
 				l="${l#-l}"

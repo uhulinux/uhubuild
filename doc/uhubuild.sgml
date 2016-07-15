@@ -810,6 +810,52 @@ elhagyjuk a packages/csomagnév prefixet.
   <tag/section [!]/
 
 	A csomag section mezője.
+	Lehetséges értékei:
+	<itemize>
+		<item><tt>Applications/Archiving</tt>
+		<item><tt>Applications/Configuration</tt>
+		<item><tt>Applications/Database</tt>
+		<item><tt>Applications/Editors</tt>
+		<item><tt>Applications/Edutainment</tt>
+		<item><tt>Applications/Emulators</tt>
+		<item><tt>Applications/FileManagers</tt>
+		<item><tt>Applications/Games</tt>
+		<item><tt>Applications/Graphics</tt>
+		<item><tt>Applications/Internet</tt>
+		<item><tt>Applications/Multimedia</tt>
+		<item><tt>Applications/Networking</tt>
+		<item><tt>Applications/Office</tt>
+		<item><tt>Applications/Printing</tt>
+		<item><tt>Applications/Scientific</tt>
+		<item><tt>Applications/Tools</tt>
+		<item><tt>Applications/Typesetting</tt>
+		<item><tt>Applications/WindowManagers</tt>
+		<item><tt>Artwork</tt>
+		<item><tt>Data</tt>
+		<item><tt>Development</tt>
+		<item><tt>Development/Compilers</tt>
+		<item><tt>Development/Headers</tt>
+		<item><tt>Development/Sources</tt>
+		<item><tt>Development/Tools</tt>
+		<item><tt>Documentation</tt>
+		<item><tt>Firmware</tt>
+		<item><tt>Interpreters</tt>
+		<item><tt>Libraries</tt>
+		<item><tt>Meta</tt>
+		<item><tt>Servers</tt>
+		<item><tt>System/Base</tt>
+		<item><tt>System/Boot</tt>
+		<item><tt>System/Daemons</tt>
+		<item><tt>System/FileSystems</tt>
+		<item><tt>System/Fonts</tt>
+		<item><tt>System/Printing</tt>
+		<item><tt>System/Shells</tt>
+		<item><tt>System/SoftwareManagement</tt>
+		<item><tt>System/Tools</tt>
+		<item><tt>System/X</tt>
+		<item><tt>UHU</tt>
+		<item><tt>Web</tt>
+	</itemize>	
 
   <tag/suid_wrapper [?]/
 

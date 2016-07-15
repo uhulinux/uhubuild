@@ -63,7 +63,7 @@ warn ()
 
 # tmp -------------------------------------------------------------------------
 unset __tmp || true
-__tmp=() # bash 4.3, declare -a: unbound variable
+__tmp=()
 tmpfile()
 {
 	local i
@@ -97,7 +97,7 @@ tmpdir ()
 }
 
 # -----------------------------------------------------------------------------
-_exit_hooks=() # bash 4.3, declare -a: unbound variable
+_exit_hooks=()
 exit_hook ()
 {
 	_exit_hooks[${#_exit_hooks[@]}]="$1"

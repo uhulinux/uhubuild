@@ -33,7 +33,7 @@ case "${UB_MAKEINSTALL_USE_DESTDIR:-}" in
 		;;
 esac
 
-argv=() # bash 4.3, declare -a: unbound variable
+argv=()
 if [ "$UB_MAKEINSTALL_USE_DESTDIR" = "yes" ]; then
 	argv[${#argv[@]}]="DESTDIR=$UB_MAKEINSTALL_PREFIX"
 # ez meg szokott lenni:
@@ -48,7 +48,7 @@ else
 	argv[${#argv[@]}]="sysconfdir=$UB_MAKEINSTALL_PREFIX/etc"
 fi
 
-argv2=() # bash 4.3, declare -a: unbound variable
+argv2=()
 shopt -s extglob
 for i in "${argv[@]}"; do
 	pattern="$i"

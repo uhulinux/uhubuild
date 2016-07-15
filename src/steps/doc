@@ -15,6 +15,10 @@ if [ -f "$UB_SRCDIR/doc" ]; then
 				error "$pattern: nincs ilyen fájl!"
 				break
 			fi
+			if [ ! -s "$file" ]; then
+				error "$pattern: üres fájl!"
+				break
+			fi
 			pretendroot cp -a --no-preserve=ownership "$file" "$UB_INSTALLDIR/usr/share/doc/Packages/$UB_SOURCENAME/"
 		done
 	done < "$UB_SRCDIR/doc"

@@ -32,10 +32,6 @@ if [ -f extconf.rb ]; then
 	ruby extconf.rb "$@"
 fi
 
-if [ -f install.rdf -a -d chrome ]; then
-	exit 0
-fi
-
 if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
 	exec scons \
 		PREFIX=/usr \
