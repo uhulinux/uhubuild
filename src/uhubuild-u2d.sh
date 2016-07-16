@@ -24,6 +24,43 @@ function urllist() {
 	geturl "$@" | sed -r 's/^.*\/([^\/]+)\/?$/\1/'
 }
 
+# automatically parse version number from file
+function parsever() {
+	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
+}
+
+# split version number from file
+function splitver() {
+	num=1
+	if [ "$#" -eq 2 ]; then
+		num="$2"
+	fi
+	if [ "$#" -eq 0 ]; then
+		pattern='.*-([0-9.]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$'
+	else
+		pattern="$1"
+	fi
+
+	grep -E "$pattern" | sed -r 's/'"$pattern"'/\'"$num"'/'
+}
+
+# general script: all release in one dir
+function u2d {
+	urllist $1 | parsever | sort -V | tail -n 1
+}
+
+# general script: release placed under versioned directory
+function u2dsubdir {
+	project="$1"
+	unstable="$2"
+	reg="02468";
+	if [ -n "${unstable:-}" ]; then
+		reg="0-9"
+	fi
+	ver="$(urllist $project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+	urllist $project/$ver | parsever | sort -V | tail -n 1
+}
+
 # list sourceforge project files
 function sflist() {
 	project="$1"
@@ -63,25 +100,5 @@ function u2dcpan() {
 function u2dpypi() {
 	project="$1"
 	urllist "https://pypi.python.org/simple/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
-}
-
-# automatically parse version number from file
-function parsever() {
-	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
-}
-
-# split version number from file
-function splitver() {
-	num=1
-	if [ "$#" -eq 2 ]; then
-		num="$2"
-	fi
-	if [ "$#" -eq 0 ]; then
-		pattern='.*-([0-9.]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$'
-	else
-		pattern="$1"
-	fi
-
-	grep -E "$pattern" | sed -r 's/'"$pattern"'/\'"$num"'/'
 }
 
