@@ -16,7 +16,11 @@ else
 fi
 
 if [ -f setup.py -a ! -f Makefile ]; then
-	exec python ./setup.py build "$@"
+	if [ "${UB_PYTHON}" = "3" ]; then
+		exec python3 ./setup.py build "$@"
+	else
+		exec python2 ./setup.py build "$@"
+	fi
 fi
 
 if [ -f Makefile.PL ]; then
