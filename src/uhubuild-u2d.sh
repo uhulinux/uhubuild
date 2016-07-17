@@ -52,12 +52,7 @@ function u2d {
 # general script: release placed under versioned directory
 function u2dsubdir {
 	project="$1"
-	unstable="$2"
-	reg="02468";
-	if [ -n "${unstable:-}" ]; then
-		reg="0-9"
-	fi
-	ver="$(urllist $project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+	ver="$(urllist $project | grep -E '^[0-9.]+$' | sort -V | tail -n 1)"
 	urllist $project/$ver | parsever | sort -V | tail -n 1
 }
 
