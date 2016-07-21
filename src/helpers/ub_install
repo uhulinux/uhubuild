@@ -9,12 +9,7 @@ if [ -f Build.PL ]; then
 fi
 
 if [ -f setup.py -a ! -f Makefile ]; then
-	"${UB_PYTHON:-"2"}"
-	if [ "${UB_PYTHON}" = "3" ]; then
-		exec python3 setup.py install --root="$UB_INSTALLDIR"
-	else
-		exec python2 setup.py install --root="$UB_INSTALLDIR"
-	fi
+	exec python"${UB_PYTHON}" setup.py install --root="$UB_INSTALLDIR"
 fi
 
 if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then

@@ -56,6 +56,11 @@ function u2dsubdir {
 	urllist $project/$ver | parsever | sort -V | tail -n 1
 }
 
+# list github project files
+function u2dgithub {
+    urllist $1/releases/ | sed 's/^[0-9]/v&/g' | sed 's/^v/v-/g' | sed 's/-[0-9]\.[tbzx].*//g' | sed s/pre.*//g | parsever | sort -V | tail -n 1
+}
+
 # list sourceforge project files
 function sflist() {
 	project="$1"
