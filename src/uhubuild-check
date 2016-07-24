@@ -401,7 +401,7 @@ fi
 ##################
 ### maintainer ###
 ##################
-if [ -f maintainer ]; then
+if check maintainer; then
 	reformat 0 < maintainer > $UHUBUILD_SRC2DIR/maintainer
 	if [ $(wc -l < $UHUBUILD_SRC2DIR/maintainer) -ne 1 ]; then
 		error "A maintainer fájl nem egysoros!"

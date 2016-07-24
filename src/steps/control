@@ -12,19 +12,26 @@ for pkg in $UB_PACKAGES; do
 		echo "Package: $pkg"
 		echo "Source: ${UB_SOURCENAME}_$UB_VERSION-$UB_RELEASE"
 		echo "Version: $UB_VERSION-$UB_RELEASE$UB_EXTRARELEASE"
-		echo "Section: $(cat "$UB_SRCDIR/packages/$pkg/section")"
-		if [ -s "$UB_SRCDIR/packages/$pkg/categories" ]; then
-			cat="$(tr '\n' ',' <"$UB_SRCDIR/packages/$pkg/categories")"
-			cat="${cat%,}"
-			echo "Categories: ${cat//,/, }"
+		echo "Architecture: ${UB_ARCH}"
+
+		if [ "$UHUBUILD_DISTR" = "3.1" ] || [ "$UHUBUILD_DISTR" = "dev" ]; then
+			echo "Distribution: UHU Linux UBK1"
+		else
+			echo "Distribution: ${UB_DISTRIBUTION}"
 		fi
+		
 		prio="$(cat "$UB_SRCDIR/packages/$pkg/priority")"
 		echo "Priority: $prio"
 		if [ "$prio" = "required" ]; then
 			echo "Essential: yes"
 		fi
-		echo "Architecture: ${UB_ARCH}"
 
+		echo "Maintainer: $(cat "$UB_SRCDIR/maintainer")"
+
+		if [ -f "$UB_SRCDIR/vendor" ]; then
+			echo "Vendor: $(cat "$UB_SRCDIR/vendor")"
+		fi
+		
 		if [ -s "$UB_ADMINDIR/depends-$pkg" ]; then
 			sep=''
 			echo -n "Depends:"
@@ -88,23 +95,20 @@ for pkg in $UB_PACKAGES; do
 			echo
 		fi
 
-		if [ "$UHUBUILD_DISTR" = "3.1" ] || [ "$UHUBUILD_DISTR" = "dev" ]; then
-			echo "Distribution: UHU Linux UBK1"
-		else
-			echo "Distribution: ${UB_DISTRIBUTION}"
-		fi
-		if [ -f "$UB_SRCDIR/vendor" ]; then
-			echo "Vendor: $(cat "$UB_SRCDIR/vendor")"
-		fi
-		if [ -f "$UB_SRCDIR/maintainer" ]; then
-			echo "Maintainer: $(cat "$UB_SRCDIR/maintainer")"
+		echo "Section: $(cat "$UB_SRCDIR/packages/$pkg/section")"
+		if [ -s "$UB_SRCDIR/packages/$pkg/categories" ]; then
+			cat="$(tr '\n' ',' <"$UB_SRCDIR/packages/$pkg/categories")"
+			cat="${cat%,}"
+			echo "Categories: ${cat//,/, }"
 		fi
 
-		echo "Description: $(sed -e 's/\(^\|[[:space:]]\)&/\1/g' "$UB_SRCDIR/packages/$pkg/summary/hu")"
-		sed -e 's/^$/\./' -e 's/^/ /' -e 's/\(^\|[[:space:]]\)&/\1/g' < "$UB_SRCDIR/packages/$pkg/description/hu"
 		if [ -f "$UB_SRCDIR/homepage" ]; then
 			echo "Homepage: $(cat "$UB_SRCDIR/homepage")"
 		fi
+		
+		echo "Description: $(sed -e 's/\(^\|[[:space:]]\)&/\1/g' "$UB_SRCDIR/packages/$pkg/summary/hu")"
+		sed -e 's/^$/\./' -e 's/^/ /' -e 's/\(^\|[[:space:]]\)&/\1/g' < "$UB_SRCDIR/packages/$pkg/description/hu"
+
 	} > DEBIAN/control
 	if ! iconv -f UTF-8 -t UTF-8 <DEBIAN/control >/dev/null 2>&1; then
 		echo "  control file of $pkg is not valid UTF-8"
