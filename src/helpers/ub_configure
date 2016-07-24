@@ -39,7 +39,7 @@ if grep -q enable-shared "$configure"; then
 fi
 
 if [ -z "${UB_CONFIGURE_NO_DISABLE_STATIC:-}" ]; then
-	if grep -q disable-static "$configure"; then
+	if grep -q disable-static || grep -q enable-static "$configure"; then
 		argx[${#argx[@]}]="--disable-static"
 	fi
 fi
