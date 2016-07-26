@@ -49,16 +49,20 @@ function splitver() {
 
 # general script: all release in one dir
 function u2d {
-	if [ -z $2 ]; then
-	  filename=""
+	if [ "$(echo $1 | grep github.com)" ];then
+	  if [ -z $2 ]; then
+	    filename=""
+	  else
+	    filename="$2"
+	  fi
 	else
-	  filename="$2"
+	  if [ -z $2 ]; then
+	    filename=".*-"
+	  else
+	    filename="$2"
+	  fi
 	fi
-	if [ "$(echo $1 | grep github.com)" ];then 
-	      urllist $1 | _parsever | sort -V | tail -n 1
-	else
-	urllist $1 | parsever | sort -V | tail -n 1
-	fi
+	urllist $1 | _parsever | sort -V | tail -n 1
 }
 
 # general script: release placed under versioned directory
