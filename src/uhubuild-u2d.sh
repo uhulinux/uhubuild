@@ -29,7 +29,7 @@ function parsever() {
 	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
 }
 function _parsever() {
-	grep -E "^$filename([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$" | sed -r "s/$filename([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/"
+	grep -E "^$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(gz|bz2|xz|zip)$" | sed -r "s/$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/"
 }
 
 # split version number from file
@@ -49,6 +49,11 @@ function splitver() {
 
 # general script: all release in one dir
 function u2d {
+	  if [ -z $3 ]; then
+	    tarprefix=""
+	  else
+	    tarprefix="$3"
+	  fi
 	if [ "$(echo $1 | grep github.com)" ];then
 	  if [ -z $2 ]; then
 	    filename=""
