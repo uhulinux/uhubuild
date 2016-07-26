@@ -28,6 +28,9 @@ function urllist() {
 function parsever() {
 	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
 }
+function _parsever() {
+	grep -E "^$filename([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$" | sed -r "s/$filename([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/"
+}
 
 # split version number from file
 function splitver() {
@@ -46,7 +49,16 @@ function splitver() {
 
 # general script: all release in one dir
 function u2d {
+	if [ -z $2 ]; then
+	  filename=""
+	else
+	  filename="$2"
+	fi
+	if [ "$(echo $1 | grep github.com)" ];then 
+	      urllist $1 | _parsever | sort -V | tail -n 1
+	else
 	urllist $1 | parsever | sort -V | tail -n 1
+	fi
 }
 
 # general script: release placed under versioned directory
