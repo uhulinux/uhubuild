@@ -28,6 +28,10 @@ function urllist() {
 function parsever() {
 	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
 }
+# paraméterekkel
+function _parsever() {
+	grep -E "^$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(gz|bz2|xz|zip)$" | sed -r "s/$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/"
+}
 
 # split version number from file
 function splitver() {
@@ -44,9 +48,27 @@ function splitver() {
 	grep -E "$pattern" | sed -r 's/'"$pattern"'/\'"$num"'/'
 }
 
-# general script: all release in one dir
+# general script: all release in one dir (+github projects)
 function u2d {
-	urllist $1 | parsever | sort -V | tail -n 1
+	  if [ -z $3 ]; then
+	    tarprefix=""
+	  else
+	    tarprefix="$3"
+	  fi
+	if [ "$(echo $1 | grep github.com)" ];then
+	  if [ -z $2 ]; then
+	    filename=""
+	  else
+	    filename="$2"
+	  fi
+	else
+	  if [ -z $2 ]; then
+	    filename=".*-"
+	  else
+	    filename="$2"
+	  fi
+	fi
+	urllist $1 | _parsever | sort -V | tail -n 1
 }
 
 # general script: release placed under versioned directory
@@ -54,11 +76,6 @@ function u2dsubdir {
 	project="$1"
 	ver="$(urllist $project | grep -E '^[0-9.]+$' | sort -V | tail -n 1)"
 	urllist $project/$ver | parsever | sort -V | tail -n 1
-}
-
-# list github project files
-function u2dgithub {
-    urllist $1/releases/ | sed 's/^[0-9]/v&/g' | sed 's/^v/v-/g' | sed 's/-[0-9]\.[tbzx].*//g' | sed s/pre.*//g | parsever | sort -V | tail -n 1
 }
 
 # list sourceforge project files
