@@ -950,7 +950,14 @@ for pkg in packages/*; do
 				System/Tools | \
 				System/X | \
 				UHU | \
-				Web)
+				Web | \
+				CINNAMON | \
+				GNOME | \
+				KDE | \
+				LXDE | \
+				LXQT | \
+				MATE | \
+				XFCE)
 					;;
 				*)
 					error "Hibás vagy régi érték a $pkg/section fájlban: $sect"

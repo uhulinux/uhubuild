@@ -855,7 +855,17 @@ elhagyjuk a packages/csomagnév prefixet.
 		<item><tt>System/X</tt>
 		<item><tt>UHU</tt>
 		<item><tt>Web</tt>
-	</itemize>	
+	</itemize>
+	Valamint a nagyobb desktopok:
+		<itemize>
+		<item><tt>CINNAMON</tt>
+		<item><tt>GNOME</tt>
+		<item><tt>KDE</tt>
+		<item><tt>LXDE</tt>
+		<item><tt>LXQT</tt>
+		<item><tt>MATE</tt>
+		<item><tt>XFCE</tt>
+	</itemize>
 
   <tag/suid_wrapper [?]/
 
