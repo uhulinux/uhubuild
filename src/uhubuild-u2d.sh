@@ -82,7 +82,9 @@ function u2dsubdir {
 function sflist() {
 	project="$1"
 	path="$2"
-	geturl "http://sourceforge.net/projects/$project/files/$path" | grep -E "$project/files/$path(/[^/])?" | while read n; do
+	 #A grep csak a normál karakteres formájú $sppath stinget eszi, a geturl meg csak a %20 stílusú $path stringet.
+	sppath=$(echo -e "${path//%/\x}")
+	geturl "http://sourceforge.net/projects/$project/files/$path" | grep -E "$project/files/$sppath(/[^/])?" | while read n; do
 		if [[ "$n" =~ /$ ]]; then
 			echo $n | sed -r 's/^.*\/([^\/]+)\/$/\1/'
 		elif [[ "$n" =~ /download$ ]]; then
