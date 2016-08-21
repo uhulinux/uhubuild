@@ -20,6 +20,14 @@ done
 unset i
 
 export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin"
+
+for j in /etc/profile.d/*.sh; do
+	if [ -f "$j" ]; then
+		source "$j"
+	fi
+done
+unset j
+
 export HOME=~
 export LC_ALL=C
 export IFS=$' \t\n'
