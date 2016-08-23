@@ -19,14 +19,8 @@ for i in /etc/env.d/*.env; do
 done
 unset i
 
-export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin"
-
-for j in /etc/profile.d/*.sh; do
-	if [ -f "$j" ]; then
-		source "$j"
-	fi
-done
-unset j
+# extra path: qt5
+export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin:/usr/lib/qt5/bin"
 
 export HOME=~
 export LC_ALL=C
