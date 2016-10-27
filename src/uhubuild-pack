@@ -177,7 +177,7 @@ sync
 export ZLIB_RSYNC=1
 export SORTDIR_VERSCMP=1
 if type -p sortdir >/dev/null; then
-	sortdir dpkg-deb --build -z 9 "$@"
+	sortdir dpkg-deb --build -z 6 "$@"
 else
-	        dpkg-deb --build -z 9 "$@"
+	        dpkg-deb --build -z 6 "$@"
 fi
