@@ -152,7 +152,7 @@ reformat ()
 	else
 		die "reformat: hibás használat!"
 	fi
-	tr -d '\r' | sed -e 's/[[:space:]]*$//' | $cmd
+	tr -d '\r' | sed -e 's/[[:blank:]]*$//' | $cmd
 }
 
 no_leading_slash ()
@@ -342,6 +342,8 @@ fi
 for file in acquire compile install; do
 	if [ -f $file ]; then
 		pp < $file > $UHUBUILD_SRC2DIR/$file
+		sed -i '/^#!.*$/G' $file
+		reformat 1 < $file > $UHUBUILD_SRC2DIR/$file
 	fi
 done
 
