@@ -1128,16 +1128,13 @@ else
 		fi
 	done
 
-	# Esetleges fölösleges (0 méretű) fájlok törlése és az esetleges fájlvégi sorvégjel hiány pótlása
+	# Esetleges fölösleges (0 méretű) fájlok törlése
 	for f in acquire build-depends compile doc install options \
 	  packages/*/{{description,words}/hu,depends,perms,conffiles,categories,options,suid_wrapper,users,groups \
 					conflicts,obsoletes,pre-depends,provides,replaces}; do
 		if [ -f "$f" -a ! -s "$f" ]; then
 			rm -f "$f"
 		fi
-		if [ -f "$f" ];then
-            sed -i -e '$a\' "$f"
-        fi
 	done
 
 	# Esetleges fölösleges könyvtárak törlése
