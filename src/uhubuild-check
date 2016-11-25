@@ -365,6 +365,7 @@ fi
 #################
 if [ -f changelog ]; then
 	pp < changelog > $UHUBUILD_SRC2DIR/changelog
+	reformat 1 < changelog > $UHUBUILD_SRC2DIR/changelog
 	touch -r changelog $UHUBUILD_SRC2DIR/changelog
 fi
 
@@ -803,6 +804,7 @@ for pkg in packages/*; do
 	for file in postinst postrm prerm; do
 		if [ -f $pkg/$file ]; then
 			pp < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
+			reformat 1 < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
 		fi
 	done
 
