@@ -804,6 +804,7 @@ for pkg in packages/*; do
 	for file in postinst postrm prerm; do
 		if [ -f $pkg/$file ]; then
 			pp < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
+			sed -i '/^#!.*$/G' $pkg/$file
 			reformat 1 < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
 		fi
 	done
