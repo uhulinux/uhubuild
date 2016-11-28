@@ -152,7 +152,7 @@ reformat ()
 	else
 		die "reformat: hibás használat!"
 	fi
-	tr -d '\r' | sed -e 's/[[:blank:]]*$//' | sed -e '$a\' | $cmd
+	tr -d '\r' | sed -i '/^#!.*$/G' | sed -e 's/[[:blank:]]*$//' | sed -e '$a\' | $cmd
 }
 
 no_leading_slash ()
@@ -342,7 +342,7 @@ fi
 for file in acquire compile install; do
 	if [ -f $file ]; then
 		pp < $file > $UHUBUILD_SRC2DIR/$file
-		sed -i '/^#!.*$/G' $file
+#		sed -i '/^#!.*$/G' $file
 		reformat 1 < $file > $UHUBUILD_SRC2DIR/$file
 	fi
 done
@@ -804,7 +804,7 @@ for pkg in packages/*; do
 	for file in postinst postrm prerm; do
 		if [ -f $pkg/$file ]; then
 			pp < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
-			sed -i '/^#!.*$/G' $pkg/$file
+#			sed -i '/^#!.*$/G' $pkg/$file
 			reformat 1 < $pkg/$file > $UHUBUILD_SRC2DIR/$pkg/$file
 		fi
 	done
