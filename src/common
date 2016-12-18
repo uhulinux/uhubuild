@@ -50,7 +50,7 @@ error ()
 {
 	errors=$((errors+1))
 	if [ $errors -gt 100 ]; then
-		die "Tul sok hiba!"
+		die "Túl sok hiba!"
 	fi
 	redecho "Error: $*" >&2
 }

@@ -227,7 +227,8 @@ for pkg in $UB_PACKAGES; do
 							fi
 
 							if [ "$found" == "no" ]; then
-								error "a $file interpretere nincs meg: [$args]"
+								warn "a $file interpretere nincs meg: [$args]"
+								continue
 							fi
 							unset found
 						fi

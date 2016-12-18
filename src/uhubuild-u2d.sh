@@ -50,23 +50,23 @@ function splitver() {
 
 # general script: all release in one dir (+github projects)
 function u2d {
-	  if [ -z $3 ]; then
-	    tarprefix=""
-	  else
-	    tarprefix="$3"
-	  fi
-	if [ "$(echo $1 | grep github.com)" ];then
-	  if [ -z $2 ]; then
-	    filename=""
-	  else
-	    filename="$2"
-	  fi
+	if [ -z $3 ]; then
+		tarprefix=""
 	else
-	  if [ -z $2 ]; then
-	    filename=".*-"
-	  else
-	    filename="$2"
-	  fi
+	    tarprefix="$3"
+	fi
+	if [ "$(echo $1 | grep github.com)" ];then
+		if [ -z $2 ]; then
+	    	filename=""
+		else
+			filename="$2"
+		fi
+	else
+		if [ -z $2 ]; then
+			filename=".*-"
+		else
+			filename="$2"
+		fi
 	fi
 	urllist $1 | _parsever | sort -V | tail -n 1
 }
@@ -74,8 +74,18 @@ function u2d {
 # general script: release placed under versioned directory
 function u2dsubdir {
 	project="$1"
+	if [ -z $3 ]; then
+		tarprefix=""
+	else
+	    tarprefix="$3"
+	fi
+	if [ -z $2 ]; then
+		filename=".*-"
+	else
+	    filename="$2"
+	fi
 	ver="$(urllist $project | grep -E '^[0-9.]+$' | sort -V | tail -n 1)"
-	urllist $project/$ver | parsever | sort -V | tail -n 1
+	urllist $project/$ver | _parsever | sort -V | tail -n 1
 }
 
 # list sourceforge project files
