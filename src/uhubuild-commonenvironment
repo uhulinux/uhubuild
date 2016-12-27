@@ -25,6 +25,7 @@ export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/us
 export HOME=~
 export LC_ALL=C
 export IFS=$' \t\n'
+export SHELL=/bin/bash
 
 umask 022
 
