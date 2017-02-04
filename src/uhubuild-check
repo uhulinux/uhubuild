@@ -685,7 +685,9 @@ for pkg in packages/*; do
 	### packages/*/excludes ###
 	###########################
 	if [ -f $pkg/excludes ]; then
-		pp < $pkg/excludes > $UHUBUILD_SRC2DIR/$pkg/excludes
+		pp < $pkg/excludes > $UHUBUILD_SRC2DIR/$pkg/excludes.tmp
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/excludes.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/excludes
+		rm $UHUBUILD_SRC2DIR/$pkg/excludes.tmp
 	fi
 
 	######################################
