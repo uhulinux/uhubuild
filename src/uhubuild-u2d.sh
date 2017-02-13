@@ -26,11 +26,11 @@ function urllist() {
 
 # automatically parse version number from file
 function parsever() {
-	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/'
+	grep -E '.*-([0-9.-]+)\.((tar\.)|(t))?(lz|gz|bz2|xz|zip)$' | sed -r 's/.*-([0-9.-]+)\.((tar\.)|(t))?(lz|gz|bz2|xz|zip)/\1/'
 }
 # paraméterekkel
 function _parsever() {
-	grep -E "^$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(gz|bz2|xz|zip)$" | sed -r "s/$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(gz|bz2|xz|zip)/\1/"
+	grep -E "^$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(lz|gz|bz2|xz|zip)$" | sed -r "s/$filename([0-9.-]+)$tarprefix\.((tar\.)|(t))?(lz|gz|bz2|xz|zip)/\1/"
 }
 
 # split version number from file
