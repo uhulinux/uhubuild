@@ -32,17 +32,18 @@ for pkg in $UB_PACKAGES; do
 
 	for i in "$pkg"/*; do
 		case "$i" in
-			*/bin)  ;;
-			*/boot) ;;
-			*/dev)  ;;
-			*/etc)  ;;
-			*/home) ;;
-			*/lib)  ;;
-			*/opt)  ;;
-			*/sbin) ;;
-			*/srv)  ;;
-			*/usr)  ;;
-			*/var)  ;;
+			*/bin)   ;;
+			*/boot)  ;;
+			*/dev)   ;;
+			*/etc)   ;;
+			*/home)  ;;
+			*/lib)   ;;
+			*/lib64) ;;
+			*/opt)   ;;
+			*/sbin)  ;;
+			*/srv)   ;;
+			*/usr)   ;;
+			*/var)   ;;
 			*/DEBIAN) ;;
 			*)
 				forbidden "$i"
@@ -56,6 +57,7 @@ for pkg in $UB_PACKAGES; do
 			*/games)   ;;
 			*/include) ;;
 			*/lib)     ;;
+			*/lib64)   ;;
 			*/libexec) ;;
 			*/local)   ;;
 			*/sbin)    ;;
