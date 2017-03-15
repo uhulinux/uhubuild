@@ -15,10 +15,6 @@
 
 cd "$UB_PACKAGEDIR"
 
-function forbidden() {
-	error "FHS által tiltva: $1"
-}
-
 shopt -s dotglob
 
 for pkg in $UB_PACKAGES; do
@@ -46,7 +42,7 @@ for pkg in $UB_PACKAGES; do
 			*/var)   ;;
 			*/DEBIAN) ;;
 			*)
-				forbidden "$i"
+				error "FHS által tiltva: $i (package: $pkg)"
 				;;
 		esac
 	done
@@ -64,7 +60,7 @@ for pkg in $UB_PACKAGES; do
 			*/share)   ;;
 			*/src)     ;;
 			*)
-				forbidden "$i"
+				error "FHS által tiltva: $i (package: $pkg)"
 				;;
 		esac
 	done
