@@ -205,6 +205,6 @@ for pkg in $UB_PACKAGES; do
 	fi | \
 	  while read -d $'\0' dir; do
 		echo "${dir#.}" >> "$UB_ADMINDIR/dirs-$pkg"
-		echo "    Üres könyvtár: $pkg/${dir#./}"
+		echo "    Üres könyvtár a(z) $pkg csomagban: /${dir#./}"
 	done
 done
