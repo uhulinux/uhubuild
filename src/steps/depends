@@ -91,7 +91,7 @@ for pkg in $UB_PACKAGES; do
 		done
 		PCP="$PCP:$UB_PACKAGEDIR/$p/usr/lib/pkgconfig:$UB_PACKAGEDIR/$p/usr/share/pkgconfig"
 	done
-	for dir in /lib /usr/lib $(cat $UB_SRCDIR/packages/$pkg/libpath); do
+	for dir in /lib /usr/lib /lib64 /usr/lib64 $(cat $UB_SRCDIR/packages/$pkg/libpath); do
 		if [ -d "$dir" ]; then
 			realpath="$(readlink -f "$dir")"
 			LP="$LP $realpath"
@@ -246,7 +246,7 @@ for pkg in $UB_PACKAGES; do
 			# ezt szépen kiírja a pkg-config, először a -L kapcsolókat, ami
 			# alapján majd megtudjuk, hogy mely könyvtárakban kell utána a
 			# -l kapcsolók libjeit keresni, ...
-			libpath="/lib /usr/lib"
+			libpath="/lib /usr/lib /lib64 /usr/lib64"
 			for L in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-L "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-L "$file"); do
 				if [ "$L" = "${L#-L/}" ]; then
 					error "$file: invalid pkg-config output"
@@ -368,7 +368,7 @@ if false; then
 				continue
 			fi
 			libdir="$(grep ^libdir= "$file" | cut -d= -f2- | tr -d \')"
-			libpath="/lib /usr/lib $libdir"
+			libpath="/lib /usr/lib /lib64 /usr/lib64 $libdir"
 			deplibs="$(grep ^dependency_libs= "$file" | cut -d= -f2- | tr -d \')"
 			for L in $deplibs; do
 				if [ "$L" = "${L#-L/}" ]; then
@@ -399,11 +399,11 @@ if false; then
 				fi
 				l="${l#-l}"
 				found=0
-				if [ "$l" = "gcc" ]; then
-					# -lgcc uses /usr/lib/gcc-lib/*/*/libgcc.a
-					echo /usr/lib/gcc*/*/*/libgcc.a >> "$UB_TMPDIR/file-noversion"
-					found=1
-				fi
+#				if [ "$l" = "gcc" ]; then
+#					# -lgcc uses /usr/lib/gcc-lib/*/*/libgcc.a
+#					echo /usr/lib/gcc*/*/*/libgcc.a >> "$UB_TMPDIR/file-noversion"
+#					found=1
+#				fi
 				for libdir in $libpath; do
 					for p in $UB_PACKAGES; do
 						if [ -e "$UB_PACKAGEDIR/$p$libdir/lib$l.so" -o -L "$UB_PACKAGEDIR/$p/$libdir/lib$l.so" ]; then
