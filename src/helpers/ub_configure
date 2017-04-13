@@ -2,7 +2,6 @@
 
 . /usr/lib/uhubuild/common
 
-UB_ARCH="${UHUBUILD_ARCH:-$(_arch)}"
 case "${UB_ARCH}" in
 	i386)
 		export UB_HOST="i686-uhu-linux"

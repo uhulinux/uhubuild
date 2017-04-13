@@ -22,6 +22,12 @@ if [ $# -gt 1 ]; then
 	die "Használat: uhubuild-build [forrás-könyvtár]"
 fi
 
+export UB_ARCH=$UHUBUILD_ARCH
+
+if [ "$UB_ARCH" == "amd64" ] && [ "$(uname -m)" == "i386" ];then
+    die "Csak 64 bites módban indítva lehet 64 bites csomagot készíteni!"
+fi
+
 # A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
 if [ -z "${UHUBUILD_SRCDIR:-}" ]; then
 	export UHUBUILD_SRCDIR="$(cd "${1:-.}" && pwd -P)"
@@ -68,7 +74,6 @@ mkdir -p "$PRETENDROOTDIR" "$UB_TMPDIR"
 export UB_PACKAGES=$(cd "$UB_SRCDIR/packages"; echo *)
 export UB_SOURCENAME="$(<"$UB_SRCDIR/sourcename")"
 export UB_DISTRIBUTION="$(<"$UB_SRCDIR/distribution")"
-export UB_ARCH="${UHUBUILD_ARCH:-$(_arch)}"
 export UB_VERSION="$(<"$UB_SRCDIR/version")"
 export UB_VERSION_MAJOR="$(cut -d. -f1 "$UB_SRCDIR/version")"
 export UB_VERSION_MINOR="$(cut -d. -f2 "$UB_SRCDIR/version")"

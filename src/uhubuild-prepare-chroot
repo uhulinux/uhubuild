@@ -66,11 +66,18 @@ apt_statedir="-o Dir::State=$UHUBUILD_CHROOTDIR/var/state/apt"
 apt_cachedir="-o Dir::Cache=$UHUBUILD_CHROOTDIR/var/cache/apt"
 apt_noimmconf="-o APT::Immediate-Configure=false"
 apt_pkgproblemresolver="-o Debug::pkgProblemResolver=yes"
-
-apt_options="$apt_sourcelist $apt_preferences $apt_statusdir $apt_chrootdir $apt_statedir $apt_cachedir $apt_noimmconf $apt_pkgproblemresolver"
-apt_empty_options="$apt_sourcelist $apt_preferences $apt_empty_statusdir $apt_chrootdir $apt_statedir $apt_cachedir $apt_noimmconf $apt_pkgproblemresolver"
-
+apt_arch="-o=APT::Architecture=$UB_ARCH"
+apt_dpkgopts=""
 dpkg_options="--root=$UHUBUILD_CHROOTDIR"
+
+if [ "$UB_ARCH" == "amd64" ];then
+apt_dpkgopts="-o DPkg::Options::=--force-architecture"
+dpkg_options="--root=$UHUBUILD_CHROOTDIR --force-architecture"
+fi
+
+apt_options="$apt_sourcelist $apt_preferences $apt_statusdir $apt_chrootdir $apt_arch $apt_dpkgopts $apt_statedir $apt_cachedir $apt_noimmconf $apt_pkgproblemresolver"
+apt_empty_options="$apt_sourcelist $apt_preferences $apt_empty_statusdir $apt_chrootdir $apt_arch $apt_dpkgopts $apt_statedir $apt_cachedir $apt_noimmconf $apt_pkgproblemresolver"
+
 
 # Nyitó könyvtár létrehozása.
 
