@@ -111,8 +111,8 @@ function u2dgnome {
 	if [ -n "${unstable:-}" ]; then
 		reg="0-9"
 	fi
-	ver="$(urllist "ftp://ftp.gnome.org/pub/gnome/sources/$project/" | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
-	urllist "ftp://ftp.gnome.org/pub/gnome/sources/$project/$ver" | grep LATEST-IS | sed -r 's/LATEST-IS-//' | sort -V | tail -n 1
+	ver="$(urllist "https://download.gnome.org/sources/$project/" | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+	urllist "https://download.gnome.org/sources/$project/$ver" | grep LATEST-IS | sed -r 's/LATEST-IS-//' | sort -V | tail -n 1
 }
 
 # script for perl modules
