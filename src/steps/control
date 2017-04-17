@@ -14,7 +14,7 @@ for pkg in $UB_PACKAGES; do
 		echo "Version: $UB_VERSION-$UB_RELEASE$UB_EXTRARELEASE"
 		echo "Architecture: ${UB_ARCH}"
 
-		if [ "$UHUBUILD_DISTR" = "3.1" ] || [ "$UHUBUILD_DISTR" = "dev" ]; then
+		if [ "$UHUBUILD_DISTR" = "dev" ]; then
 			echo "Distribution: UHU Linux UBK1"
 		else
 			echo "Distribution: ${UB_DISTRIBUTION}"

@@ -17,6 +17,8 @@
 
 dieifuser
 
+export UB_ARCH=${UHUBUILD_ARCH}
+
 if [ $# -gt 1 ]; then
 	die "Használat: uhubuild-chrootbuild [forrás-könyvtár]"
 fi
