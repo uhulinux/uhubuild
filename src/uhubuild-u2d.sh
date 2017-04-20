@@ -112,7 +112,7 @@ function u2dgnome {
 		reg="0-9"
 	fi
 	ver="$(urllist "https://download.gnome.org/sources/$project/" | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
-	urllist "https://download.gnome.org/sources/$project/$ver" | grep LATEST-IS | sed -r 's/LATEST-IS-//' | sort -V | tail -n 1
+	u2dsubdir "https://download.gnome.org/sources/$project/$ver"
 }
 
 # script for perl modules
