@@ -8,9 +8,9 @@
 
 cd "$UB_COMPILEDIR"
 
-for csere in $(grep -rI ' \-O3 ' * | sed 's/:.*//g' | sort -u);do
-ub_replace -O3 -O2 $csere
-done
+# for csere in $(grep -rI ' \-O3 ' * | sed 's/:.*//g' | sort -u);do
+# ub_replace -O3 -O2 $csere
+# done
 
 listpackages "$UB_ADMINDIR/compile-with"
 _hostname  > "$UB_ADMINDIR/compile-host"
