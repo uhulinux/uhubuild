@@ -213,3 +213,38 @@ has_macro ()
 {
 	egrep '^#(if|else|elif|endif)' "$@" >/dev/null
 }
+
+# -----------------------------------------------------------------------------
+all-flag-vars() {
+	echo {C,CPP,CXX,CCAS,F,FC,LD}FLAGS
+}
+
+# Remove occurrences of strings from variable given in $1
+# Strings removed are matched as globs, so for example
+# '-O*' would remove -O1, -O2 etc.
+_filter-var() {
+	local f x var=$1 new=()
+	shift
+
+	for f in ${!var} ; do
+		for x in "$@" ; do
+			# Note this should work with globs like -O*
+			[[ ${f} == ${x} ]] && continue 2
+		done
+		new+=( "${f}" )
+	done
+	export ${var}="${new[*]}"
+}
+
+# @FUNCTION: filter-flags
+# @USAGE: <flags>
+# @DESCRIPTION:
+# Remove particular <flags> from {C,CPP,CXX,CCAS,F,FC,LD}FLAGS.  Accepts shell globs.
+filter-flags() {
+	local v
+	for v in $(all-flag-vars) ; do
+		_filter-var ${v} "$@"
+	done
+	return 0
+}
+
