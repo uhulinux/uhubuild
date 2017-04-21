@@ -8,6 +8,10 @@
 
 cd "$UB_COMPILEDIR"
 
+for i in $(grep -r ' \-O3 ' * | sed s/:.*//g | sort -u);do
+ub_replace -O3 -O2 $i
+done
+
 listpackages "$UB_ADMINDIR/compile-with"
 _hostname  > "$UB_ADMINDIR/compile-host"
 logdate "Compile-Started"
