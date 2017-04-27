@@ -72,9 +72,6 @@ find "$UB_COMPILEDIR"/ -name "*.orig" -print0 | xargs -r0 rm -rvf --
 # További takarítások
 find "$UB_COMPILEDIR"/ '(' \
 		-name CVS        -o \
-		-name RCS        -o \
-		-name SCCS       -o \
 		-name .cvsignore -o \
-		-name .gitignore -o \
 		-name "#*#"         \
 		')' -print0 | xargs -r0 rm -rvf --
