@@ -1045,7 +1045,7 @@ if [ -f "u2d" ]; then
 		newver="$(uhubuild-u2d)"
 		current="$(cat version)"
 			if [ -n "$newver" -a "$newver" != "$current" ]; then
-				warn "new version available: $newver" (current: $current)
+				warn "new version available: $newver (current: $current)"
 			fi
 	fi
 fi
