@@ -17,8 +17,6 @@ UB_MTUNE="generic"
 
 UB_CFLAGS="-O2 -march=$UB_MARCH -mtune=$UB_MTUNE ${CFLAGS:-}"
 
-filter-flags -O3
-
 export CFLAGS="$UB_CFLAGS"
 
 argv=()
