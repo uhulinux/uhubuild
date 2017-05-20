@@ -7,7 +7,7 @@ if [ -f CMakeLists.txt ]; then
 		-DCMAKE_INSTALL_PREFIX="/usr" \
 		"$@" \
 		..
-elif [ -f "configure" ]; then
+elif [ -f "configure" -a ! -f meson.build ]; then
 	ub_configure "$@"
 else
 	if [ -f "autogen.sh" ]; then
@@ -37,6 +37,19 @@ if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
 		PREFIX=/usr \
 		LIBDIR=/usr/lib \
 		"$@"
+fi
+
+if [ -f meson.build ]; then
+	meson \
+		--prefix "/usr"             \
+		--sysconfdir "/etc"         \
+		--localstatedir "/var"      \
+		--mandir "/usr/share/man"   \
+		--infodir "/usr/share/info" \
+		--backend ninja		        \
+		--buildtype release         \
+		--default-library shared
+ 		"$@"
 fi
 
 exec ub_make
