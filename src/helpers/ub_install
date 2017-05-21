@@ -16,7 +16,13 @@ if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
 	exec scons install --install-sandbox="$UB_INSTALLDIR" "$@"
 fi
 
-RPM_BUILD_ROOT="$UB_INSTALLDIR" \
-ub_makeinstall "$@"
+if [ -f meson.build -a -f build/build.ninja ]; then
+	DESTDIR="$UB_INSTALLDIR" ninja -C build install
+fi
+
+if [ ! -f meson.build ]; then
+	RPM_BUILD_ROOT="$UB_INSTALLDIR" \
+	ub_makeinstall "$@"
+fi
 
 ub_fixpaths

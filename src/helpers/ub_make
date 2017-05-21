@@ -3,8 +3,13 @@
 . /usr/lib/uhubuild/common
 
 j="-j${UB_MAKE_PROCS:-$(_procs)}"
-echo "make $j"
-for i in "$@"; do
-	echo -e "\t$i"
-done
-make "$j" "$@"
+
+if [ -f meson.build -a -f build/build.ninja ]; then
+	ninja -C build "$j" "$@"
+else
+	echo "make $j"
+	for i in "$@"; do
+		echo -e "\t$i"
+	done
+	make "$j" "$@"
+fi

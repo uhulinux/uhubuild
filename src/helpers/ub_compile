@@ -48,8 +48,8 @@ if [ -f meson.build ]; then
 		--infodir="/usr/share/info" \
 		--backend=ninja		        \
 		--buildtype=release         \
-		--default-library=shared
- 		"$@"
+		--default-library=shared	\
+		"$@"
 fi
 
 exec ub_make
