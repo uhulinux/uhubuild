@@ -3,7 +3,7 @@
 if [ -f CMakeLists.txt ]; then
 	mkdir -p build
 	cd build
-	if ! grep '-DCMAKE_INSTALL_LIBDIR' "$UB_SRCDIR/compile"; then
+	if ! grep 'DCMAKE_INSTALL_LIBDIR' "$UB_SRCDIR/compile"; then
 		cmake \
 			-DCMAKE_INSTALL_PREFIX="/usr" \
 			-DCMAKE_INSTALL_LIBDIR="/usr/lib" \
