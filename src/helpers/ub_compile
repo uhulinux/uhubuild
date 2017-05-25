@@ -1,20 +1,27 @@
 #!/bin/bash -eu
 
 if [ -f CMakeLists.txt ]; then
+	argv=()
+	argx=(
+		-DCMAKE_INSTALL_PREFIX="/usr" \
+	)
+	if ! grep 'DCMAKE_INSTALL_LIBDIR' "$UB_SRCDIR/compile"; then
+		argx[${#argx[@]}]="-DCMAKE_INSTALL_LIBDIR="/usr/lib""
+	fi
+	for i in "${argx[@]}"; do
+		argv[${#argv[@]}]="$i"
+	done
+	# be verbose :)
+	echo "cmake"
+	for i in "$@" "${argv[@]}"; do
+		echo -e "\t$i"
+	done
+
 	mkdir -p build
 	cd build
-	if ! grep 'DCMAKE_INSTALL_LIBDIR' "$UB_SRCDIR/compile"; then
-		cmake \
-			-DCMAKE_INSTALL_PREFIX="/usr" \
-			-DCMAKE_INSTALL_LIBDIR="/usr/lib" \
-			"$@" \
-			..
-	else
-		cmake \
-			-DCMAKE_INSTALL_PREFIX="/usr" \
-			"$@" \
-			..
-	fi
+	cmake \
+		"$@" "${argv[@]}" \
+		..
 elif [ -f "configure" -a ! -f meson.build ]; then
 	ub_configure "$@"
 else
