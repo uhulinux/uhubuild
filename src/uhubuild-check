@@ -260,19 +260,6 @@ fi
 # Ez eléggé babra munka.
 #
 
-# A distribution az elejére kell, mert ez még definiál cpp-változót.
-# de kell ez? -DUHU_LINUX_2_2
-
-####################
-### distribution ###
-####################
-if check distribution; then
-reformat 0 < distribution > $UHUBUILD_SRC2DIR/distribution
-	if [ $(wc -l < $UHUBUILD_SRC2DIR/distribution) -ne 1 ]; then
-		error "A distribution fájl nem egysoros!"
-	fi
-fi
-
 ##############
 ### addons ###
 ##############
@@ -322,6 +309,16 @@ if [ -f changelog ]; then
 	pp < changelog > $UHUBUILD_SRC2DIR/changelog
 	reformat 1 < changelog > $UHUBUILD_SRC2DIR/changelog
 	touch -r changelog $UHUBUILD_SRC2DIR/changelog
+fi
+
+####################
+### distribution ###
+####################
+if check distribution; then
+reformat 0 < distribution > $UHUBUILD_SRC2DIR/distribution
+	if [ $(wc -l < $UHUBUILD_SRC2DIR/distribution) -ne 1 ]; then
+		error "A distribution fájl nem egysoros!"
+	fi
 fi
 
 ###########
