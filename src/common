@@ -198,18 +198,3 @@ _procs ()
 	fi
 	echo "${_PROCS}"
 }
-
-# -----------------------------------------------------------------------------
-preprocess ()
-{
-	sed -e 's/"/\x1f/g' -e 's/\\/\x1e/g' -e 's/^\(.*\)$/"\1"/' \
-	  -e 's/^"\(#\(if\|else\|elif\|endif\).*\)"$/\1/' | \
-	cpp -P "$@" | \
-	grep '^"' | \
-	sed -e 's/"//g' -e 's/\x1e/\\/g' -e 's/\x1f/"/g'
-}
-
-has_macro ()
-{
-	egrep '^#(if|else|elif|endif)' "$@" >/dev/null
-}

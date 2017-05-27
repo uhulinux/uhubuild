@@ -26,14 +26,6 @@
 #
 # A név történelmi okokból "check", talán lehetne jobb nevet is találni.
 #
-# Újdonság: a preprocesszálást is ez a szkript végzi. Kissé bonyolult a
-# helyzet, mert sokmindent kell tudnia egyszerre. Helyben preprocesszálni,
-# másolás közben preprocesszálni, preprocesszált változtatot ellenőrizni a
-# lehető legszigorúbban, preprocesszálás előtt álló változatot
-# hellyel-közzel ellenőrizni... Az ellenőrzések illetve kipofozások nagy
-# részét csak akkor tudjuk elvégezni egy fájlon, ha abban már nincsen
-# preprocesszor parancs.
-#
 
 . /usr/lib/uhubuild/uhubuild-commonenvironment
 . /usr/lib/uhubuild/uhubuild-common
@@ -41,21 +33,11 @@
 shopt -s extglob
 
 copy=no
-preproc=no
 cppflags=''
 while true; do
 	case "$1" in
 	  --copy)
 		copy=yes
-		shift
-		continue
-		;;
-	  --preproc=*)
-		preproc=yes
-		i="${1#--preproc=}"
-		for j in $i; do
-			cppflags="$cppflags -D$j"
-		done
 		shift
 		continue
 		;;
@@ -66,7 +48,7 @@ while true; do
 done
 
 if [ $# -gt 1 ]; then
-	die "Használat: uhubuild-check [--copy] [--preproc=...] [forrás-könyvtár]"
+	die "Használat: uhubuild-check [--copy] [forrás-könyvtár]"
 fi
 
 # A forrás könyvtár vagy az aktuális, vagy a megadott paraméter
@@ -107,11 +89,7 @@ fi
 
 pp ()
 {
-	if [ "$preproc" = "yes" ]; then
-		preprocess $cppflags
-	else
-		cat
-	fi
+	cat
 }
 
 no_double_empty_line ()
@@ -273,7 +251,6 @@ if [ -d patches ]; then
 	while read file; do
 		case "${file##*/}" in
 			*.@(dif|diff|patch|patch0|patchR|tar|sh|skip|desc|txt)?(.@(gz|bz2|Z)));;
-			*.preproc) ;;
 			*) illegal "$file" ;;
 		esac
 	done < <(ub_list patches -type f -print)
@@ -304,14 +281,10 @@ fi
 ##############
 for dir in addons*; do
 	if [ -d "$dir" ]; then
-		if [ -f "$dir/preproc" ]; then
-			{ grep '' "$dir/preproc"; echo pyfgcrl; } | preprocess $cppflags 2>/dev/null | grep pyfgcrl >/dev/null || continue
-		fi
 		mkdir -p "$UHUBUILD_SRC2DIR/addons"
 		cp -a "$dir"/. "$UHUBUILD_SRC2DIR/addons/"
 	fi
 done
-rm -f "$UHUBUILD_SRC2DIR/addons/preproc"
 
 ###############
 ### patches ###
@@ -319,19 +292,8 @@ rm -f "$UHUBUILD_SRC2DIR/addons/preproc"
 if [ -d patches ]; then
 	cp -a patches $UHUBUILD_SRC2DIR
 	while read file; do
-		p="$file"
-		case "$p" in
-			*.preproc) continue;;
-			*.@(gz|bz2|Z)) p="${p%.*}";;
-		esac
-		p="${p%.*}".preproc
-		if [ -f "$p" ]; then
-			{ grep '' "$p"; echo pyfgcrl; } | preprocess $cppflags 2>/dev/null | grep pyfgcrl >/dev/null || rm "$file"
-		fi
-	done < <(ub_list $UHUBUILD_SRC2DIR/patches -type f -print)
-	while read file; do
-		case "${file##*/}" in
-			*.preproc) rm "$file";;
+		case "$file" in
+			*.@(gz|bz2|Z)) file="${file%.*}";;
 		esac
 	done < <(ub_list $UHUBUILD_SRC2DIR/patches -type f -print)
 fi
@@ -352,12 +314,8 @@ done
 #####################
 if [ -f build-depends ]; then
 	pp < build-depends > $UHUBUILD_SRC2DIR/build-depends.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/build-depends.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/build-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/build-depends
-		rm $UHUBUILD_SRC2DIR/build-depends.tmp
-	else
-		mv $UHUBUILD_SRC2DIR/build-depends.tmp $UHUBUILD_SRC2DIR/build-depends
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/build-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/build-depends
+	rm $UHUBUILD_SRC2DIR/build-depends.tmp
 fi
 
 #################
@@ -374,12 +332,8 @@ fi
 ###########
 if [ -f doc ]; then
 	pp < doc > $UHUBUILD_SRC2DIR/doc.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/doc.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/doc.tmp | no_leading_slash | no_trailing_slash | sort -u > $UHUBUILD_SRC2DIR/doc
-		rm $UHUBUILD_SRC2DIR/doc.tmp
-	else
-		mv $UHUBUILD_SRC2DIR/doc.tmp $UHUBUILD_SRC2DIR/doc
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/doc.tmp | no_leading_slash | no_trailing_slash | sort -u > $UHUBUILD_SRC2DIR/doc
+	rm $UHUBUILD_SRC2DIR/doc.tmp
 fi
 
 ################
@@ -417,21 +371,17 @@ fi
 if [ -f options ]; then
 	pp < options
 fi > $UHUBUILD_SRC2DIR/options.tmp
-if ! has_macro $UHUBUILD_SRC2DIR/options.tmp; then
-	reformat 0 < $UHUBUILD_SRC2DIR/options.tmp | tr A-Z a-z | sort -u > $UHUBUILD_SRC2DIR/options
-	rm $UHUBUILD_SRC2DIR/options.tmp
-	while IFS='' read option; do
-		case "$option" in
-		  skip-strip)	;;
-		  skip-optipng)	;;
-		  *)
-			error "Hibás érték az options fájlban: $option!"
-			;;
-		esac
-	done < $UHUBUILD_SRC2DIR/options
-else
-	mv $UHUBUILD_SRC2DIR/options.tmp $UHUBUILD_SRC2DIR/options
-fi
+reformat 0 < $UHUBUILD_SRC2DIR/options.tmp | tr A-Z a-z | sort -u > $UHUBUILD_SRC2DIR/options
+rm $UHUBUILD_SRC2DIR/options.tmp
+while IFS='' read option; do
+	case "$option" in
+	  skip-strip)	;;
+	  skip-optipng)	;;
+	  *)
+		error "Hibás érték az options fájlban: $option!"
+		;;
+	esac
+done < $UHUBUILD_SRC2DIR/options
 
 ###############
 ### release ###
@@ -571,25 +521,17 @@ for pkg in packages/*; do
 	if [ -f $pkg/categories ]; then
 		pp < $pkg/categories
 	fi > $UHUBUILD_SRC2DIR/$pkg/categories.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/categories.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/categories.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/categories
-		rm $UHUBUILD_SRC2DIR/$pkg/categories.tmp
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/categories.tmp $UHUBUILD_SRC2DIR/$pkg/categories
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/categories.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/categories
+	rm $UHUBUILD_SRC2DIR/$pkg/categories.tmp
 
 	############################
 	### packages/*/conffiles ###
 	############################
 	if [ -f $pkg/conffiles ]; then
 		pp < $pkg/conffiles > $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp; then
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp | leading_slash | sort -u \
-			  > $UHUBUILD_SRC2DIR/$pkg/conffiles
-			rm $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp
-		else
-			mv $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp $UHUBUILD_SRC2DIR/$pkg/conffiles
-		fi
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp | leading_slash | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/conffiles
+		rm $UHUBUILD_SRC2DIR/$pkg/conffiles.tmp
 	fi
 
 	#############################
@@ -598,21 +540,17 @@ for pkg in packages/*; do
 	if [ -f $pkg/conflicts ]; then
 		pp < $pkg/conflicts
 	fi > $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/conflicts
-		rm $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp
-		while read package op version; do
-			case "${op#(}" in
-				""|"<"|"<<"|"<="|"="|">="|">>"|">")
-					;;
-				*)
-					error "Ismeretlen verzió-operátor ($op) a $pkg/conflicts fájlban."
-					;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/conflicts
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp $UHUBUILD_SRC2DIR/$pkg/conflicts
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/conflicts
+	rm $UHUBUILD_SRC2DIR/$pkg/conflicts.tmp
+	while read package op version; do
+		case "${op#(}" in
+			""|"<"|"<<"|"<="|"="|">="|">>"|">")
+				;;
+			*)
+				error "Ismeretlen verzió-operátor ($op) a $pkg/conflicts fájlban."
+				;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/conflicts
 
 	##########################
 	### packages/*/depends ###
@@ -620,22 +558,18 @@ for pkg in packages/*; do
 	if [ -f $pkg/depends ]; then
 		pp < $pkg/depends
 	fi > $UHUBUILD_SRC2DIR/$pkg/depends.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/depends.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/depends.tmp | sort -u \
-		  > $UHUBUILD_SRC2DIR/$pkg/depends
-		rm $UHUBUILD_SRC2DIR/$pkg/depends.tmp
-		while read package op version; do
-			case "${op#(}" in
-				""|"<"|"<<"|"<="|"="|">="|">>"|">")
-					;;
-				*)
-					error "Ismeretlen verzió-operátor ($op) a $pkg/depends fájlban."
-					;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/depends
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/depends.tmp $UHUBUILD_SRC2DIR/$pkg/depends
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/depends.tmp | sort -u \
+	  > $UHUBUILD_SRC2DIR/$pkg/depends
+	rm $UHUBUILD_SRC2DIR/$pkg/depends.tmp
+	while read package op version; do
+		case "${op#(}" in
+			""|"<"|"<<"|"<="|"="|">="|">>"|">")
+				;;
+			*)
+				error "Ismeretlen verzió-operátor ($op) a $pkg/depends fájlban."
+				;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/depends
 
 	#######################
 	### packages/*/dirs ###
@@ -643,13 +577,9 @@ for pkg in packages/*; do
 	if [ -f $pkg/dirs ]; then
 		pp < $pkg/dirs
 	fi > $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/dirs.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/dirs.tmp | leading_slash | no_trailing_slash | sort -u \
-		  > $UHUBUILD_SRC2DIR/$pkg/dirs
-		rm $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/dirs.tmp $UHUBUILD_SRC2DIR/$pkg/dirs
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/dirs.tmp | leading_slash | no_trailing_slash | sort -u \
+	  > $UHUBUILD_SRC2DIR/$pkg/dirs
+	rm $UHUBUILD_SRC2DIR/$pkg/dirs.tmp
 
 	########################
 	### packages/*/files ###
@@ -659,26 +589,22 @@ for pkg in packages/*; do
 	fi
 	if [ -f $pkg/files ]; then
 		pp < $pkg/files > $UHUBUILD_SRC2DIR/$pkg/files.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/files.tmp; then
-			# Jajj, gány... :(
-			grep '' $UHUBUILD_SRC2DIR/$pkg/files.tmp | while read a b; do
-				if [ "$b" = "" ]; then
-					echo "$a"
-				else
-					echo "$b" "$a"
-				fi
-			done > "$UHUBUILD_SRC2DIR/$pkg/files.tmp2"
-			leading_slash < "$UHUBUILD_SRC2DIR/$pkg/files.tmp2" | \
-			reformat 0 | sort -u | \
-			sed -e 's|/\+|/|g' | sed -e 's|/\(\*\*/\)\+|/**/|g' \
-			  > "$UHUBUILD_SRC2DIR/$pkg/files.tmp"
-			while read a b; do
-				echo "$b	$a"
-			done < "$UHUBUILD_SRC2DIR/$pkg/files.tmp" > "$UHUBUILD_SRC2DIR/$pkg/files"
-			rm "$UHUBUILD_SRC2DIR/$pkg/files.tmp" "$UHUBUILD_SRC2DIR/$pkg/files.tmp2"
-		else
-			mv $UHUBUILD_SRC2DIR/$pkg/files.tmp $UHUBUILD_SRC2DIR/$pkg/files
-		fi
+		# Jajj, gány... :(
+		grep '' $UHUBUILD_SRC2DIR/$pkg/files.tmp | while read a b; do
+			if [ "$b" = "" ]; then
+				echo "$a"
+			else
+				echo "$b" "$a"
+			fi
+		done > "$UHUBUILD_SRC2DIR/$pkg/files.tmp2"
+		leading_slash < "$UHUBUILD_SRC2DIR/$pkg/files.tmp2" | \
+		reformat 0 | sort -u | \
+		sed -e 's|/\+|/|g' | sed -e 's|/\(\*\*/\)\+|/**/|g' \
+		  > "$UHUBUILD_SRC2DIR/$pkg/files.tmp"
+		while read a b; do
+			echo "$b	$a"
+		done < "$UHUBUILD_SRC2DIR/$pkg/files.tmp" > "$UHUBUILD_SRC2DIR/$pkg/files"
+		rm "$UHUBUILD_SRC2DIR/$pkg/files.tmp" "$UHUBUILD_SRC2DIR/$pkg/files.tmp2"
 	fi
 
 	###########################
@@ -696,13 +622,9 @@ for pkg in packages/*; do
 	if [ -f $pkg/keep-old-timestamps ]; then
 		pp < $pkg/keep-old-timestamps
 	fi > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp | leading_slash | sort -u \
-		  > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps
-		rm $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp | leading_slash | sort -u \
+	  > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps
+	rm $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
 
 	##########################
 	### packages/*/libpath ###
@@ -710,15 +632,11 @@ for pkg in packages/*; do
 	if [ -f $pkg/libpath ]; then
 		pp < $pkg/libpath
 	fi > $UHUBUILD_SRC2DIR/$pkg/libpath.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/libpath.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/libpath.tmp | leading_slash | sort -u \
-		  > $UHUBUILD_SRC2DIR/$pkg/libpath
-		rm $UHUBUILD_SRC2DIR/$pkg/libpath.tmp
-		if grep ':' $UHUBUILD_SRC2DIR/$pkg/libpath; then
-			error "A $pkg/libpath file nem tartalmazhat kettőspontot!"
-		fi
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/libpath.tmp $UHUBUILD_SRC2DIR/$pkg/libpath
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/libpath.tmp | leading_slash | sort -u \
+	  > $UHUBUILD_SRC2DIR/$pkg/libpath
+	rm $UHUBUILD_SRC2DIR/$pkg/libpath.tmp
+	if grep ':' $UHUBUILD_SRC2DIR/$pkg/libpath; then
+		error "A $pkg/libpath file nem tartalmazhat kettőspontot!"
 	fi
 
 	#############################
@@ -727,21 +645,17 @@ for pkg in packages/*; do
 	if [ -f $pkg/obsoletes ]; then
 		pp < $pkg/obsoletes
 	fi > $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/obsoletes
-		rm $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp
-		while read package op version; do
-			case "${op#(}" in
-				""|"<"|"<<"|"<="|"="|">="|">>"|">")
-					;;
-				*)
-					error "Ismeretlen verzió-operátor ($op) a $pkg/obsoletes fájlban."
-					;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/obsoletes
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp $UHUBUILD_SRC2DIR/$pkg/obsoletes
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/obsoletes
+	rm $UHUBUILD_SRC2DIR/$pkg/obsoletes.tmp
+	while read package op version; do
+		case "${op#(}" in
+			""|"<"|"<<"|"<="|"="|">="|">>"|">")
+				;;
+			*)
+				error "Ismeretlen verzió-operátor ($op) a $pkg/obsoletes fájlban."
+				;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/obsoletes
 
 	##########################
 	### packages/*/options ###
@@ -749,22 +663,18 @@ for pkg in packages/*; do
 	if [ -f $pkg/options ]; then
 		pp < $pkg/options
 	fi > $UHUBUILD_SRC2DIR/$pkg/options.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/options.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/options.tmp | tr A-Z a-z | sort -u \
-		  > $UHUBUILD_SRC2DIR/$pkg/options
-		rm $UHUBUILD_SRC2DIR/$pkg/options.tmp
-		while IFS='' read option; do
-			case "$option" in
-			  skip-fhs|skip-autodepend)			;;
-			  skip-postinst|skip-prerm|skip-postrm)		;;
-			  *)
-				error "Hibás érték a $pkg/options fájlban: $option!"
-				;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/options
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/options.tmp $UHUBUILD_SRC2DIR/$pkg/options
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/options.tmp | tr A-Z a-z | sort -u \
+	  > $UHUBUILD_SRC2DIR/$pkg/options
+	rm $UHUBUILD_SRC2DIR/$pkg/options.tmp
+	while IFS='' read option; do
+		case "$option" in
+		  skip-fhs|skip-autodepend)			;;
+		  skip-postinst|skip-prerm|skip-postrm)		;;
+		  *)
+			error "Hibás érték a $pkg/options fájlban: $option!"
+			;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/options
 
 	########################
 	### packages/*/perms ###
@@ -772,33 +682,29 @@ for pkg in packages/*; do
 	if [ -f $pkg/perms ]; then
 		pp < $pkg/perms
 	fi > $UHUBUILD_SRC2DIR/$pkg/perms.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/perms.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/perms.tmp | no_trailing_slash > $UHUBUILD_SRC2DIR/$pkg/perms.tmp2
-		while read -r owner group mode file rest; do
-			if [ "$owner" = "" ]; then
-				group="-"
-			fi
-			if [ "$owner" = "" ]; then
-				group="-"
-			fi
-			case "$mode" in
-				[0-7][0-7][0-7])
-					mode=" $mode";;
-				0[0-7][0-7][0-7])
-					mode=" ${mode:1:3}";;
-				""|-)
-					mode="   -";;
-			esac
-			if [ "${file:0:1}" != "/" ]; then
-				file="/$file"
-			fi
-			printf "%-8s  %-8s  %s  %s\n" "$owner" "$group" "$mode" "$file"
-		done < $UHUBUILD_SRC2DIR/$pkg/perms.tmp2 > $UHUBUILD_SRC2DIR/$pkg/perms.tmp
-		sort -u < $UHUBUILD_SRC2DIR/$pkg/perms.tmp > $UHUBUILD_SRC2DIR/$pkg/perms
-		rm $UHUBUILD_SRC2DIR/$pkg/perms.tmp{,2}
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/perms.tmp $UHUBUILD_SRC2DIR/$pkg/perms
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/perms.tmp | no_trailing_slash > $UHUBUILD_SRC2DIR/$pkg/perms.tmp2
+	while read -r owner group mode file rest; do
+		if [ "$owner" = "" ]; then
+			group="-"
+		fi
+		if [ "$owner" = "" ]; then
+			group="-"
+		fi
+		case "$mode" in
+			[0-7][0-7][0-7])
+				mode=" $mode";;
+			0[0-7][0-7][0-7])
+				mode=" ${mode:1:3}";;
+			""|-)
+				mode="   -";;
+		esac
+		if [ "${file:0:1}" != "/" ]; then
+			file="/$file"
+		fi
+		printf "%-8s  %-8s  %s  %s\n" "$owner" "$group" "$mode" "$file"
+	done < $UHUBUILD_SRC2DIR/$pkg/perms.tmp2 > $UHUBUILD_SRC2DIR/$pkg/perms.tmp
+	sort -u < $UHUBUILD_SRC2DIR/$pkg/perms.tmp > $UHUBUILD_SRC2DIR/$pkg/perms
+	rm $UHUBUILD_SRC2DIR/$pkg/perms.tmp{,2}
 
 	##########################################
 	### packages/*/{postinst,postrm,prerm} ###
@@ -816,25 +722,19 @@ for pkg in packages/*; do
 	###########################
 	if [ -f $pkg/priority ]; then
 		pp < $pkg/priority > $UHUBUILD_SRC2DIR/$pkg/priority.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/priority.tmp; then
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/priority.tmp > $UHUBUILD_SRC2DIR/$pkg/priority
-			rm $UHUBUILD_SRC2DIR/$pkg/priority.tmp
-			if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/priority) -ne 1 ]; then
-				error "Hibás $pkg/priority fájl! (nem egysoros)"
-			else
-				case $(cat $UHUBUILD_SRC2DIR/$pkg/priority) in
-					required|important|standard|optional|extra)
-						;;
-					*)
-						error "Hibás érték a $pkg/priority fájlban!"
-						;;
-				esac
-			fi
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/priority.tmp > $UHUBUILD_SRC2DIR/$pkg/priority
+		rm $UHUBUILD_SRC2DIR/$pkg/priority.tmp
+		if [ $(wc -l < $UHUBUILD_SRC2DIR/$pkg/priority) -ne 1 ]; then
+			error "Hibás $pkg/priority fájl! (nem egysoros)"
 		else
-			mv $UHUBUILD_SRC2DIR/$pkg/priority.tmp $UHUBUILD_SRC2DIR/$pkg/priority
+			case $(cat $UHUBUILD_SRC2DIR/$pkg/priority) in
+				required|important|standard|optional|extra)
+					;;
+				*)
+					error "Hibás érték a $pkg/priority fájlban!"
+					;;
+			esac
 		fi
-	else
-		echo "optional" >"$UHUBUILD_SRC2DIR"/"$pkg"/priority
 	fi
 
 	##############################
@@ -843,21 +743,17 @@ for pkg in packages/*; do
 	if [ -f $pkg/pre-depends ]; then
 		pp < $pkg/pre-depends
 	fi > $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/pre-depends
-		rm $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp
-		while read package op version; do
-			case "${op#(}" in
-				""|"<"|"<<"|"<="|"="|">="|">>"|">")
-					;;
-				*)
-					error "Ismeretlen verzió-operátor ($op) a $pkg/pre-depends fájlban."
-					;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/pre-depends
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp $UHUBUILD_SRC2DIR/$pkg/pre-depends
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/pre-depends
+	rm $UHUBUILD_SRC2DIR/$pkg/pre-depends.tmp
+	while read package op version; do
+		case "${op#(}" in
+			""|"<"|"<<"|"<="|"="|">="|">>"|">")
+				;;
+			*)
+				error "Ismeretlen verzió-operátor ($op) a $pkg/pre-depends fájlban."
+				;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/pre-depends
 
 	#############################
 	### packages/*/provides ###
@@ -865,21 +761,17 @@ for pkg in packages/*; do
 	if [ -f $pkg/provides ]; then
 		pp < $pkg/provides
 	fi > $UHUBUILD_SRC2DIR/$pkg/provides.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/provides.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/provides.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/provides
-		rm $UHUBUILD_SRC2DIR/$pkg/provides.tmp
-		while read package op version; do
-			case "${op#(}" in
-				""|"<"|"<<"|"<="|"="|">="|">>"|">")
-					;;
-				*)
-					error "Ismeretlen verzió-operátor ($op) a $pkg/provides fájlban."
-					;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/provides
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/provides.tmp $UHUBUILD_SRC2DIR/$pkg/provides
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/provides.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/provides
+	rm $UHUBUILD_SRC2DIR/$pkg/provides.tmp
+	while read package op version; do
+		case "${op#(}" in
+			""|"<"|"<<"|"<="|"="|">="|">>"|">")
+				;;
+			*)
+				error "Ismeretlen verzió-operátor ($op) a $pkg/provides fájlban."
+				;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/provides
 
 	#############################
 	### packages/*/replaces ###
@@ -887,21 +779,17 @@ for pkg in packages/*; do
 	if [ -f $pkg/replaces ]; then
 		pp < $pkg/replaces
 	fi > $UHUBUILD_SRC2DIR/$pkg/replaces.tmp
-	if ! has_macro $UHUBUILD_SRC2DIR/$pkg/replaces.tmp; then
-		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/replaces.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/replaces
-		rm $UHUBUILD_SRC2DIR/$pkg/replaces.tmp
-		while read package op version; do
-			case "${op#(}" in
-				""|"<"|"<<"|"<="|"="|">="|">>"|">")
-					;;
-				*)
-					error "Ismeretlen verzió-operátor ($op) a $pkg/replaces fájlban."
-					;;
-			esac
-		done < $UHUBUILD_SRC2DIR/$pkg/replaces
-	else
-		mv $UHUBUILD_SRC2DIR/$pkg/replaces.tmp $UHUBUILD_SRC2DIR/$pkg/replaces
-	fi
+	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/replaces.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/replaces
+	rm $UHUBUILD_SRC2DIR/$pkg/replaces.tmp
+	while read package op version; do
+		case "${op#(}" in
+			""|"<"|"<<"|"<="|"="|">="|">>"|">")
+				;;
+			*)
+				error "Ismeretlen verzió-operátor ($op) a $pkg/replaces fájlban."
+				;;
+		esac
+	done < $UHUBUILD_SRC2DIR/$pkg/replaces
 
 	##########################
 	### packages/*/section ###
@@ -978,22 +866,18 @@ for pkg in packages/*; do
 	###############################
 	if [ -f $pkg/suid_wrapper ]; then
 		pp < $pkg/suid_wrapper > $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp; then
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp | leading_slash | sort -u \
-			  > $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
-			rm $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp
-			while read line; do
-				case "$line" in
-					/sbin/* | /usr/sbin/*)
-						;;
-					*)
-						error "Hibás fájlnév a $pkg/suid_wrapper fájlban!"
-						;;
-				esac
-			done < $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
-		else
-			mv $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
-		fi
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp | leading_slash | sort -u \
+		  > $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
+		rm $UHUBUILD_SRC2DIR/$pkg/suid_wrapper.tmp
+		while read line; do
+			case "$line" in
+				/sbin/* | /usr/sbin/*)
+					;;
+				*)
+					error "Hibás fájlnév a $pkg/suid_wrapper fájlban!"
+					;;
+			esac
+		done < $UHUBUILD_SRC2DIR/$pkg/suid_wrapper
 	fi
 
 	#################################
@@ -1001,35 +885,27 @@ for pkg in packages/*; do
 	#################################
 	if [ -f $pkg/users ]; then
 		pp < $pkg/users > $UHUBUILD_SRC2DIR/$pkg/users.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/users.tmp; then
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users.tmp2
-			while read -r name uid gid rest; do
-				if [ "$name" = "" -o "$uid" = "" -o "$gid" = "" ]; then
-					error "Hiányos $pkg/users fájl!"
-				fi
-				printf "%-8s %4s %4s  %s\n" "$name" "$uid" "$gid" "$rest"
-			done < $UHUBUILD_SRC2DIR/$pkg/users.tmp2 > $UHUBUILD_SRC2DIR/$pkg/users.tmp
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users
-			rm $UHUBUILD_SRC2DIR/$pkg/users.tmp{,2}
-		else
-			mv $UHUBUILD_SRC2DIR/$pkg/users.tmp $UHUBUILD_SRC2DIR/$pkg/users
-		fi
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users.tmp2
+		while read -r name uid gid rest; do
+			if [ "$name" = "" -o "$uid" = "" -o "$gid" = "" ]; then
+				error "Hiányos $pkg/users fájl!"
+			fi
+			printf "%-8s %4s %4s  %s\n" "$name" "$uid" "$gid" "$rest"
+		done < $UHUBUILD_SRC2DIR/$pkg/users.tmp2 > $UHUBUILD_SRC2DIR/$pkg/users.tmp
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users
+		rm $UHUBUILD_SRC2DIR/$pkg/users.tmp{,2}
 	fi
 	if [ -f $pkg/groups ]; then
 		pp < $pkg/groups > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
-		if ! has_macro $UHUBUILD_SRC2DIR/$pkg/groups.tmp; then
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/groups.tmp > $UHUBUILD_SRC2DIR/$pkg/groups.tmp2
-			while read -r name gid rest; do
-				if [ "$name" = "" -o "$gid" = "" ]; then
-					error "Hiányos $pkg/groups fájl!"
-				fi
-				printf "%-8s %4s  %s\n" "$name" "$gid" "$rest"
-			done < $UHUBUILD_SRC2DIR/$pkg/groups.tmp2 > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
-			reformat 0 < $UHUBUILD_SRC2DIR/$pkg/groups.tmp > $UHUBUILD_SRC2DIR/$pkg/groups
-			rm $UHUBUILD_SRC2DIR/$pkg/groups.tmp{,2}
-		else
-			mv $UHUBUILD_SRC2DIR/$pkg/groups.tmp $UHUBUILD_SRC2DIR/$pkg/groups
-		fi
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/groups.tmp > $UHUBUILD_SRC2DIR/$pkg/groups.tmp2
+		while read -r name gid rest; do
+			if [ "$name" = "" -o "$gid" = "" ]; then
+				error "Hiányos $pkg/groups fájl!"
+			fi
+			printf "%-8s %4s  %s\n" "$name" "$gid" "$rest"
+		done < $UHUBUILD_SRC2DIR/$pkg/groups.tmp2 > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
+		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/groups.tmp > $UHUBUILD_SRC2DIR/$pkg/groups
+		rm $UHUBUILD_SRC2DIR/$pkg/groups.tmp{,2}
 	fi
 done
 
@@ -1096,38 +972,6 @@ else
 	# Kis rendrakás van még hátra
 	cd "$UHUBUILD_SRCDIR"
 	shopt -s nullglob
-
-	if [ "$preproc" = "yes" ]; then
-
-		# Kiszűrt patchek törlése
-		for file in $(find patches -type f); do
-			if [ ! -f "$UHUBUILD_SRC2DIR/$file" ]; then
-				rm "$file"
-			fi
-		done
-
-		# Addons helyrerakása
-		for file in $(ub_list addons -type f -print); do
-			if [ ! -f "$UHUBUILD_SRC2DIR/$file" ]; then
-				rm "$file"
-			elif ! cmp -s "$file" "$UHUBUILD_SRC2DIR/$file"; then
-				cp -a "$UHUBUILD_SRC2DIR/$file" "$file"
-			fi
-		done
-		for file in $(ub_list "$UHUBUILD_SRC2DIR/addons" -type f -print); do
-			file="${file#$UHUBUILD_SRC2DIR/}"
-			if [ ! -f "$file" ]; then
-				mkdir -p "${file%/*}"
-				cp -a "$UHUBUILD_SRC2DIR/$file" "$file"
-			fi
-		done
-		for file in addons*; do
-			if [ "$file" != "addons" ]; then
-				rm -rf "$file"
-			fi
-		done
-
-	fi
 
 	# optional priority törlése
 	for p in packages/*/priority; do

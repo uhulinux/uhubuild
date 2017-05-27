@@ -46,7 +46,7 @@ fi
 mkdir --mode=0755 -p -- "$UHUBUILD_WORKDIR"
 
 export UHUBUILD_SRC2DIR="$UHUBUILD_WORKDIR/.src"
-uhubuild-check --copy --preproc="$UHUBUILD_PREPROC"
+uhubuild-check --copy
 
 export UB_WORKDIR="$UHUBUILD_WORKDIR"
 
