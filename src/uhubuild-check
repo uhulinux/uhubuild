@@ -33,7 +33,6 @@
 shopt -s extglob
 
 copy=no
-cppflags=''
 while true; do
 	case "$1" in
 	  --copy)
@@ -273,8 +272,6 @@ reformat 0 < distribution > $UHUBUILD_SRC2DIR/distribution
 		error "A distribution fájl nem egysoros!"
 	fi
 fi
-
-# cppflags="$cppflags -D$(tr 'a-z' 'A-Z' < $UHUBUILD_SRC2DIR/distribution | tr -c 'A-Z0-9\n' '[_*]')"
 
 ##############
 ### addons ###
