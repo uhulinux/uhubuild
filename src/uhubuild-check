@@ -729,6 +729,8 @@ for pkg in packages/*; do
 					;;
 			esac
 		fi
+	else
+		echo "optional" >"$UHUBUILD_SRC2DIR"/"$pkg"/priority
 	fi
 
 	##############################
