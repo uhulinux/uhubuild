@@ -2,13 +2,17 @@
 
 . /usr/lib/uhubuild/common
 
+sysarch=$(uname -m)
+
 case "${UB_ARCH}" in
 	i386)
-		export UB_HOST="i686-uhu-linux"
+		export UB_HOST="$sysarch-uhu-linux"
+		export UB_TARGET="i686-uhu-linux"
 		export UB_MARCH="i686 -m32"
 		;;
 	amd64)
-		export UB_HOST="x86_64-uhu-linux"
+		export UB_HOST="$sysarch-gnu-linux"
+		export UB_TARGET="x86_64-gnu-linux"
 		export UB_MARCH="k8 -m64"
 		;;
 esac
@@ -28,6 +32,7 @@ argx=(
 	--infodir="/usr/share/info" \
 	--build="$UB_HOST"          \
 	--host="$UB_HOST"           \
+	--target="$UB_TARGET"       \
 )
 
 shopt -s extglob
