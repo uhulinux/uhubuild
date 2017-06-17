@@ -225,8 +225,7 @@ for file in packages/*/*; do
 	  categories|conffiles|conflicts|depends|dirs |\
 	  excludes|files|groups|obsoletes|options|perms|\
 	  postinst |postrm |prerm  |priority|pre-depends|\
-	  provides|replaces|section  |users  |\
-	  keep-old-timestamps|suid_wrapper|libpath)
+	  provides|replaces|section|users|suid_wrapper|libpath)
 		must_be_file "$file"
 		;;
 	  description|summary|words)
@@ -609,16 +608,6 @@ for pkg in packages/*; do
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/excludes.tmp | sort -u > $UHUBUILD_SRC2DIR/$pkg/excludes
 		rm $UHUBUILD_SRC2DIR/$pkg/excludes.tmp
 	fi
-
-	######################################
-	### packages/*/keep-old-timestamps ###
-	######################################
-	if [ -f $pkg/keep-old-timestamps ]; then
-		pp < $pkg/keep-old-timestamps
-	fi > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
-	reformat 0 < $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp | leading_slash | sort -u \
-	  > $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps
-	rm $UHUBUILD_SRC2DIR/$pkg/keep-old-timestamps.tmp
 
 	##########################
 	### packages/*/libpath ###

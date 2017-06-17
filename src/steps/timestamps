@@ -10,25 +10,3 @@ if [ -f "$UB_SRCDIR/changelog" ]; then
 	find "$UB_PACKAGEDIR" -depth ! -type l -newer "$UB_SRCDIR/changelog" -print0 | \
 	  xargs -0 -r touch -c -r "$UB_SRCDIR/changelog"
 fi
-
-for pkg in $UB_PACKAGES; do
-	cd "$UB_PACKAGEDIR/$pkg"
-	if [ ! -f "$UB_SRCDIR/packages/$pkg/keep-old-timestamps" ]; then
-		continue
-	fi
-	while read -r file; do
-		if [ ! -f "./$file" ]; then
-			error "$file: nincs ilyen fájl ebben a készülő csomagban!"
-			break
-		fi
-		echo -n "$file: "
-		if [ ! -f "/$file" ]; then
-			echo "új fájl"
-		elif cmp -s "/$file" "./$file"; then
-			echo "változatlan maradt, időcímke: $(date -r /${file})"
-			touch -r "/$file" "./$file"
-		else
-			echo "megváltozott"
-		fi
-	done < "$UB_SRCDIR/packages/$pkg/keep-old-timestamps"
-done
