@@ -24,7 +24,7 @@ fi
 
 export UB_ARCH=$UHUBUILD_ARCH
 
-if [ "$UB_ARCH" == "amd64" ] && [ "$(uname -m)" == "i386" ];then
+if [ "$UB_ARCH" == "amd64" ] && [ "$(uname -m)" == "i686" ];then
     die "Csak 64 bites módban indítva lehet 64 bites csomagot készíteni!"
 fi
 
