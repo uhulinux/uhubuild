@@ -36,6 +36,7 @@ for pkg in $UB_PACKAGES; do
 			*/lib)   ;;
 			*/lib64) ;;
 			*/opt)   ;;
+			*/run)   ;;
 			*/sbin)  ;;
 			*/srv)   ;;
 			*/usr)   ;;
