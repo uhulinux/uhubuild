@@ -23,7 +23,6 @@ unset i
 export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin:/usr/lib/qt5/bin"
 
 export HOME=~
-export LC_ALL=C
 export IFS=$' \t\n'
 export SHELL=/bin/bash
 
