@@ -169,8 +169,8 @@ for step in $steps; do
 	fi
 done
 
-# ccache-t tömörítjük, ha kell.
-if [ -f "$UB_ADMINDIR/.ccache_extracted" ]; then
+# ccache-t tömörítjük, ha kell, és nincs compile hiba.
+if [ -f "$UB_ADMINDIR/.ccache_extracted" -a ! -f "$UB_ADMINDIR/retval" ]; then
 	greenecho "ccache-compress..."
 	/usr/lib/uhubuild/steps/ccache-compress
 fi
