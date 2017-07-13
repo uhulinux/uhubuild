@@ -150,9 +150,9 @@ else
 #	greenecho " OK"
 fi
 
-steps="$steps python addons cleanup optipng split dirs users-groups changelog suid_wrapper \
-  perms scripts remove-misc man info mo \
-  timestamps menu depends shlibs fhs conffiles buildinfo control pack"
+steps="$steps addons cleanup fhs optipng split dirs users-groups changelog suid_wrapper \
+  perms scripts remove-misc man info mo timestamps menu \
+  depends shlibs conffiles buildinfo control pack"
 
 for step in $steps; do
 	echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- UHUBUILD -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-" >> "$UB_ADMINDIR/log"

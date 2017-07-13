@@ -22,6 +22,7 @@ unset i
 # extra path: qt5
 export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin:/usr/lib/qt5/bin"
 
+export LC_ALL=hu_HU.UTF-8
 export HOME=~
 export IFS=$' \t\n'
 export SHELL=/bin/bash

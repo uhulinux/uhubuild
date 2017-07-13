@@ -1,8 +1,16 @@
 #!/bin/bash -eu
 
-find "$UB_INSTALLDIR" -name .xvpics -print0 | xargs -r0 rm -rfv --
+# python
+find "$UB_INSTALLDIR" -name "*.py" | while read f; do
+	echo "${f}c"
+	echo "${f}o"
+done | xargs -r rm -f
 
+# perl
 if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
 	find "$UB_INSTALLDIR/usr/lib/perl5" -name "perllocal.pod" -type f -print0 | \
 		xargs -r0 rm --
 fi
+
+# xvpics
+find "$UB_INSTALLDIR" -name .xvpics -print0 | xargs -r0 rm -rfv --
