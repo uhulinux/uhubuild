@@ -150,7 +150,7 @@ else
 #	greenecho " OK"
 fi
 
-steps="$steps addons cleanup fhs optipng split dirs users-groups changelog suid_wrapper \
+steps="$steps addons cleanup optipng split fhs dirs users-groups changelog suid_wrapper \
   perms scripts remove-misc man info mo timestamps menu \
   depends shlibs conffiles buildinfo control pack"
 

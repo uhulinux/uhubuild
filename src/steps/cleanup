@@ -1,16 +1,12 @@
 #!/bin/bash -eu
 
 # python
-find "$UB_INSTALLDIR" -name "*.py" | while read f; do
-	echo "${f}c"
-	echo "${f}o"
-done | xargs -r rm -f
+find "$UB_INSTALLDIR" -name \*.pyc -o -name \*.pyo -o -name __pycache__ -delete
 
 # perl
 if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
-	find "$UB_INSTALLDIR/usr/lib/perl5" -name "perllocal.pod" -type f -print0 | \
-		xargs -r0 rm --
+	find "$UB_INSTALLDIR/usr/lib/perl5" -name "perllocal.pod" -type f -delete
 fi
 
 # xvpics
-find "$UB_INSTALLDIR" -name .xvpics -print0 | xargs -r0 rm -rfv --
+find "$UB_INSTALLDIR" -name .xvpics -delete
