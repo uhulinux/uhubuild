@@ -901,7 +901,7 @@ fi
 ########################
 ### run uhubuild-u2d ###
 ########################
-if [ -f "u2d" ]; then
+if [ -f "u2d" -a "$copy" != "yes" ]; then
 	if ! grep 'noupdate' u2d; then
 		newver="$(uhubuild-u2d)"
 		current="$(cat version)"
