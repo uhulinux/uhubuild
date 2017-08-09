@@ -67,4 +67,4 @@ fi
 
 # Letöröljük a patchelés által generált szemetet
 find "$UB_COMPILEDIR"/ -name "*~"     -print0 | xargs -r0 rm -rvf --
-find "$UB_COMPILEDIR"/ -name "*.orig" -print0 | xargs -r0 rm -rvf --
+find "$UB_COMPILEDIR"/ -name "*.orig" -not -path "*/rust/*" -print0 | xargs -r0 rm -rvf --
