@@ -107,7 +107,7 @@ A control fájllal kapcsolatban sem szimpatizáltunk azzal az ötlettel, hogy
 minden adatot egy fájlban tárolunk. Ami külön adat, az legyen mind-mind egy
 külön apró fájl. Így sokkal egyszerűbb például a release értéket növelni egy
 újrafordításkor. További nagy előnye ennek a koncepciónak, hogy ha
-verziókövető rendszerben akarjuk tárolni a forrásokat (pl. cvs vagy svn),
+verziókövető rendszerben akarjuk tárolni a forrásokat (pl. git),
 akkor nem fordulhat elő az, hogy két független, de a control fájlban egymáshoz
 túl közeli módosítás ütközik.
 
@@ -1611,7 +1611,7 @@ shape-jedi.tar.gz . :XBlast-TNT/image/sprite/
 A következő sor(ok)ban egy vagy több letöltési helyet adhatunk meg, ahonnan
 az első sor első szavában megadott fájl beszerezhető. http://, https:// és
 ftp:// URL-eken esetén azt a könyvtárat kell megadnunk, ``/'' jellel a
-végén, amelyikből a fent említett fájl letölthető. cvs:// és svn://
+végén, amelyikből a fent említett fájl letölthető. git:// és svn://
 szintaxissal verziókezelő rendszerből is ki tudjuk szedni a fájlokat. Az
 URL-eket illik egy TAB karakterrel beljebb tabulálni.
 
@@ -1691,7 +1691,7 @@ a Makefile.am-ből az automake csomag programjaival készíti el. Az automake
 használatáról a Makefile.in elején található utalás, valamint a Makefile.am
 fájl létezése árulkodik.
 
-<sect2>automake, autoconf, cvs<p>
+<sect2>automake, autoconf, git<p>
 
 Tisztességes program esetén az automake és autoconf parancsokat csak a
 fejlesztő futtatja le, a felhasználónak (csomagkészítőnek) erre nincsen
@@ -1700,7 +1700,7 @@ config.h.in fájlokat használja. A csomagfordítást végző chroot rendszerben
 azonban alapból megtalálható ez a két csomag, hátha mégis kell.
 
 Vannak programok, melyekről ránézésre nem egyértelmű, de a fordítás során
-mégis használják a fenti két programot. CVS-ből szedett forráskód esetén
+mégis használják a fenti két programot. git-ből szedett forráskód esetén
 pedig gyakorlatilag biztos, hogy (egy ott mellékelt útmutató szerint) nekünk
 kell lefuttatnunk ezeket, hogy előállítsuk a configure szkriptet. Itt
 kezdődnek a bonyodalmak. Az automake és autoconf program fejlődése során
