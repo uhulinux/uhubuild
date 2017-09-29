@@ -115,6 +115,18 @@ function u2dgnome {
 	u2dsubdir "https://download.gnome.org/sources/$project/$ver"
 }
 
+# script for mate projects
+function u2dmate {
+	project="$1"
+	unstable="$2"
+	reg="02468";
+	if [ -n "${unstable:-}" ]; then
+		reg="0-9"
+	fi
+	ver="$(urllist "http://pub.mate-desktop.org/releases/" | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+	urllist http://pub.mate-desktop.org/releases/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
+}
+
 # script for perl modules
 function u2dcpan() {
 	ver="$(curl -m 10 -s http://cpanmetadb.plackperl.org/v1.0/package/$1)"
