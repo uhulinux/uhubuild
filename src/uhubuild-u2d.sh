@@ -129,14 +129,15 @@ function u2dmate {
 
 # script for xfce4
 function u2dxfce {
-	project="$1"
-	unstable="$2"
+	subdir="$1" #xfce vagy apps
+	project="$2"
+	unstable="$3"
 	reg="02468";
 	if [ -n "${unstable:-}" ]; then
 		reg="0-9"
 	fi
-    ver="$(urllist http://archive.xfce.org/src/xfce/$project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
-    urllist http://archive.xfce.org/src/xfce/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
+    ver="$(urllist http://archive.xfce.org/src/$subdir/$project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+    urllist http://archive.xfce.org/src/$subdir/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
 }
 
 
