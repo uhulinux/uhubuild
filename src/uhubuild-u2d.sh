@@ -127,6 +127,19 @@ function u2dmate {
 	urllist http://pub.mate-desktop.org/releases/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
 }
 
+# script for xfce4
+function u2dxfce {
+	project="$1"
+	unstable="$2"
+	reg="02468";
+	if [ -n "${unstable:-}" ]; then
+		reg="0-9"
+	fi
+    ver="$(urllist http://archive.xfce.org/src/xfce/$project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+    urllist http://archive.xfce.org/src/xfce/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
+}
+
+
 # script for perl modules
 function u2dcpan() {
 	ver="$(curl -m 10 -s http://cpanmetadb.plackperl.org/v1.0/package/$1)"
