@@ -502,7 +502,7 @@ for pkg in packages/*; do
 		fi
 		LC_ALL=hu_HU.UTF-8 comm -13 "$UHUBUILD_SRC2DIR/$pkg/words/hu" "$tmpfile" >"$tmpfile2"
 		if [ -s "$tmpfile2" ]; then
-			error "Nyomdahiba a(z) $pkg leírásában!"
+			warn "Nyomdahiba a(z) $pkg leírásában!"
 			cat "$tmpfile2" | $to_utf8_filter >&2
 			echo "(Ami esetleg mégsem nyomdahiba, azt jelöld meg egy eléírt & jellel!)" >&2
 		fi
