@@ -67,6 +67,7 @@ apt_cachedir="-o Dir::Cache=$UHUBUILD_CHROOTDIR/var/cache/apt"
 apt_noimmconf="-o APT::Immediate-Configure=false"
 apt_pkgproblemresolver="-o Debug::pkgProblemResolver=yes"
 apt_arch="-o=APT::Architecture=$UB_ARCH"
+apt_force="--allow-downgrades --allow-remove-essential --allow-change-held-packages"
 dpkg_options="--root=$UHUBUILD_CHROOTDIR"
 
 apt_dpkgopts="-o DPkg::Options::=--force-architecture"
@@ -120,7 +121,7 @@ apt-get $apt_empty_options update
 # uhubuild-common telepítése és kilépés, ha az első körben vagyunk.
 
 if [ $# = 0 ]; then
-	if apt-get $apt_options --yes --force-yes install uhubuild-common; then
+	if apt-get $apt_options --yes $apt_force install uhubuild-common; then
 		# kiraly
 		exit
 	else
@@ -187,7 +188,7 @@ else
 fi
 
 # Na, most telepítünk és konfigurálunk mindenkit, aki kell.
-if apt-get $apt_options --yes --force-yes install $pkgs; then
+if apt-get $apt_options --yes $apt_force install $pkgs; then
 	# kiraly
 	:
 else
