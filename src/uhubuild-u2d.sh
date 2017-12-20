@@ -103,6 +103,12 @@ function sflist() {
 	done
 }
 
+# sourceforge subdirs
+function sflistd() {
+subdir=$(sflist $1 $2 | splitver '^([0-9.]+)$' | sort -V | tail -n 1)
+sflist $1 $2/$subdir | parsever | sort -V | tail -n 1
+}
+
 # script for gnome projects
 function u2dgnome {
 	project="$1"
