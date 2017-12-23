@@ -18,9 +18,6 @@ if [ -f CMakeLists.txt ]; then
 	argx=(
 		-DCMAKE_INSTALL_PREFIX="/usr" \
 	)
-	if ! grep 'DCMAKE_INSTALL_LIBDIR' "$UB_SRCDIR/compile"; then
-		argx[${#argx[@]}]="-DCMAKE_INSTALL_LIBDIR="/usr/lib""
-	fi
 	for i in "${argx[@]}"; do
 		argv[${#argv[@]}]="$i"
 	done
