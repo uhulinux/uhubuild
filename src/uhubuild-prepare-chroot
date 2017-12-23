@@ -118,10 +118,10 @@ done
 
 apt-get $apt_empty_options update
 
-# uhubuild-common telepítése és kilépés, ha az első körben vagyunk.
+# uhubuild-config telepítése és kilépés, ha az első körben vagyunk.
 
 if [ $# = 0 ]; then
-	if apt-get $apt_options --yes $apt_force install uhubuild-common; then
+	if apt-get $apt_options --yes $apt_force install uhubuild-config; then
 		# kiraly
 		exit
 	else
@@ -144,7 +144,7 @@ fi
 
 tmpfile apt_output
 
-if ! apt-get $apt_empty_options --no-act install uhubuild-common "$@" >"$apt_output" 2>&1; then
+if ! apt-get $apt_empty_options --no-act install uhubuild-config "$@" >"$apt_output" 2>&1; then
 	cat "$apt_output" >&2
 	die
 fi
@@ -214,8 +214,6 @@ chroot $UHUBUILD_CHROOTDIR /sbin/uhu-pkg postinst +
 
 rm -rf $UHUBUILD_CHROOTDIR/var/lib/dpkg-empty
 dpkg $dpkg_options --clear-avail
-# --forget-old-unavail deprecated since 1.15.4
-# dpkg $dpkg_options --forget-old-unavail
 apt-get $apt_options autoclean
 
 # /etc/hosts
