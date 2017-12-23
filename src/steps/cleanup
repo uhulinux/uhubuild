@@ -8,5 +8,10 @@ if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
 	find "$UB_INSTALLDIR/usr/lib/perl5" -name "perllocal.pod" -type f -delete
 fi
 
+# gtk-doc
+if [ -d "$UB_INSTALLDIR/usr/share/gtk-doc" ]; then
+	rm -Rf "$UB_INSTALLDIR/usr/share/gtk-doc"
+fi
+
 # xvpics
 find "$UB_INSTALLDIR" -name .xvpics -delete
