@@ -9,9 +9,13 @@ if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
 fi
 
 # gtk-doc
+if [ ! -f "$UB_INSTALLDIR/usr/bin/gtkdocize" ] ; then
 if [ -d "$UB_INSTALLDIR/usr/share/gtk-doc" ]; then
 	rm -Rf "$UB_INSTALLDIR/usr/share/gtk-doc"
 fi
-
+fi
 # xvpics
 find "$UB_INSTALLDIR" -name .xvpics -delete
+
+# .la
+find "$UB_INSTALLDIR" -name *.la -delete
