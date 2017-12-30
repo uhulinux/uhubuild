@@ -121,7 +121,7 @@ apt-get $apt_empty_options update
 # uhubuild-config telepítése és kilépés, ha az első körben vagyunk.
 
 if [ $# = 0 ]; then
-	if apt-get $apt_options --yes $apt_force install uhubuild-config; then
+	if apt-get $apt_options --yes $apt_force install uhu-base uhubuild-config; then
 		# kiraly
 		exit
 	else
@@ -144,7 +144,7 @@ fi
 
 tmpfile apt_output
 
-if ! apt-get $apt_empty_options --no-act install uhubuild-config "$@" >"$apt_output" 2>&1; then
+if ! apt-get $apt_empty_options --no-act install uhu-base uhubuild-config "$@" >"$apt_output" 2>&1; then
 	cat "$apt_output" >&2
 	die
 fi
