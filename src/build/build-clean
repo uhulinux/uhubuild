@@ -1,0 +1,181 @@
+#!/bin/bash
+
+. /usr/lib/uhubuild/common
+scrollout
+
+# Törli az UHU-Linux ${DISTR} alá készített UBK-s csomagokhoz,
+# tartozó buildolás során keletkezett fájlokat
+#
+# A szkriptet eredetileg készítette: Charlos, 2007. március 9.-én.
+# Sári Gábor <sari.gabor@gmail.com>
+
+BUILDCLEAN_VERSION="0.0.4"
+BASENAME=`basename $0`
+BASE=`pwd`
+KVT=" könyvtár kiürítése."
+
+case ${BASENAME} in
+	build-clean)
+		export DISTR=3;;
+	build-clean-2.2)
+		export DISTR=2.2;;
+	build-clean-3)
+		export DISTR=3;;
+	build-clean-ubk1|build-clean-UBK1)
+		export DISTR=UBK1;;
+	build-clean-ubk2|build-clean-UBK2)
+		export DISTR=UBK2;;
+esac
+
+[ "$UID" != 0 ] && {
+	redecho "A ${BASENAME} csak rendszergazdai jogosultságokkal futtatható!"
+	exit 1
+}
+
+function help() {
+	appleecho "${BASENAME} ${BUILDCLEAN_VERSION}"
+	echo
+	appleecho "Leírás:"
+	echo
+	appleecho "Törli az UHU-Linux ${DISTR} alá készített UHU csomagok készítése"
+	appleecho "során keletkezett fájlokat és könyvtárakat."
+	echo
+	appleecho "Egyedi kapcsolók segítségével a fordítás során készülő speciális"
+	appleecho "fájlokat és könyvtárakat vagy egyszerre akár az összeset is törölhetjük."
+	echo
+	appleecho "Kapcsolók:"
+	echo
+	appleecho -n "[-rc |--remove-ccache]        : "
+	echo "A /var/cache/uhubuild/ccache/$KVT"
+	appleecho -n "[-rch|--remove-chrootdir]     : "
+	echo "A /var/uhubuild/${DISTR}/chroot/ alatti könyvtárak kiürítése."
+	appleecho -n "[-rs |--remove-snapshots]     : "
+	echo "A misc-${DISTR}/snapshot/$KVT"
+	appleecho -n "[-rer|--remove-extrareleases] : "
+	echo "A misc-${DISTR}/extrarelease/$KVT"
+	appleecho -n "[-rf |--remove-failed]        : "
+	echo "A misc-${DISTR}/failed/$KVT"
+	appleecho -n "[-rlp|--remove-logpack]       : "
+	echo "A misc-${DISTR}/logpack/$KVT"
+	appleecho -n "[-rt |--remove-tmp]           : "
+	echo "A misc-${DISTR}/tmp/$KVT"
+	appleecho -n "[-rpt|--remove-patches]       : "
+	echo "A patches-${DISTR}/$KVT"
+	appleecho -n "[-rpk|--remove-packages]      : "
+	echo "A packages-${DISTR}/$KVT Az ub alkönyvtár marad!"
+	echo
+	appleecho -n "[-all|--all]                  : "
+	echo "Töröl mindent, ami kapcsolódik az uhubuild környezethez, kivéve az UB forrásokat!"
+	echo
+	appleecho -n "[-h  |--help]                 : "
+	echo "E súgóoldal megjelenítése."
+	appleecho -n "[-v  |--version]              : "
+	echo "Verziószám kijelzése."
+	exit 0
+}
+
+if [ $# == 0 ]; then
+	help
+fi
+
+export UHUBUILD_VAR=/var/uhubuild
+export UHUBUILD_PATH=/usr/src/UHUBUILD
+
+function ccache_torles() {
+	echo "A ccache$KVT"
+	rm -rf /var/cache/uhubuild/ccache/${DISTR}/* 2>/dev/null
+}
+
+function chrootdir_torles() {
+	echo "A chroot könyvtárak kiürítése."
+	for a in 1 2 3 ; do
+		cd ${UHUBUILD_VAR}/${DISTR}/chroot${a}/
+		rm -rf *
+	done
+}
+
+function snapshots_torles() {
+	echo "A snapshot$KVT"
+	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/snapshot/compile/* 2>/dev/null
+	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/snapshot/install/* 2>/dev/null
+}
+
+function extrarel_torles() {
+	echo "Az extrarelease$KVT"
+	rm -f ${UHUBUILD_PATH}/misc-${DISTR}/extrarelease/* 2>/dev/null
+}
+
+function faileds_torles() {
+	echo "A failed$KVT"
+	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/failed/* 2>/dev/null
+}
+
+function packages_torles() {
+	echo "Az összes UHU csomag törlése."
+	rm -f ${UHUBUILD_PATH}/packages-${DISTR}/* 2>/dev/null
+}
+
+function logpack_torles() {
+	echo "A logpack$KVT"
+	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/logpack/* 2>/dev/null
+}
+
+function tmp_torles() {
+	echo "A tmp$KVT"
+	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/tmp/* 2>/dev/null
+}
+
+function patches_torles() {
+	echo "A patches$KVT"
+	rm -rf ${UHUBUILD_PATH}/patches-${DISTR}/* && 2>/dev/null
+}
+
+
+for i in "$@"; do
+case "$1" in
+	-rch|--remove-chrootdir)
+		chrootdir_torles
+		shift;;
+	-rc|--remove-ccache)
+		ccache_torles
+		shift;;
+	-rs|--remove-snapshots)
+		snapshots_torles
+		shift;;
+	-rer|--remove-extrareleases)
+		extrarel_torles
+		shift;;
+	-rf|--remove-faileds)
+		faileds_torles
+		shift;;
+	-rpk|--remove-packages)
+		packages_torles
+		shift;;
+	-rlp|--remove-logpack)
+		logpack_torles
+		shift;;
+	-rt |--remove-tmp)
+		tmp_torles
+		shift;;
+	-rpt|--remove-patches)
+		patches_torles
+		shift;;
+	-all|--all)
+		redecho "Purge mód."
+		echo
+		redecho -n "Figyelem! "
+		echo "A teljes ${DISTR} UHUBUILD környezet ürítésre kerül!"
+		echo
+		chrootdir_torles ; ccache_torles ; snapshots_torles ; extrarel_torles
+		faileds_torles ; packages_torles ; logpack_torles ; tmp_torles ; patches_torles
+		exit 0;;
+	-v|--version)
+		yellowecho "${BASENAME} ${BUILDCLEAN_VERSION}"
+    	exit 0;;
+	-h|--help)
+		help
+		exit 0;;
+esac
+done
+
+cd ${BASE}

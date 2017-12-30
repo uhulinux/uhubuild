@@ -1,0 +1,13 @@
+# /etc/apt/sources.list-build
+#
+# Lokálisan tárolt UHU csomagok, adott esetben a build
+# rendszer megfelelő packages könyvtárai.
+# A Packages, Packages.gz és Release fájlok megléte
+# szükséges a megadott könyvtárban!
+
+deb file:/usr/src/UHUBUILD/packages-3/i386 ./
+
+# UBK
+deb [arch=i386] ftp://ftp.ubk.hu/pkg/3/main/i386 ./
+# deb [arch=i386] http://download.ubk.hu/pkg/3/main/i386 ./
+

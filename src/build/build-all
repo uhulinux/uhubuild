@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# UHUBUILD környezetben verziófüggetlen
+# fordítást levezénylő szkript
+#
+# Összeállította: Sári Gábor <saga@kde.hu>
+# 2004. január 19. táján a II. UHU Csomagoló Party után
+
+[ "$UID" != 0 ] && {
+	echo "Csak a rendszergazdaként indítható ez a szkript!"
+	exit 1
+}
+
+for i in 3 ubk1 ubk2; do
+	/usr/bin/build-"$i" "$@"
+done

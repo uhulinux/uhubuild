@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# UHUBUILD környezet verziófüggetlen takarító szkript
+#
+# A szkriptet eredetileg készítette: Charlos, 2007. március 9.-én.
+
+[ "$UID" != 0 ] && {
+	echo "Csak a rendszergazdaként indítható ez a szkript!"
+	exit 1
+}
+
+for i in 3 ubk1 ubk2; do
+	/usr/bin/build-clean-"$i" "$@"
+done
