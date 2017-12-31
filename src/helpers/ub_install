@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
-if [ -f CMakeLists.txt -a -f build/Makefile ]; then
-	cd build; ub_makeinstall "$@"
+if [ -f CMakeLists.txt -a -f ../object/Makefile ]; then
+	cd ../object; ub_makeinstall DESTDIR="$UB_INSTALLDIR" "$@"
 elif [ -f Build.PL ]; then
 	exec ./Build install destdir="$UB_INSTALLDIR"
 elif [ -f setup.py -a ! -f Makefile ]; then

@@ -27,11 +27,10 @@ if [ -f CMakeLists.txt ]; then
 		echo -e "\t$i"
 	done
 
-	mkdir -p build
-	cd build
+	cd ../object
 	cmake \
 		"$@" "${argv[@]}" \
-		..
+		../compile
 elif [ -f "configure" -a ! -f meson.build ]; then
 	ub_configure "$@"
 else
