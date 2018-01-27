@@ -14,8 +14,8 @@ for pkg in $UB_PACKAGES; do
 		echo "Version: $UB_VERSION-$UB_RELEASE$UB_EXTRARELEASE"
 		echo "Architecture: ${UB_ARCH}"
 
-		if [ "$UHUBUILD_DISTR" = "dev" ]; then
-			echo "Distribution: UHU Linux UBK2"
+		if [ "$UHUBUILD_DISTR" = "UBK2" ]; then
+			echo "Distribution: UHU-Linux UBK2"
 		else
 			echo "Distribution: ${UB_DISTRIBUTION}"
 		fi
@@ -61,13 +61,6 @@ for pkg in $UB_PACKAGES; do
 			echo
 		fi
 		if [ -s "$UB_SRCDIR/packages/$pkg/replaces" ]; then
-			sep=''
-			echo -n "Conflicts:"
-			while read -r line; do
-				echo -n "$sep" "$line"
-				sep=','
-			done < "$UB_SRCDIR/packages/$pkg/replaces"
-			echo
 			sep=''
 			echo -n "Replaces:"
 			while read -r line; do

@@ -331,7 +331,7 @@ else
 	fi
 	apt-ftparchive release . \
 		-o APT::FTPArchive::Release::Origin="${VENDOR}" \
-		-o APT::FTPArchive::Release::Label="UHU Linux" \
+		-o APT::FTPArchive::Release::Label="UHU-Linux" \
 		-o APT::FTPArchive::Release::Version="${UHUBUILD_DISTR}" \
 		-o APT::FTPArchive::Release::Architectures="${UB_ARCH}" \
 		> ./Release  
@@ -349,10 +349,10 @@ echo
 	# Distribution fix
 	if [ -f "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution ]; then
 		if grep -q -v "${UHUBUILD_DISTR}" "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution; then
-			sed -i -e "s/^.*$/UHU Linux ${UHUBUILD_DISTR}/g" "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution
+			sed -i -e "s/^.*$/UHU-Linux ${UHUBUILD_DISTR}/g" "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution
 		fi
 	else
-		echo "UHU Linux ${UHUBUILD_DISTR}" > "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution
+		echo "UHU-Linux ${UHUBUILD_DISTR}" > "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution
 	fi
 
 	# Maintainer fix
@@ -450,7 +450,7 @@ echo
 		fi
 		apt-ftparchive release . \
 			-o APT::FTPArchive::Release::Origin="${VENDOR}" \
-			-o APT::FTPArchive::Release::Label="UHU Linux" \
+			-o APT::FTPArchive::Release::Label="UHU-Linux" \
 			-o APT::FTPArchive::Release::Version="${UHUBUILD_DISTR}" \
 			-o APT::FTPArchive::Release::Architectures="${UB_ARCH}" \
 			> ./Release  
