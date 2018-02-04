@@ -533,6 +533,11 @@ fi
 		echo "uhu-pkg" >> "$UB_TMPDIR/pkg-noversion"
 	fi
 
+# Az usermode mindenkinek kell, ahol suid_wrapper van.
+	if [ -s "$UB_SRCDIR/packages/$pkg/suid_wrapper" ]; then
+		echo "usermode" >> "$UB_TMPDIR/pkg-noversion"
+	fi
+
 # Megvannak a csomagnevek. Sorba rendezzük őket.
 	sort -u < "$UB_TMPDIR/pkg-atleast"   > "$UB_TMPDIR/pkg-atleast.tmp"
 	sort -u < "$UB_TMPDIR/pkg-noversion" | comm -23 - "$UB_TMPDIR/pkg-atleast.tmp" \

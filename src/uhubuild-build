@@ -104,7 +104,6 @@ if [ -n "${UHUBUILD_CCACHE_DIR:-}" ]; then
 	export CCACHE_NOSTATS=1
 	export CCACHE_NLEVELS=2
 	unset  CCACHE_HARDLINK  || true
-#	unset  CCACHE_RECACHE   || true ## ez legyen kívülről megadható
 	unset  CCACHE_HASHDIR   || true
 	unset  CCACHE_UNIFY     || true
 	unset  CCACHE_EXTENSION || true
@@ -119,7 +118,7 @@ blueecho "Target binary packages: ${UB_PACKAGES}."
 if [ -z "${UB_SNAPSHOTFILE:-}" ]; then
 	mkdir -p "$UB_ADMINDIR" "$UB_COMPILEDIR" "$UB_OBJECTDIR"
 	logdate "Build-Started"
-	steps="acquire ccache-extract compile ccache-remove-unused ccache-compress compile-snapshot install strip doc move-compile install-snapshot"
+	steps="acquire ccache-extract compile ccache-compress compile-snapshot install strip doc move-compile install-snapshot"
 else
 	greenecho "snapshot visszaállítása..."
 	if [ ! -f "$UB_SNAPSHOTFILE" ]; then

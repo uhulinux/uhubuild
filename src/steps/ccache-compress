@@ -11,6 +11,9 @@ if [ -z "${UB_CCACHE_DIR:-}" ]; then
 	exit 0
 fi
 
+find "$UB_CCACHE_DIR" -type f ! -name '*.stderr' ! -anewer "$UB_ADMINDIR/.ccache_extracted" \
+  -printf '%p\000%p.stderr\000' | xargs -0 -r rm -f
+
 find "$UB_CCACHE_DIR" -depth -mindepth 1 -type d -print0 | \
   xargs -0 -r rmdir --ignore-fail-on-non-empty
 
