@@ -1,21 +1,3 @@
-_build22()
-{
-        local cur foo
-        cur=${COMP_WORDS[COMP_CWORD]}
-        foo="$(/bin/ls /usr/src/UHUBUILD/UB-2.2)"
-        COMPREPLY=($(compgen -W "$foo" -- "$cur"))
-}
-complete -F _build22 build-2.2
-
-_build3()
-{
-        local cur foo
-        cur=${COMP_WORDS[COMP_CWORD]}
-        foo="$(/bin/ls /usr/src/UHUBUILD/UB-3)"
-        COMPREPLY=($(compgen -W "$foo" -- "$cur"))
-}
-complete -F _build3 build-3
-
 _buildubk1()
 {
         local cur foo
