@@ -9,6 +9,6 @@
 	exit 1
 }
 
-for i in 3 ubk1 ubk2; do
+for i in ubk1 ubk2; do
 	/usr/bin/build-clean-"$i" "$@"
 done
