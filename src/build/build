@@ -36,7 +36,7 @@ esac
 	exit 1
 	}
 
-export UB_ARCH="i386"
+export UB_ARCH="amd64"
 export UHUBUILD_VAR=/var/uhubuild
 export UHUBUILD_PATH=/usr/src/UHUBUILD
 	# Az UHUBUILD_PATH az a könyvtár, amelyben
@@ -71,6 +71,11 @@ for i in "$@"; do
 			yellowecho "64 bites fordítás."
 			echo
 			export UB_ARCH="amd64"
+			shift;;
+		-32)
+			yellowecho "32 bites fordítás."
+			echo
+			export UB_ARCH="i386"
 			shift;;
 		-cc|--create-contents)
 			yellowecho "Contents.gz készítése a packages könyvtárban."
@@ -160,7 +165,10 @@ for i in "$@"; do
 			echo
 			appleecho "Opcionálisan megadható kapcsolók jelentése:"
 			appleecho "[-64]:"
-			appleecho "64 bites fordítás."
+			appleecho "64 bites fordítás. Ez az alapértelmezett."
+			echo
+			appleecho "[-32]:"
+			appleecho "32 bites fordítás."
 			echo
 			appleecho "[-ns|--no-snapshot]:"
 			appleecho "Nem készülnek snapshot fájlok."
