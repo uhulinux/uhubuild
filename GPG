@@ -1,0 +1,21 @@
+gpg-s tároló használata UBK kulcssal
+
+root-ként:
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 12A3276B
+gpg --import ubk-secret.asc
+apt-key add ubk.asc
+
+saját új kulccsal:
+root-ként:
+gpg --gen-key
+gpg --export -a kulcsazonosító > utvonal/sajat.asc
+apt-key add utvonal/sajat.asc
+
+saját meglévő kulccsal:
+userként:
+gpg --export -a kulcsazonosító > utvonal/sajat.asc
+gpg --export-secret-key -a kulcsazonosító > utvonal/sajat-privat.asc
+root-ként:
+gpg --import utvonal/sajat.asc
+gpg --import utvonal/sajat-privat.asc
+apt-key add utvonal/sajat.asc
