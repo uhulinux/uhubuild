@@ -1,15 +1,15 @@
 #!/bin/bash -eu
 
-if [ -f CMakeLists.txt -a -f build/Makefile ]; then
+if [ -f meson.build -a -f build/build.ninja ]; then
+	DESTDIR="$UB_INSTALLDIR" ninja -C build install
+elif [ -f CMakeLists.txt -a -f build/Makefile ]; then
 	cd build; ub_makeinstall "$@"
-elif [ -f Build.PL ]; then
-	exec ./Build install destdir="$UB_INSTALLDIR"
 elif [ -f setup.py -a ! -f Makefile ]; then
 	exec python"${UB_PYTHON}" setup.py install --root="$UB_INSTALLDIR"
+elif [ -f Build.PL ]; then
+	exec ./Build install destdir="$UB_INSTALLDIR"
 elif [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
 	exec scons install --install-sandbox="$UB_INSTALLDIR" "$@"
-elif [ -f meson.build -a -f build/build.ninja ]; then
-	DESTDIR="$UB_INSTALLDIR" ninja -C build install
 else
 	ub_makeinstall "$@"
 fi
