@@ -332,7 +332,7 @@ cd "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}
 
 yellowecho "Packages, Packages.gz készítése"
 
-rm -f Packages{,.gz} Contents{,.gz} Release{,.gpg}
+rm -f Release{,.gpg}
 
 if [ -x /usr/bin/uhu-reposign ]; then
 	uhu-reposign "${UHUBUILD_DISTR}" "${UB_ARCH}" "$BUILD_GPGKEY"
@@ -453,7 +453,7 @@ echo
 
     yellowecho "Packages, Packages.gz készítése"
 
-	rm -f Packages{,.gz} Contents{,.gz} Release{,.gpg}
+	rm -f Release{,.gpg}
 
 	if [ -x /usr/bin/uhu-reposign ]; then
 		uhu-reposign "${UHUBUILD_DISTR}" "${UB_ARCH}" "$BUILD_GPGKEY"
