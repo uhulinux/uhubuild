@@ -32,11 +32,16 @@ if [ -f CMakeLists.txt ]; then
 	cmake \
 		"$@" "${argv[@]}" \
 		..
-elif [ -f "configure" -a ! -f meson.build ]; then
+fi
+
+if [ -f "configure" -a ! -f meson.build ]; then
 	ub_configure "$@"
 else
 	if [ -f "autogen.sh" -a ! -f meson.build ]; then
 		UB_CONFIGURE_SCRIPT="./autogen.sh" ub_configure "$@"
+	fi
+	if [ ! -f "configure" -a ! -f "autogen.sh" -a ! -f meson.build ]; then
+		autoreconf -vif && ub_configure "$@"
 	fi
 fi
 
