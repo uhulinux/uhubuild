@@ -41,7 +41,9 @@ else
 		NOCONFIGURE=1 ./autogen.sh && ub_configure "$@"
 	fi
 	if [ ! -f "configure" -a ! -f "autogen.sh" -a ! -f CMakeLists.txt -a ! -f meson.build ]; then
-		autoreconf -vif && ub_configure "$@"
+	    if [ -f configure.ac -o -f configure.in ]; then
+		    autoreconf -vif && ub_configure "$@"
+		fi
 	fi
 fi
 
