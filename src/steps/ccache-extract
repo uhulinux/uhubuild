@@ -11,10 +11,16 @@ if [ -z "${UB_CCACHE_DIR:-}" ]; then
 	exit 0
 fi
 
-if [ -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz" ]; then
-	if ! tar xz -C "$UB_CCACHE_DIR" -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz"; then
+if [ -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.xz" ]; then
+	if ! tar xJ -C "$UB_CCACHE_DIR" -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.xz"; then
 		warn "error while extracting ccache"
 	fi
+else
+    if [ -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz" ]; then
+    	if ! tar xz -C "$UB_CCACHE_DIR" -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz"; then
+    		warn "error while extracting ccache"
+    	fi
+    fi
 fi
 
 touch "$UB_ADMINDIR/.ccache_extracted"

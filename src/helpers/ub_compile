@@ -1,7 +1,8 @@
 #!/bin/bash -eu
 
 if [ -f meson.build ]; then
-	meson build \
+	argv=()
+	argx=(
 		--prefix="/usr"             \
 		--sysconfdir="/etc"         \
 		--localstatedir="/var"      \
@@ -10,7 +11,18 @@ if [ -f meson.build ]; then
 		--backend=ninja		        \
 		--buildtype=release         \
 		--default-library=shared	\
-		"$@"
+	)
+	for i in "${argx[@]}"; do
+		argv[${#argv[@]}]="$i"
+	done
+	# be verbose :)
+	echo "meson build"
+	for i in "$@" "${argv[@]}"; do
+		echo -e "\t$i"
+	done
+	
+	meson build \
+		"$@" "${argv[@]}"
 fi
 
 if [ -f CMakeLists.txt ]; then
