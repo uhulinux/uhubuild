@@ -24,4 +24,8 @@ else
 fi
 mv "$UHUBUILD_CCACHE_DIR/.${UB_SOURCENAME}_ccache.tar.xz.tmp" "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.xz"
 
+if [ -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz" ]; then
+    rm -f "$UHUBUILD_CCACHE_DIR/${UB_SOURCENAME}_ccache.tar.gz"
+fi
+
 rm -f "$UB_ADMINDIR/.ccache_extracted"
