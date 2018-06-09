@@ -14,11 +14,7 @@ for pkg in $UB_PACKAGES; do
 		echo "Version: $UB_VERSION-$UB_RELEASE$UB_EXTRARELEASE"
 		echo "Architecture: ${UB_ARCH}"
 
-		if [ "$UHUBUILD_DISTR" = "UBK2" ]; then
-			echo "Distribution: UHU-Linux UBK2"
-		else
-			echo "Distribution: ${UB_DISTRIBUTION}"
-		fi
+		echo "Distribution: ${UB_DISTRIBUTION}"
 		
 		prio="$(cat "$UB_SRCDIR/packages/$pkg/priority")"
 		echo "Priority: $prio"
