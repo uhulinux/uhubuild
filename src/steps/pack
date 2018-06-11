@@ -32,6 +32,6 @@ for pkg in $UB_PACKAGES; do
 	pretendroot \
 	  uhubuild-pack "$UB_PACKAGEDIR/$pkg" "$UB_RESULTDIR"
 done
-for pkg in "$UB_RESULTDIR"/*.deb; do
-	mv "$pkg" "${pkg%.deb}.${DIST}.uhu"
+for pkg in "$UB_RESULTDIR"/*.ubk.uhu; do
+	mv "$pkg" "${pkg%.ubk.uhu}.${DIST}.uhu"
 done
