@@ -28,6 +28,7 @@ fi
 if [ -f CMakeLists.txt ]; then
 	argv=()
 	argx=(
+	    -DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="/usr" \
 	)
 	for i in "${argx[@]}"; do
