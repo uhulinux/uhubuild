@@ -358,7 +358,16 @@ for pkg in $UB_PACKAGES; do
 				fi
 			done
 			;;
-		  *.la)
+			# cmake fájl analízise
+			./usr/lib/cmake/*/*Config.cmake)
+               for cmakedep in `grep find_dependency $file | sed 's/.*find_dependency[(]//g' | sed 's/\s.*/Config.cmake/g'`;do
+        	        cmakedepdir=$(echo $cmakedep | sed 's/Config.*//g')
+            	    if [ -f "/usr/lib/cmake/$cmakedepdir/$cmakedep" ]; then
+						echo "/usr/lib/cmake/$cmakedepdir/$cmakedep" >> "$UB_TMPDIR/file-noversion"
+                    else
+                 		error "/usr/lib/cmake/$cmakedepdir/$cmakedep is required by $file but not found"
+					fi
+				done   
 			;;
 		esac
 
