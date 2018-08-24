@@ -359,7 +359,7 @@ for pkg in $UB_PACKAGES; do
 			done
 			;;
 			# cmake fájl analízise
-			./usr/lib/cmake/*/*Config.cmake)
+			./usr/lib/cmake/*/*Config.cmake|./usr/lib/qt5/lib/cmake/*/*Config.cmake)
                for cmakedep in `grep find_dependency $file | sed 's/.*find_dependency[(]//g' | sed 's/\s.*/Config.cmake/g'`;do
         	        cmakedepdir=$(echo $cmakedep | sed 's/Config.*//g')
             	    if [ -f "/usr/lib/cmake/$cmakedepdir/$cmakedep" ]; then
