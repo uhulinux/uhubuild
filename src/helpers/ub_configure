@@ -4,11 +4,11 @@
 
 case "${UB_ARCH}" in
 	i386)
-		export UB_HOST="i686-gnu-linux"
+		export UB_HOST="i686-linux-gnu"
 		export UB_MARCH="-march=i686 -m32"
 		;;
 	amd64)
-		export UB_HOST="x86_64-gnu-linux"
+		export UB_HOST="x86_64-linux-gnu"
 		export UB_MARCH="-march=k8 -m64"
 		;;
 esac
