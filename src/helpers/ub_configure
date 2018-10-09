@@ -9,7 +9,7 @@ case "${UB_ARCH}" in
 		;;
 	amd64)
 		export UB_HOST="x86_64-linux-gnu"
-		export UB_MARCH="-march=k8 -m64"
+		export UB_MARCH="-march=amdfam10 -m64"
 		;;
 esac
 
