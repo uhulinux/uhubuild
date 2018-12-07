@@ -446,12 +446,14 @@ echo
 	done
 	cp -a $UHUBUILD_RESULTDIR/* "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}/
 
-    # Az ub-ket kimásoljuk, de nem tömörítjük, a forrásokat töröljük
+    # Az ub-ket kimásoljuk, de nem tömörítjük
     if [ ! -d "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub ]; then
         mkdir -p "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub
     fi
-    mv "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/$i "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/
-    rm -Rf "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/$i/sources
+    if [ -d "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/$i ]; then
+        rm -Rf "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/$i
+    fi
+    cp -R "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/$i "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/
     
 	# A Packages és Packages.gz fájlok létrehozása a lokálisan
 	# megtalálható új UHU csomagjaink alkalmazhatósága érdekében
