@@ -84,8 +84,13 @@ function u2dsubdir {
 	else
 	    filename="$2"
 	fi
-	ver="$(urllist $project | grep -E '^[0-9.]+$' | sort -V | tail -n 1)"
-	urllist $project/$ver | _parsever | sort -V | tail -n 1
+	for ver in $(urllist $project | grep -E '^[0-9.]+$' | sort -r);do
+        version=$(urllist $project/$ver | _parsever | sort -V | tail -n 1)
+        if [ "$version" ];then
+            echo $version
+            exit 0
+        fi
+    done
 }
 
 # list sourceforge project files
