@@ -72,12 +72,17 @@ function u2d {
 }
 
 # general script: release placed under versioned directory
+# or versioned_directory/src
 function u2dsubdir {
 	project="$1"
-	if [ -z $3 ]; then
-		tarprefix=""
-	else
-	    tarprefix="$3"
+    if [ "$3" = "src" ];then
+        srcdir=src
+    else
+        if [ -z $3 ]; then
+            tarprefix=""
+        else
+            tarprefix="$3"
+        fi
 	fi
 	if [ -z $2 ]; then
 		filename=".*-"
@@ -85,7 +90,7 @@ function u2dsubdir {
 	    filename="$2"
 	fi
 	for ver in $(urllist $project | grep -E '^[0-9.]+$' | sort -r);do
-        version=$(urllist $project/$ver | _parsever | sort -V | tail -n 1)
+        version=$(urllist $project/$ver/$srcdir/ | _parsever | sort -V | tail -n 1)
         if [ "$version" ];then
             echo $version
             exit 0
