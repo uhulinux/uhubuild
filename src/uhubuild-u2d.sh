@@ -72,17 +72,12 @@ function u2d {
 }
 
 # general script: release placed under versioned directory
-# or versioned_directory/src
 function u2dsubdir {
 	project="$1"
-    if [ "$3" = "src" ];then
-        srcdir=src
+    if [ -z $3 ]; then
+       tarprefix=""
     else
-        if [ -z $3 ]; then
-            tarprefix=""
-        else
-            tarprefix="$3"
-        fi
+       tarprefix="$3"
 	fi
 	if [ -z $2 ]; then
 		filename=".*-"
@@ -96,6 +91,24 @@ function u2dsubdir {
             exit 0
         fi
     done
+}
+
+# u2dsrc script: files under versioned subdir/src 
+function u2dsrc {
+    urlcim=$1
+    filename="$2"-
+	for ver in $(urllist $urlcim | grep -E '^[0-9.]+$' | sort -rV);do
+        version=$(u2d $urlcim/$ver/src/ $filename)
+        if [ "$version" ];then
+            echo $version
+            exit 0
+        fi
+    done
+}
+
+# kdeapps project
+function kdeapp {
+    u2dsrc https://download.kde.org/stable/applications/ $1
 }
 
 # list sourceforge project files
