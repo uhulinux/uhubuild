@@ -89,7 +89,7 @@ function u2dsubdir {
 	else
 	    filename="$2"
 	fi
-	for ver in $(urllist $project | grep -E '^[0-9.]+$' | sort -r);do
+	for ver in $(urllist $project | grep -E '^[0-9.]+$' | sort -rV);do
         version=$(urllist $project/$ver/$srcdir/ | _parsever | sort -V | tail -n 1)
         if [ "$version" ];then
             echo $version
