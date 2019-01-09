@@ -22,7 +22,7 @@ chmod -R u+r "$UB_COMPILEDIR" "$UB_OBJECTDIR"
 
 logdate "Compile-Finished"
 
-times > "$UB_ADMINDIR/compile-time"
-sec="$(tail -n 1 "$UB_ADMINDIR/compile-time" | sed -e 's/m/\*60\+/g' -e 's/\....s//g' -e 's/ /\+/g')"
-cpu="$(grep 'cpu MHz' /proc/cpuinfo | head -n 1 | cut -d: -f2 | cut -d. -f1)"
-echo "$(((sec)*cpu/1000))" > "$UB_ADMINDIR/compile-time"
+# times > "$UB_ADMINDIR/compile-time"
+# sec="$(tail -n 1 "$UB_ADMINDIR/compile-time" | sed -e 's/m/\*60\+/g' -e 's/\....s//g' -e 's/ /\+/g')"
+# cpu="$(grep 'cpu MHz' /proc/cpuinfo | head -n 1 | cut -d: -f2 | cut -d. -f1)"
+# echo "$(((sec)*cpu/1000))" > "$UB_ADMINDIR/compile-time"
