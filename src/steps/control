@@ -11,7 +11,7 @@ for pkg in $UB_PACKAGES; do
 	{
 		echo "Package: $pkg"
 		echo "Source: ${UB_SOURCENAME}_$UB_VERSION-$UB_RELEASE"
-		echo "Version: $UB_VERSION-$UB_RELEASE$UB_EXTRARELEASE"
+		echo "Version: $UB_FULLVERSION-$UB_RELEASE$UB_EXTRARELEASE"
 		echo "Architecture: ${UB_ARCH}"
 
 		echo "Distribution: ${UB_DISTRIBUTION}"

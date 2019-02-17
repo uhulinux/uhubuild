@@ -511,7 +511,7 @@ for pkg in $UB_PACKAGES; do
 		fi
 		# FIXME: pfujj, gany, ez kodduplikalas, lasd par sorral lejjebb
 		if [ -d "$UB_SRCDIR/packages/$package" ]; then
-			version="$UB_VERSION"
+			version="$UB_FULLVERSION"
 		else
 			version="$(dpkg -s "$package" | grep '^Version: ')"
 			version="${version#Version: }"
@@ -530,7 +530,7 @@ for pkg in $UB_PACKAGES; do
 		if [ -n "${op:+x}" -a -z "$version" ]; then
 		# FIXME: pfujj, gany, ez (kicsit) kodduplikalas, lasd par sorral feljebb
 			if [ -d "$UB_SRCDIR/packages/$package" ]; then
-				version="$UB_VERSION"
+				version="$UB_FULLVERSION"
 				release="$UB_RELEASE$UB_EXTRARELEASE"
 			else
 				version="$(dpkg -s "$package" | grep '^Version: ')"

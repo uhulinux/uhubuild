@@ -29,7 +29,7 @@ for pkg in $UB_PACKAGES; do
 						maj="${soname##*-}"
 					fi
 					if [ "$lib" != "$soname" -a "$maj" != "$soname" ]; then
-						echo "$lib $maj $pkg (>= $UB_VERSION)" >> "$UB_TMPDIR/shlibs"
+						echo "$lib $maj $pkg (>= $UB_FULLVERSION)" >> "$UB_TMPDIR/shlibs"
 					fi
 				fi
 				;;
