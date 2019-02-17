@@ -996,6 +996,8 @@ kapják meg:
 
 <tag/UB_SOURCENAME/ Source Name.
 
+<tag/UB_FULLVERSION/ Epoch verziószám. Pl. 1:5.55.0
+
 <tag/UB_VERSION, UB_RELEASE, UB_DISTRIBUTION/ Értelemszerűen.
 
 <tag/UB_PACKAGES/ Whitespace-szel elválasztva a készítendő bináris csomagok
