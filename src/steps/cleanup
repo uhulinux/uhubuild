@@ -1,18 +1,5 @@
 #!/bin/bash -eu
 
-function localedel () {
-european=" C bg bg_BG cs cs_CZ da da_DK de de_DE es es_ES fi fi_FI fr fr_FR hr hr_HR hu hu_HU it it_IT pl pl_PL pt pt_PT ro ro_RO ru ru_RU sk sk_SK sl sl_SL sk_SK sr sr_SR sv "
-localedir="$UB_INSTALLDIR"/usr/share/$1
-if [ -d "$localedir" ];then
-    locales=$(ls -1 $localedir)
-    for locale in $locales ;do
-    if [[ ! $european =~ .*$locale.* ]];then
-        rm -rf $localedir/$locale
-    fi
-    done
-fi
-}
-
 # python
 find "$UB_INSTALLDIR" \( -name \*.pyc -o -name \*.pyo -o -name __pycache__ \) -delete
 
@@ -33,7 +20,3 @@ find "$UB_INSTALLDIR" -name .xvpics -delete
 
 # .la
 find "$UB_INSTALLDIR" -name *.la -delete
-
-# locales
-localedel locale
-localedel help
