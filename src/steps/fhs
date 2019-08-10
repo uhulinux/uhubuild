@@ -51,6 +51,7 @@ for pkg in $UB_PACKAGES; do
 	for i in "$pkg"/usr/*; do
 		case "$i" in
 			*/bin)     ;;
+			*/etc)     ;;
 			*/games)   ;;
 			*/include) ;;
 			*/lib)     ;;
@@ -71,7 +72,6 @@ for pkg in $UB_PACKAGES; do
 	  /lib/lib \
 	  /share \
 	  /usr/doc \
-	  /usr/etc \
 	  /usr/lib/lib \
 	  /usr/local \
 	  /usr/locale \
