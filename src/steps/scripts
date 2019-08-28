@@ -4,7 +4,7 @@
 # Postinst és postrm szkript előállítása.
 #
 # Minden csomag kap postinst, postrm és prerm szkriptet, amely egy adott
-# szkriptet hív meg (/sbin/uhu-pkg), argumentumként a teendőt (postinst,
+# szkriptet hív meg (/usr/sbin/uhu-pkg), argumentumként a teendőt (postinst,
 # prerm, postrm) és a csomag nevét adva meg.
 #
 # Az egyetlen kivétel: az ezeket a szkripteket tartalmazó csomag (uhu-pkg)
@@ -12,7 +12,7 @@
 #
 # Ha saját egyéni postinst, postrm vagy prerm szkript is van a csomaghoz,
 # akkor az {postinst,postrm,prerm}-custom néven kerül bemásolásra. Ezt az
-# /sbin/uhu-pkg szkript fogja indítani.
+# /usr/sbin/uhu-pkg szkript fogja indítani.
 #
 
 . /usr/lib/uhubuild/uhubuild-common
@@ -28,19 +28,19 @@ for pkg in $UB_PACKAGES; do
 
 	if ! grep -qx skip-postinst $UB_SRCDIR/packages/$pkg/options; then
 		echo "#!/bin/sh" > "$pkg/DEBIAN/postinst"
-		echo "exec /sbin/uhu-pkg postinst $pkg \"\$@\"" >> "$pkg/DEBIAN/postinst"
+		echo "exec /usr/sbin/uhu-pkg postinst $pkg \"\$@\"" >> "$pkg/DEBIAN/postinst"
 		chmod 755 "$pkg/DEBIAN/postinst"
 	fi
 
 	if ! grep -qx skip-postrm $UB_SRCDIR/packages/$pkg/options; then
 		echo "#!/bin/sh" > "$pkg/DEBIAN/postrm"
-		echo "exec /sbin/uhu-pkg postrm $pkg \"\$@\"" >> "$pkg/DEBIAN/postrm"
+		echo "exec /usr/sbin/uhu-pkg postrm $pkg \"\$@\"" >> "$pkg/DEBIAN/postrm"
 		chmod 755 "$pkg/DEBIAN/postrm"
 	fi
 
 	if ! grep -qx skip-prerm $UB_SRCDIR/packages/$pkg/options; then
 		echo "#!/bin/sh" > "$pkg/DEBIAN/prerm"
-		echo "exec /sbin/uhu-pkg prerm $pkg \"\$@\"" >> "$pkg/DEBIAN/prerm"
+		echo "exec /usr/sbin/uhu-pkg prerm $pkg \"\$@\"" >> "$pkg/DEBIAN/prerm"
 		chmod 755 "$pkg/DEBIAN/prerm"
 	fi
 done

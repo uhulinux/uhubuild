@@ -206,9 +206,9 @@ else
 	fi
 fi
 
-echo "Running \`/sbin/uhu-pkg postinst +' ..."
+echo "Running \`/usr/sbin/uhu-pkg postinst +' ..."
 unset UHU_PKG_SKIP || true
-chroot $UHUBUILD_CHROOTDIR /sbin/uhu-pkg postinst +
+chroot $UHUBUILD_CHROOTDIR /usr/sbin/uhu-pkg postinst +
 
 # Végső simítások.
 
