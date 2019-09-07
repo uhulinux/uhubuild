@@ -10,6 +10,10 @@ shopt -s extglob
 cd "$UB_COMPILEDIR"
 
 if [ -f "$UB_SRCDIR/acquire" ]; then
+    # nagyobb források letöltéséhez kell a 4 GB-os /tmp
+    if [ $((`stat -f -c "%a" .`*`stat -f -c "%s" .`/(1024*1024*1024))) -lt 4 ]; then
+        mount -o remount,size=4G /tmp
+    fi
 	"$UB_SRCDIR/acquire" -u -a "$UB_SRCDIR/sources" -x "$UB_COMPILEDIR"
 	# Az acquire szkript kiránthatja alólunk a cwd-t
 	# (ha letörli és újra létrehozza)
