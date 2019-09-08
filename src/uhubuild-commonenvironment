@@ -29,7 +29,3 @@ export SHELL=/bin/bash
 
 umask 022
 
-# nagyobb források letöltéséhez kell a 4 GB-os /tmp
-if [ $((`stat -f -c "%a" .`*`stat -f -c "%s" .`/(1024*1024*1024))) -lt 4 ]; then
-    mount -o remount,size=4G /tmp
-fi
