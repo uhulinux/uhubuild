@@ -457,6 +457,13 @@ for pkg in $UB_PACKAGES; do
 		fi
 	done
 
+    # python: nem mindig van #!/usr/bin/python* a .py fájlok elején...
+    if [ -d /usr/lib/python2.* ]; then
+        echo "python2" >> "$UB_TMPDIR/file-noversion"
+    fi
+    if [ -d /usr/lib/python3.* ]; then
+        echo "python3" >> "$UB_TMPDIR/file-noversion"
+    fi
 
 # Most a file-* fájlokban fájlnevek vannak. Ebből kell csinálni csomagneveket.
 
