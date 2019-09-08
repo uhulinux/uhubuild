@@ -457,14 +457,6 @@ for pkg in $UB_PACKAGES; do
 		fi
 	done
 
-    # python: nem mindig van #!/usr/bin/python* a .py fájlok elején...
-    if [ -d /usr/lib/python2.* ]; then
-        echo "python2" >> "$UB_TMPDIR/file-noversion"
-    fi
-    if [ -d /usr/lib/python3.* ]; then
-        echo "python3" >> "$UB_TMPDIR/file-noversion"
-    fi
-
 # Most a file-* fájlokban fájlnevek vannak. Ebből kell csinálni csomagneveket.
 
 	sort -u < "$UB_TMPDIR/file-atleast" > "$UB_TMPDIR/file-atleast.tmp"
@@ -494,6 +486,14 @@ for pkg in $UB_PACKAGES; do
 	if [ -s "$UB_SRCDIR/packages/$pkg/suid_wrapper" ]; then
 		echo "usermode" >> "$UB_TMPDIR/pkg-noversion"
 	fi
+
+# python: nem mindig van #!/usr/bin/python* a .py fájlok elején...
+    if [ -d /usr/lib/python2.* ]; then
+        echo "python2" >> "$UB_TMPDIR/file-noversion"
+    fi
+    if [ -d /usr/lib/python3.* ]; then
+        echo "python3" >> "$UB_TMPDIR/file-noversion"
+    fi
 
 # Megvannak a csomagnevek. Sorba rendezzük őket.
 	sort -u < "$UB_TMPDIR/pkg-atleast"   > "$UB_TMPDIR/pkg-atleast.tmp"
