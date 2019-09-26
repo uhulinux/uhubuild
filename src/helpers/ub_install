@@ -5,11 +5,7 @@ if [ -f meson.build -a -f build/build.ninja ]; then
 elif [ -f CMakeLists.txt -a -f build/Makefile ]; then
 	cd build; ub_makeinstall "$@"
 elif [ -f setup.py -a ! -f Makefile ]; then
-    if [ -n "$PYTHON" ]; then
-	    exec "$PYTHON" setup.py install --root="$UB_INSTALLDIR"
-	else
-	    exec python3 setup.py install --root="$UB_INSTALLDIR"	
-	fi
+	"$PYTHON" setup.py install --root="$UB_INSTALLDIR"
 elif [ -f Build.PL ]; then
 	exec ./Build install destdir="$UB_INSTALLDIR"
 elif [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
