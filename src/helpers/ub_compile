@@ -61,7 +61,7 @@ else
 fi
 
 if [ -f setup.py -a ! -f Makefile ]; then
-	"$PYTHON" ./setup.py build "$@"
+	exec "$PYTHON" ./setup.py build "$@"
 fi
 
 if [ -f Makefile.PL ]; then
