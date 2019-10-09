@@ -172,11 +172,12 @@ for step in $steps; do
 	fi
 done
 
-# ccache-t tömörítjük, ha kell, és nincs compile hiba.
-if [ -f "$UB_ADMINDIR/.ccache_extracted" -a ! -f "$UB_ADMINDIR/retval" ]; then
+# ccache-t tömörítjük, ha kell, a compile után.
+if [ -f "$UB_ADMINDIR/.ccache_extracted" ] && [ "$step" = "compile"] ; then
 	greenecho "ccache-compress..."
 	/usr/lib/uhubuild/steps/ccache-compress
 fi
+
 # A "logpack" lépést mindenképp le kell futtatni a legvégén, akkor is, ha
 # hiba történt korábban.
 greenecho "logpack..."
