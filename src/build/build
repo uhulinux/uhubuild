@@ -64,7 +64,6 @@ fi
 [ -d "$UHUBUILD_MISC_PATH"/logpack/${UB_ARCH} ] || mkdir -p "$UHUBUILD_MISC_PATH"/logpack/${UB_ARCH}
 [ -d "$UHUBUILD_MISC_PATH"/tmp/${UB_ARCH} ] || mkdir -p "$UHUBUILD_MISC_PATH"/tmp/${UB_ARCH}
 
-
 for i in "$@"; do
 	case $1 in
 		-64)
@@ -306,7 +305,7 @@ export UHUBUILD_APT_SOURCES=/etc/apt/sources.list-build-${UHUBUILD_DISTR}
 	exit 1
 }
 
-export UHUBUILD_LOGPACKDIR="$UHUBUILD_PATH"/misc-${UHUBUILD_DISTR}/logpack/${UB_ARCH}
+export UHUBUILD_LOGPACKDIR=${UHUBUILD_PATH}/misc-${UHUBUILD_DISTR}/logpack/${UB_ARCH}
 
 export UHUBUILD_RESULTDIR=$(mktemp -d "$UHUBUILD_PATH"/misc-${UHUBUILD_DISTR}/tmp/${UB_ARCH}/RESULT.XXXXXX)
 
@@ -441,12 +440,16 @@ echo
 	# A kész csomagokat a packages-${UHUBUILD_DISTR}/ alá másoljuk,
 	# de töröljük onnan a régebbi példányokat.
 
+    greenecho -n "Elkészült csomagok kimásolása "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH} alá... "
 	for pkg in $(ls $UHUBUILD_RESULTDIR); do
 		rm -f "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}/${pkg%%_*}_*
 	done
 	cp -a $UHUBUILD_RESULTDIR/* "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}/
+	greenecho "OK"
 
     # Az ub-ket kimásoljuk, de nem tömörítjük
+
+    greenecho -n "Elkészült csomagok ub forrásának kimásolása "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}/ub alá... "
     if [ ! -d "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub ]; then
         mkdir -p "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub
     fi
@@ -454,13 +457,13 @@ echo
         rm -Rf "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/$i
     fi
     cp -R "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/$i "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/ub/
+    greenecho "OK"
     
 	# A Packages és Packages.gz fájlok létrehozása a lokálisan
 	# megtalálható új UHU csomagjaink alkalmazhatósága érdekében
 
-	cd "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}
-
     yellowecho "Packages, Packages.gz készítése"
+	cd "$UHUBUILD_PATH"/packages-${UHUBUILD_DISTR}/${UB_ARCH}
 
 	rm -f Release{,.gpg}
 
