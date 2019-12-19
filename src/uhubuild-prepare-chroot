@@ -206,9 +206,15 @@ else
 	fi
 fi
 
-echo "Running \`/usr/sbin/uhu-pkg postinst +' ..."
-unset UHU_PKG_SKIP || true
-chroot $UHUBUILD_CHROOTDIR /usr/sbin/uhu-pkg postinst +
+if [ -f /usr/sbin/uhu-pkg] && [ -x /usr/sbin/uhu-pkg ]; then
+    echo "Running \`/usr/sbin/uhu-pkg postinst +' ..."
+    unset UHU_PKG_SKIP || true
+    chroot $UHUBUILD_CHROOTDIR /usr/sbin/uhu-pkg postinst +
+else
+    echo "Running \`/sbin/uhu-pkg postinst +' ..."
+    unset UHU_PKG_SKIP || true
+    chroot $UHUBUILD_CHROOTDIR /sbin/uhu-pkg postinst +
+fi
 
 # Végső simítások.
 
