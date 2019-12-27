@@ -173,7 +173,7 @@ for step in $steps; do
 done
 
 # ccache-t tömörítjük, ha kell, a compile után.
-if [ -f "$UB_ADMINDIR/.ccache_extracted" ] && [ "$step" = "compile"] ; then
+if [ -f "$UB_ADMINDIR/.ccache_extracted" ] && [ "$step" = "compile" ] ; then
 	greenecho "ccache-compress..."
 	/usr/lib/uhubuild/steps/ccache-compress
 fi
