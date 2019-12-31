@@ -16,11 +16,15 @@ KVT=" könyvtár kiürítése."
 
 case ${BASENAME} in
 	build-clean)
-		export DISTR=UBK2;;
+		export DISTR=UBK3;;
 	build-clean-ubk1|build-clean-UBK1)
 		export DISTR=UBK1;;
 	build-clean-ubk2|build-clean-UBK2)
 		export DISTR=UBK2;;
+	build-clean-ubk3|build-clean-UBK3)
+		export DISTR=UBK3;;
+	build-clean-ubk4|build-clean-UBK4)
+		export DISTR=UBK4;;
 esac
 
 [ "$UID" != 0 ] && {

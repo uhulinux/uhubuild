@@ -11,6 +11,6 @@
 	exit 1
 }
 
-for i in ubk1 ubk2; do
+for i in ubk1 ubk2 ubk3 ubk4; do
 	/usr/bin/build-"$i" "$@"
 done
