@@ -108,7 +108,8 @@ function u2dsrc {
 
 # kdeapps project
 function kdeapp {
-    u2dsrc https://download.kde.org/stable/applications/ $1
+    # u2dsrc https://download.kde.org/stable/applications/ $1
+    u2dsrc https://download.kde.org/stable/release-service/ $1
 }
 
 # list sourceforge project files
