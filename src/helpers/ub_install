@@ -2,6 +2,8 @@
 
 if [ -f meson.build -a -f build/build.ninja ]; then
 	DESTDIR="$UB_INSTALLDIR" ninja -C build install
+elif [ -f CMakeLists.txt -a -f build/build.ninja ]; then
+	DESTDIR="$UB_INSTALLDIR" ninja -C build install
 elif [ -f CMakeLists.txt -a -f build/Makefile ]; then
 	cd build; ub_makeinstall "$@"
 elif [ -f setup.py -a ! -f Makefile ]; then

@@ -5,7 +5,17 @@
 j="-j${UB_MAKE_PROCS:-$(_procs)}"
 
 if [ -f meson.build -a -f build/build.ninja ]; then
+	echo "ninja $j"
+	for i in "$@"; do
+		echo -e "\t$i"
+	done
 	ninja -C build "$j" "$@"
+elif [ -f ${UB_COMPILEDIR}/CMakeLists.txt -a -f ${UB_COMPILEDIR}/build/build.ninja ]; then
+	echo "ninja $j"
+	for i in "$@"; do
+		echo -e "\t$i"
+	done
+    ninja "$j" "$@"
 else
 	echo "make $j"
 	for i in "$@"; do
