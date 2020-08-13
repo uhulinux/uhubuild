@@ -116,7 +116,7 @@ done
 
 # apt-get update
 
-apt-get $apt_empty_options update
+apt-get $apt_empty_options update --allow-releaseinfo-change
 
 # uhubuild-config telepítése és kilépés, ha az első körben vagyunk.
 
