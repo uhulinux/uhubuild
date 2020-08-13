@@ -19,7 +19,7 @@ scrollout
 # Páder Rezső <rezso@rezso.net>
 
 BUILD_VERSION="1.3.4"
-VENDOR="UHU Linux Baráti Kör"
+VENDOR="ubk.hu"
 PACKAGER=${PACKAGER:=UBK <ubk@ubk.hu>}
 BUILD_GPGKEY=${BUILD_GPGKEY:=UBK}
 
