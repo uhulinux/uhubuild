@@ -189,6 +189,7 @@ function u2dcpan() {
 # script for python modules
 function u2dpypi() {
 	project="$1"
-	urllist "https://pypi.python.org/simple/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
+	# urllist "https://pypi.python.org/simple/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
+	urllist "https://pypi.org/project/$project/" | sed 's/#.*//' | parsever | sort -V | tail -n 1
 }
 
