@@ -200,11 +200,9 @@ must_be_file ()
 
 for file in *; do
 	case "$file" in
-	  acquire|compile   |build-depends|changelog|\
-	  doc    |install   |maintainer   |options  |\
-	  release|sourcename|distribution |version  |\
-	  TODO   |homepage  |vendor       |split-order|\
-	  u2d)
+	  acquire|compile|build-depends|doc|install|maintainer|\
+	  options|release|sourcename|distribution|version|TODO|\
+	  homepage|vendor|split-order|u2d)
 		must_be_file "$file"
 		;;
 	  addons*|config|packages|patches|sources)
@@ -306,15 +304,6 @@ if [ -f build-depends ]; then
 	pp < build-depends > $UHUBUILD_SRC2DIR/build-depends.tmp
 	reformat 0 < $UHUBUILD_SRC2DIR/build-depends.tmp | sort -u > $UHUBUILD_SRC2DIR/build-depends
 	rm $UHUBUILD_SRC2DIR/build-depends.tmp
-fi
-
-#################
-### changelog ###
-#################
-if [ -f changelog ]; then
-	pp < changelog > $UHUBUILD_SRC2DIR/changelog
-	reformat 1 < changelog > $UHUBUILD_SRC2DIR/changelog
-	touch -r changelog $UHUBUILD_SRC2DIR/changelog
 fi
 
 ####################

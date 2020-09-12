@@ -541,12 +541,6 @@ azokra ad x bitet.
 	lezárt keresése előtt kikerülnek a csomaglistából (tehát dependencia
 	miatt visszajöhetnek).
 
-  <tag/changelog [?]/
-
-	A csomag ChangeLogja. További szerepe, hogy a készülő csomagban
-	mindazon fájlokat, melyek időcímkéje ennél újabb volna,
-	visszaállítjuk ennek a fájlnak a dátumára.
-
   <tag/compile [?] [x]/
 
 	Szkript, amely a tényleges fordítási lépést végzi. A kitömörített
