@@ -9,4 +9,5 @@ deb [arch=amd64] file:/usr/src/UHUBUILD/packages-UBK4/amd64 ./
 
 # UBK
 deb [arch=amd64] http://download.ubk.hu/pkg/ubk4/main/amd64 ./
+deb [arch=amd64] http://quantum-mirror.hu/mirrors/pub/ubk/pkg/ubk4/main/amd64 ./
 
