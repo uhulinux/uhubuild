@@ -73,6 +73,7 @@ mkdir -p "$PRETENDROOTDIR" "$UB_TMPDIR"
 export UB_PACKAGES=$(cd "$UB_SRCDIR/packages"; echo *)
 export UB_SOURCENAME="$(<"$UB_SRCDIR/sourcename")"
 export UB_DISTRIBUTION="$(<"$UB_SRCDIR/distribution")"
+export UB_DISTRIBUTION_NUM=${UB_DISTRIBUTION/UHU-Linux UBK/}
 export UB_FULLVERSION="$(<"$UB_SRCDIR/version")"
 if grep -q ":" "$UB_SRCDIR/version"; then
 export UB_VERSION=${UB_FULLVERSION/*:/}
