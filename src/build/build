@@ -26,13 +26,13 @@ BUILD_GPGKEY=${BUILD_GPGKEY:=UBK}
 case `basename $0` in
 	build)
 		export UHUBUILD_DISTR=UBK3;;
-	build-ubk1|build-UBK1)
+	build-ubk1)
 		export UHUBUILD_DISTR=UBK1;;
-	build-ubk2|build-UBK2)
+	build-ubk2)
 		export UHUBUILD_DISTR=UBK2;;
-	build-ubk3|build-UBK3)
+	build-ubk3)
 		export UHUBUILD_DISTR=UBK3;;
-	build-ubk4|build-UBK4)
+	build-ubk4)
 		export UHUBUILD_DISTR=UBK4;;
 esac
 
@@ -356,6 +356,7 @@ else
 fi
 
 cd "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/
+yellowecho "uhubuild-check..."
 uhubuild-check "$i" || exit 1
 
 echo

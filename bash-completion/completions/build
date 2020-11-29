@@ -15,3 +15,21 @@ _buildubk2()
         COMPREPLY=($(compgen -W "$foo" -- "$cur"))
 }
 complete -F _buildubk2 build-ubk2
+
+_buildubk3()
+{
+        local cur foo
+        cur=${COMP_WORDS[COMP_CWORD]}
+        foo="$(/bin/ls /usr/src/UHUBUILD/UB-UBK3)"
+        COMPREPLY=($(compgen -W "$foo" -- "$cur"))
+}
+complete -F _buildubk2 build-ubk3
+
+_buildubk4()
+{
+        local cur foo
+        cur=${COMP_WORDS[COMP_CWORD]}
+        foo="$(/bin/ls /usr/src/UHUBUILD/UB-UBK4)"
+        COMPREPLY=($(compgen -W "$foo" -- "$cur"))
+}
+complete -F _buildubk2 build-ubk4
