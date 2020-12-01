@@ -68,7 +68,7 @@ fi
 [ -d "$UHUBUILD_MISC_PATH"/logpack/${UB_ARCH} ] || mkdir -p "$UHUBUILD_MISC_PATH"/logpack/${UB_ARCH}
 [ -d "$UHUBUILD_MISC_PATH"/tmp/${UB_ARCH} ] || mkdir -p "$UHUBUILD_MISC_PATH"/tmp/${UB_ARCH}
 
-for i in "$@"; do
+for j in "$@"; do
 	case $1 in
 		-64)
 			if [ "$(uname -m)" != "x86_64" ];then
@@ -248,6 +248,10 @@ for i in "$@"; do
 		continue
 	fi
 
+echo
+yellowecho "A(z) '$i' csomag buildelése következik..."
+echo
+
 ver=$(<"$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/version)
 rel=$(<"$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/release)
 
@@ -356,12 +360,8 @@ else
 fi
 
 cd "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/
-yellowecho "uhubuild-check..."
+yellowecho "uhubuild-check futtatása..."
 uhubuild-check "$i" || exit 1
-
-echo
-yellowecho "A(z) '$i' csomag buildelése következik..."
-echo
 
 	# Distribution fix
 	if [ -f "$UHUBUILD_PATH"/UB-${UHUBUILD_DISTR}/"$i"/distribution ]; then
