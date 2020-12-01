@@ -155,8 +155,8 @@ function u2dmate {
 	if [ -n "${unstable:-}" ]; then
 		reg="0-9"
 	fi
-	for ver in $(urllist "http://pub.mate-desktop.org/releases/" | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -rV);do
-        version=$(urllist http://pub.mate-desktop.org/releases/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1)
+	for ver in $(urllist "https://pub.mate-desktop.org/releases/" | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -rV);do
+        version=$(urllist https://pub.mate-desktop.org/releases/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1)
         if [ "$version" ];then
             echo $version
             exit 0
@@ -173,8 +173,8 @@ function u2dxfce {
 	if [ -n "${unstable:-}" ]; then
 		reg="0-9"
 	fi
-    ver="$(urllist http://archive.xfce.org/src/$subdir/$project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
-    urllist http://archive.xfce.org/src/$subdir/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
+    ver="$(urllist https://archive.xfce.org/src/$subdir/$project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+    urllist https://archive.xfce.org/src/$subdir/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
 }
 
 
