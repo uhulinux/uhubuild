@@ -1,5 +1,9 @@
 #!/bin/bash -eu
 
+# a ccache bezavarhat a configure lépésnél
+# pl. webkit2gtk nem találja a pthread.h-t
+export DISABLE_CCACHE=1
+
 if [ -f meson.build ]; then
 	argv=()
 	argx=(

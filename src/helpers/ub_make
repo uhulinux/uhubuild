@@ -4,6 +4,8 @@
 
 j="-j${UB_MAKE_PROCS:-$(_procs)}"
 
+export DISABLE_CCACHE=0
+
 if [ -f meson.build -a -f build/build.ninja ]; then
 	echo "ninja $j"
 	for i in "$@"; do
