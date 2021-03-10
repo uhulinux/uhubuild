@@ -25,6 +25,8 @@ case ${BASENAME} in
 		export DISTR=UBK3;;
 	build-clean-ubk4)
 		export DISTR=UBK4;;
+	build-clean-ubk5)
+		export DISTR=UBK5;;
 esac
 
 [ "$UID" != 0 ] && {

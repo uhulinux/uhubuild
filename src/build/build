@@ -34,6 +34,8 @@ case `basename $0` in
 		export UHUBUILD_DISTR=UBK3;;
 	build-ubk4)
 		export UHUBUILD_DISTR=UBK4;;
+	build-ubk5)
+		export UHUBUILD_DISTR=UBK5;;
 esac
 
 UHUBUILD_DISTR_NUM=${UHUBUILD_DISTR/UBK/}
