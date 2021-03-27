@@ -887,6 +887,8 @@ fi
 ########################
 ### run uhubuild-u2d ###
 ########################
+yellowecho "uhubuild-u2d futtatása..."
+
 if [ -f "u2d" -a "$copy" != "yes" ]; then
 	if ! grep 'noupdate' u2d; then
 		newver="$(uhubuild-u2d)"
