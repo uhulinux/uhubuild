@@ -148,11 +148,6 @@ diepoint ()
 }
 
 # -----------------------------------------------------------------------------
-_hostname ()
-{
-	cat /proc/sys/kernel/hostname
-}
-
 warnifroot ()
 {
 	if [ "$UID" == 0 ]; then

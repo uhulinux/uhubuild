@@ -77,11 +77,6 @@ depends:
 - ha foo=>bar, es letezik foo-dev es bar-dev csomag, akkor foo-dev=>bar-dev
 - ha egy foo csomagban levo symlink egy bar csomagban levo filera mutat, akkor
   foo=>bar?
-- Nezzen bele a .la es .pc fileokba, es az alapjan (is) dependaljon
-  -> kideriteni mi a kapcsolat a *-config es a .la fileok kozott.
-     ha esetleg semmi, akkor a *-config progikat is lekerdezni
-  -> foo.pc fileokat a 'pkg-config --libs-only-l foo' paranccsal kene
-     lekerdezni, figyelve a kornyezeti valtozokra
 - "perl-depends" es "python-depends". Aztan "ruby-depends" is. (majd...)
   (tcl-depends is)
 - a (/bin,/sbin,/lib)-bol nem mutasson ki fuggoseg.
@@ -143,12 +138,6 @@ utan ellenorizzuk is le rogton, hogy mindegyik megfelelo!
 Javaslat [pozsy]: '[a-z][A-Z][0-9]+-., '. Ez igy elsore eleg szuk, meg
 meglatjuk. A space-t vegyuk bele, barmennyire is nem jo, es ezt kezeljuk is
 mindenhol!!
-
-hostname parancs a chroot kornyezetbe?
-
-updatelibtool: utanajarni hogy miert nem jo dolog libtoolt frissiteni kde
-illetve pcmm eseteben. Optimalis esetben meggyogyitani, vagy ha ez nem megy
-akkor legalabb detektalni es nem frissiteni.
 
 jo lenne ha rogton az uhubuild-check --copy soran eszrevenne ha nem jok a
 permissionok, nem csak acquire/patcheles kozben

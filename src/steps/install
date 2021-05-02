@@ -9,7 +9,7 @@
 . /usr/lib/uhubuild/uhubuild-common
 
 listpackages "$UB_ADMINDIR/install-with"
-_hostname  > "$UB_ADMINDIR/install-host"
+hostname  > "$UB_ADMINDIR/install-host"
 logdate "Install-Started"
 
 mkdir -p "$UB_INSTALLDIR"

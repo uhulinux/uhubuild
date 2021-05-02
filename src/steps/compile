@@ -10,7 +10,7 @@ cd "$UB_COMPILEDIR"
 
 
 listpackages "$UB_ADMINDIR/compile-with"
-_hostname  > "$UB_ADMINDIR/compile-host"
+hostname  > "$UB_ADMINDIR/compile-host"
 logdate "Compile-Started"
 
 

@@ -10,7 +10,7 @@
 cd "$UB_PACKAGEDIR"
 
 listpackages "$UB_ADMINDIR/pack-with"
-_hostname  > "$UB_ADMINDIR/pack-host"
+hostname  > "$UB_ADMINDIR/pack-host"
 logdate "Build-Finished"
 
 for pkg in $UB_PACKAGES; do
