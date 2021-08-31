@@ -877,7 +877,7 @@ for pkg in packages/*; do
 				error "Hiányos $pkg/groups fájl!"
 			fi
 			if [ "$gid" -ge "1000" ]; then
-				error "$pkg/users: csak rendszer csoport adható meg!"
+				error "$pkg/groups: csak rendszer csoport adható meg!"
 			fi
 			printf "%-8s %4s  %s\n" "$name" "$gid" "$rest"
 		done < $UHUBUILD_SRC2DIR/$pkg/groups.tmp2 > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
