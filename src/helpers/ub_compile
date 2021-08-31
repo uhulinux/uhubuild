@@ -5,7 +5,7 @@
 export DISABLE_CCACHE=1
 
 if [ "$UB_DISTRIBUTION_NUM" -ge "4" ]; then
-    export LDFLAGS='-Wl,--as-needed -Wl,--dynamic-linker=/usr/lib/ld-linux-x86-64.so.2'
+    export LDFLAGS='-Wl,--as-needed'
 fi
 
 if [ -f meson.build ]; then

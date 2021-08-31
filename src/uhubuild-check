@@ -861,6 +861,9 @@ for pkg in packages/*; do
 			if [ "$name" = "" -o "$uid" = "" -o "$gid" = "" ]; then
 				error "Hiányos $pkg/users fájl!"
 			fi
+			if [ "$uid" -ge "1000" -o "$gid" -ge "1000" ]; then
+				error "$pkg/users: csak rendszer felhasználó / csoport adható meg!"
+			fi
 			printf "%-8s %4s %4s  %s\n" "$name" "$uid" "$gid" "$rest"
 		done < $UHUBUILD_SRC2DIR/$pkg/users.tmp2 > $UHUBUILD_SRC2DIR/$pkg/users.tmp
 		reformat 0 < $UHUBUILD_SRC2DIR/$pkg/users.tmp > $UHUBUILD_SRC2DIR/$pkg/users
@@ -872,6 +875,9 @@ for pkg in packages/*; do
 		while read -r name gid rest; do
 			if [ "$name" = "" -o "$gid" = "" ]; then
 				error "Hiányos $pkg/groups fájl!"
+			fi
+			if [ "$gid" -ge "1000" ]; then
+				error "$pkg/users: csak rendszer csoport adható meg!"
 			fi
 			printf "%-8s %4s  %s\n" "$name" "$gid" "$rest"
 		done < $UHUBUILD_SRC2DIR/$pkg/groups.tmp2 > $UHUBUILD_SRC2DIR/$pkg/groups.tmp
