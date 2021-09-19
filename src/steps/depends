@@ -483,7 +483,7 @@ for pkg in $UB_PACKAGES; do
             echo "python" >> "$UB_TMPDIR/pkg-noversion"
         fi
     fi
-    for pv in 3.8 3.7 3.6 3.5; do
+    for pv in 3.9 3.8 3.7 3.6 3.5; do
         if [ -d ./usr/lib/python$pv ]; then
             echo "python3" >> "$UB_TMPDIR/pkg-noversion"
         fi
