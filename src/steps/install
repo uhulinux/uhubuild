@@ -53,16 +53,6 @@ if [ -d "${UB_INSTALLDIR}/${UB_WORKDIR}" ]; then
 	error "A csomagba belekerült egy $UB_WORKDIR könyvtár."
 fi
 
-for i in $(find "$UB_COMPILEDIR" "$UB_OBJECTDIR" -name "lib*.so.*U" -type f); do
-	error "GÁÁÁZ VAN, szar a libtool: $i"
-done
-
-for i in $(find "$UB_INSTALLDIR" -name "*.la" -type f -perm /111); do
-	if ! grep '^installed=yes$' -q -- "$i"; then
-		error "hibás .la file (nincs benne installed=yes): $i"
-	fi
-done
-
 diepoint
 
 info=0
