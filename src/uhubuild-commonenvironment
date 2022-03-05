@@ -19,8 +19,8 @@ for i in /etc/env.d/*.env; do
 done
 unset i
 
-# extra path: qt5
-export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin:/usr/lib/qt5/bin"
+# extra path: qt5,qt6
+export PATH="/usr/lib/uhubuild${UHUBUILD_CCACHE_DIR:+:/usr/lib/ccache}:/sbin:/usr/sbin:/bin:/usr/bin:/usr/lib/qt5/bin:/usr/lib/qt6/bin"
 
 export LC_ALL=hu_HU.UTF-8
 export HOME=~
