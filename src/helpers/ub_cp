@@ -16,10 +16,10 @@ if [ ! -d "$TO" ]; then
 fi
 
 cd "$1"
-ub_list | while read f; do
+while read f; do
 	if [ -d "$f" ]; then
 		mkdir -p "$TO/${f#./}"
 	else
 		cp -dp --parents --target-directory="$TO" -- "$f"
 	fi
-done
+done < <(ub_list . -print)
