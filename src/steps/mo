@@ -26,7 +26,7 @@ for pkg in $UB_PACKAGES; do
 		cd "$UB_PACKAGEDIR/$pkg/$dir"
 
 		# helyrepofozzuk a jogosultságokat
-		find .         | xargs -r pretendroot chown -h 0.0
+		find .         | xargs -r pretendroot chown -h 0:0
 		find . -type f | xargs -r pretendroot chmod 644
 		find . -type d | xargs -r pretendroot chmod 755
 

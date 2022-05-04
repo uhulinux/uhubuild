@@ -27,7 +27,7 @@ for pkg in $UB_PACKAGES; do
 		find . -type f -name '*.gz'  -print0 | xargs -r0 gunzip  -f --
 		find . -type f -name '*.bz2' -print0 | xargs -r0 bunzip2 -f --
 
-		find .         -print0 | xargs -r0 pretendroot chown -h 0.0
+		find .         -print0 | xargs -r0 pretendroot chown -h 0:0
 		find . -type d -print0 | xargs -r0 pretendroot chmod 755
 		find . -type f -print0 | xargs -r0 pretendroot chmod 644
 

@@ -72,7 +72,7 @@ for pkg in $UB_PACKAGES; do
 		fi
 
 		# helyrepofozzuk a jogosultsagokat
-		find "$dir"         | xargs -r pretendroot chown -h 0.0
+		find "$dir"         | xargs -r pretendroot chown -h 0:0
 		find "$dir" -type f | xargs -r pretendroot chmod 644
 		find "$dir" -type d | xargs -r pretendroot chmod 755
 		# kibontjuk a tomoritett man oldalakat
