@@ -31,16 +31,16 @@ root-ként:
 gpg --keyserver hkp://keys.gnupg.net --recv-keys 12A3276B
 gpg --import ubk-secret.asc
 gpg --export 12A3276B > ubk.gpg
-mv ubk.gpg /etc/trusted.gpg.d/ubk.gpg
+mv ubk.gpg /etc/apt/trusted.gpg.d/ubk.gpg
   VAGY
 wget http://ubk.hu/gpg/ubk.gpg
-mv ubk.gpg /etc/trusted.gpg.d/ubk.gpg
+mv ubk.gpg /etc/apt/trusted.gpg.d/ubk.gpg
 
 saját új kulccsal:
 root-ként:
 gpg --gen-key
 gpg --export kulcsazonosító > utvonal/sajat.gpg
-mv utvonal/sajat.gpg /etc/trusted.gpg.d/sajat.gpg
+mv utvonal/sajat.gpg /etc/apt/trusted.gpg.d/sajat.gpg
 
 saját meglévő kulccsal:
 userként:
@@ -49,4 +49,4 @@ gpg --export-secret-key -a kulcsazonosító > utvonal/sajat-privat.asc
 root-ként:
 gpg --import utvonal/sajat.gpg
 gpg --import utvonal/sajat-privat.asc
-mv utvonal/sajat.gpg /etc/trusted.gpg.d/sajat.gpg
+mv utvonal/sajat.gpg /etc/apt/trusted.gpg.d/sajat.gpg
