@@ -29,4 +29,3 @@ export SHELL=/bin/bash
 export PYTHON="${PYTHON:-python3}"
 
 umask 022
-

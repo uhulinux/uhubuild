@@ -13,10 +13,11 @@ BUILDCLEAN_VERSION="0.0.4"
 BASENAME=`basename $0`
 BASE=`pwd`
 KVT=" könyvtár kiürítése."
+arch="amd64"
 
 case ${BASENAME} in
 	build-clean)
-		export DISTR=UBK3;;
+		export DISTR=UBK4;;
 	build-clean-ubk1)
 		export DISTR=UBK1;;
 	build-clean-ubk2)
@@ -90,55 +91,41 @@ function ccache_torles() {
 
 function chrootdir_torles() {
 	echo "A chroot könyvtárak kiürítése."
-	for arch in amd64 i386; do
-		for a in 1 2 3 ; do
-			cd ${UHUBUILD_VAR}/${DISTR}/${arch}/chroot${a}/
-			rm -rf *
-		done
+    for a in 1 2 3 ; do
+		cd ${UHUBUILD_VAR}/${DISTR}/${arch}/chroot${a}/
+		rm -rf *
 	done
 }
 
 function snapshots_torles() {
 	echo "A snapshot$KVT"
-	for arch in amd64 i386; do
 	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/snapshot/compile/${arch}/* 2>/dev/null
 	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/snapshot/install/${arch}/* 2>/dev/null
-	done
 }
 
 function extrarel_torles() {
 	echo "Az extrarelease$KVT"
-	for arch in amd64 i386; do
 	rm -f ${UHUBUILD_PATH}/misc-${DISTR}/extrarelease/${arch}/* 2>/dev/null
-	done
 }
 
 function faileds_torles() {
 	echo "A failed$KVT"
-	for arch in amd64 i386; do
 	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/failed/${arch}/* 2>/dev/null
-	done
 }
 
 function packages_torles() {
 	echo "Az összes UHU csomag törlése."
-	for arch in amd64 i386; do
 	rm -f ${UHUBUILD_PATH}/packages-${DISTR}/${arch}/* 2>/dev/null
-	done
 }
 
 function logpack_torles() {
 	echo "A logpack$KVT"
-	for arch in amd64 i386; do
 	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/logpack/${arch}/* 2>/dev/null
-	done
 }
 
 function tmp_torles() {
 	echo "A tmp$KVT"
-	for arch in amd64 i386; do
 	rm -rf ${UHUBUILD_PATH}/misc-${DISTR}/tmp/${arch}/* 2>/dev/null
-	done
 }
 
 function patches_torles() {

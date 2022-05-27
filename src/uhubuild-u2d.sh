@@ -143,8 +143,6 @@ function u2dgnome {
 	fi
     ver="$(urllist "https://download.gnome.org/sources/$project/" | grep -E '^[0-9.]+['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
 	u2d "https://download.gnome.org/sources/$project/$ver/"
-#	ver="$(urllist "https://mirrors.gethosted.online/gnome/sources/$project/" | grep -E '^[0-9.]+['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
-#	u2d "https://mirrors.gethosted.online/gnome/sources/$project/$ver/"
 }
 
 # script for mate projects

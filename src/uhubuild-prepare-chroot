@@ -256,4 +256,3 @@ perm=$(stat -c %a "$UHUBUILD_CHROOTDIR/tmp")
 if [ "$perm" != "777" ] || [ "$perm" != "1777" ]; then
     chmod 777 $UHUBUILD_CHROOTDIR/tmp
 fi
-

@@ -8,4 +8,3 @@ fi
 
 dpkg-deb --control "$1"
 ar x "$1" data.tar.gz
-

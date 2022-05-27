@@ -27,12 +27,6 @@ for pkg in $UB_PACKAGES; do
 			echo "${conffile#/}"
 		done < "$UB_SRCDIR/packages/$pkg/conffiles"
 	fi
-	for i in etc/runlevel.d/default/*.service; do
-		j="${i/default/custom}"
-		mkdir -p etc/runlevel.d/custom
-		true >"$j"
-		echo "$j"
-	done
 	} | sort -u > "$UB_ADMINDIR/conffiles-noslash-$pkg"
 
 	rm -f DEBIAN/conffiles

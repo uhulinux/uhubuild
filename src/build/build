@@ -25,7 +25,7 @@ BUILD_GPGKEY=${BUILD_GPGKEY:=UBK}
 
 case `basename $0` in
 	build)
-		export UHUBUILD_DISTR=UBK3;;
+		export UHUBUILD_DISTR=UBK4;;
 	build-ubk1)
 		export UHUBUILD_DISTR=UBK1;;
 	build-ubk2)
@@ -72,23 +72,6 @@ fi
 
 for j in "$@"; do
 	case $1 in
-		-64)
-			if [ "$(uname -m)" != "x86_64" ];then
-				die "Csak 64 bites módban indítva lehet 64 bites fordítást készíteni!"
-			fi
-			yellowecho "64 bites fordítás."
-			echo
-			export UB_ARCH="amd64"
-			shift;;
-		-32)
-            if [ "$UHUBUILD_DISTR_NUM" >= "3" ]; then
-                redecho " 32 bites fordítás nem lehetséges."
-            else
-			    yellowecho "32 bites fordítás."
-			    echo
-			    export UB_ARCH="i386"
-			fi
-			shift;;
 		-cc|--create-contents)
 			yellowecho "Contents.gz készítése a packages könyvtárban."
 			echo
@@ -153,7 +136,7 @@ for j in "$@"; do
 			echo
 			appleecho "HASZNÁLAT:"
 			echo
-			appleecho "build-${UHUBUILD_DISTR} $1 [-64][-pv][-ps][-ns][-ncs][-nis][-rs][-rc][-ch1][-ch2][-ch3]"
+			appleecho "build-${UHUBUILD_DISTR} $1 [-pv][-ps][-ns][-ncs][-nis][-rs][-rc][-ch1][-ch2][-ch3]"
 			appleecho "[-rch][-nuch][-usc|-usi][-cc][-ner] csomag1 [csomag2] [csomag3] [...]"
 			echo
 			appleecho "vagy (posix kapcsolókkal):"
@@ -176,11 +159,6 @@ for j in "$@"; do
 			appleecho "megjelenő, a csomag nevével azonos nevű fájl is jelzi."
 			echo
 			appleecho "Opcionálisan megadható kapcsolók jelentése:"
-			appleecho "[-64]:"
-			appleecho "64 bites fordítás. Ez az alapértelmezett."
-			echo
-			appleecho "[-32]:"
-			appleecho "32 bites fordítás. UBK3 és későbbi kiadások esetén nem használható."
 			echo
 			appleecho "[-ns|--no-snapshot]:"
 			appleecho "Nem készülnek snapshot fájlok."
