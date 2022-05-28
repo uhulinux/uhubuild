@@ -210,10 +210,6 @@ for j in "$@"; do
 			echo
 			appleecho "A legfrissebb verzió elérhető a http://ubk.hu/ oldalról."
 			exit 0;;
-		*)
-		    redecho "Ismeretlen opció"
-		    echo
-		    exit 1;;
 		esac
 done
 
