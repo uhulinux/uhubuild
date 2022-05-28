@@ -9,7 +9,7 @@ scrollout
 # A szkriptet eredetileg készítette: Charlos, 2007. március 9.-én.
 # Sári Gábor <sari.gabor@gmail.com>
 
-BUILDCLEAN_VERSION="0.0.4"
+BUILDCLEAN_VERSION="0.0.5"
 BASENAME=`basename $0`
 BASE=`pwd`
 KVT=" könyvtár kiürítése."
@@ -18,10 +18,6 @@ arch="amd64"
 case ${BASENAME} in
 	build-clean)
 		export DISTR=UBK4;;
-	build-clean-ubk1)
-		export DISTR=UBK1;;
-	build-clean-ubk2)
-		export DISTR=UBK2;;
 	build-clean-ubk3)
 		export DISTR=UBK3;;
 	build-clean-ubk4)

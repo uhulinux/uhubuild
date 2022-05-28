@@ -18,7 +18,7 @@ scrollout
 # peritus <peritus@freemail.hu>
 # Páder Rezső <rezso@rezso.net>
 
-BUILD_VERSION="1.3.4"
+BUILD_VERSION="1.4.0"
 VENDOR="ubk.hu"
 PACKAGER=${PACKAGER:=UBK <ubk@ubk.hu>}
 BUILD_GPGKEY=${BUILD_GPGKEY:=UBK}
@@ -26,10 +26,6 @@ BUILD_GPGKEY=${BUILD_GPGKEY:=UBK}
 case `basename $0` in
 	build)
 		export UHUBUILD_DISTR=UBK4;;
-	build-ubk1)
-		export UHUBUILD_DISTR=UBK1;;
-	build-ubk2)
-		export UHUBUILD_DISTR=UBK2;;
 	build-ubk3)
 		export UHUBUILD_DISTR=UBK3;;
 	build-ubk4)
@@ -136,13 +132,12 @@ for j in "$@"; do
 			echo
 			appleecho "HASZNÁLAT:"
 			echo
-			appleecho "build-${UHUBUILD_DISTR} $1 [-pv][-ps][-ns][-ncs][-nis][-rs][-rc][-ch1][-ch2][-ch3]"
-			appleecho "[-rch][-nuch][-usc|-usi][-cc][-ner] csomag1 [csomag2] [csomag3] [...]"
+			appleecho "build-${UHUBUILD_DISTR} $1 [-ns][-rcs][-ris][-rc][-rch][-ch1][-ch2][-ch3]"
+			appleecho "[-usc|-usi][-cc][-ner][-nr] csomag1 [csomag2] [csomag3] [...]"
 			echo
 			appleecho "vagy (posix kapcsolókkal):"
-			appleecho "[--pack-version][--pack-source][--no-snapshot][--no-csnapshot][--no-isnapshot]"
-			appleecho "[--remove-ccache][--remove-chrootdir][--chroot1-5][--no-uhubuild-check]"
-			appleecho "[--use-csnapshot][--use-isnapshot][--create-contents][--new-extrarelease]"
+			appleecho "[--no-snapshot][--remove-csnapsot][--remove-isnapshot][--remove-ccache][--remove-chrootdir][--chroot1-3]"
+			appleecho "[--use-csnapshot][--use-isnapshot][--create-contents][--new-extrarelease][--new-release]"
  			echo
 			appleecho "A csomag1 [csomag2] [csomag3] [...] UB források alapján az UHU csomagok elkészítése."
 			echo
@@ -150,9 +145,6 @@ for j in "$@"; do
 			appleecho "a következő könyvtár alatt kell elhelyezkedniük:"
 			echo
 			appleecho "$UHUBUILD_PATH/UB-${UHUBUILD_DISTR}/"
-			echo
-			yellowecho "Nyomj egy ENTER-t a következő oldalhoz!"
-			read
 			echo
 			appleecho "Amennyiben valamelyik megadott csomag fordítása hiba miatt megszakad, azt a"
 			appleecho "fordítás végén a $UHUBUILD_PATH/misc-${UHUBUILD_DISTR}/failed/${UB_ARCH} könyvtárban"
@@ -163,10 +155,11 @@ for j in "$@"; do
 			appleecho "[-ns|--no-snapshot]:"
 			appleecho "Nem készülnek snapshot fájlok."
 			echo
-			yellowecho "Nyomj egy ENTER-t a következő oldalhoz!"
-			read
-			appleecho "[-rs|--remove-snapshot]:"
-			appleecho "Törlődnek a régebbi, adott csomaghoz kapcsolódó snapshot fájlok."
+			appleecho "[-rcs|--remove-csnapshot]:"
+			appleecho "Törlődnek a régebbi, adott csomaghoz kapcsolódó compile snapshot fájlok."
+			echo
+			appleecho "[-ris|--remove-isnapshot]:"
+			appleecho "Törlődnek a régebbi, adott csomaghoz kapcsolódó install snapshot fájlok."
 			echo
 			appleecho "[-rc|--remove-ccache]:"
 			appleecho "Törlődik a régebbi, adott csomaghoz kapcsolódó ccache fájl."
@@ -177,15 +170,12 @@ for j in "$@"; do
 			echo
 			appleecho "[-rch|--remove-chrootdir]:"
 			appleecho "A kapcsoló hatására letörli a chroot környezetet, majd újra felépíti"
-			appleecho "azt. Ha nem adunk meg -ch[1-5] kapcsolót, akkor az alapértelmezettként"
+			appleecho "azt. Ha nem adunk meg -ch[1-3] kapcsolót, akkor az alapértelmezettként"
 			appleecho "a chroot1-et törli."
 			echo
 			appleecho "[-usc|--use-csnapshot]:"
 			appleecho "Az előző fordítás során készült compile snapshot fájl alapján indul újra a"
 			appleecho "build folyamat."
-			echo
-			yellowecho "Nyomj egy ENTER-t a következő oldalhoz!"
-			read
 			echo
 			appleecho "[-usi|--use-isnapshot]:"
 			appleecho "Az előző fordítás során készült install snapshot fájl alapján indul újra a"
@@ -202,6 +192,9 @@ for j in "$@"; do
 			appleecho "miatt) később újracsomagoljuk a programot, már ne használjuk ezt a"
 			appleecho "kapcsolót!"
 			echo
+			appleecho "[-nr|--new-release]:"
+			appleecho "Eggyel emeli a csomag release értékét."
+			echo
 			appleecho "[-h|--help|-?]:"
 			appleecho "Ez az a képernyő. ;-)"
 			echo
@@ -217,6 +210,10 @@ for j in "$@"; do
 			echo
 			appleecho "A legfrissebb verzió elérhető a http://ubk.hu/ oldalról."
 			exit 0;;
+		*)
+		    redecho "Ismeretlen opció"
+		    echo
+		    exit 1;;
 		esac
 done
 
