@@ -4,9 +4,7 @@
 # pl. webkit2gtk nem találja a pthread.h-t
 export DISABLE_CCACHE=1
 
-if [ "$UB_DISTRIBUTION_NUM" -ge "4" ]; then
-    export LDFLAGS='-Wl,--as-needed'
-fi
+export LDFLAGS='-Wl,--as-needed'
 
 if [ -f meson.build ]; then
 	argv=()

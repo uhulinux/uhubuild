@@ -2,7 +2,7 @@
 
 . /usr/lib/uhubuild/common
 
-export UB_HOST="x86_64-linux-gnu"
+export UB_HOST="x86_64-unknown-linux-gnu"
 
 UB_CFLAGS="-O2 -m64 -mtune=generic ${CFLAGS:-}"
 
