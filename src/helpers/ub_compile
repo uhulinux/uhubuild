@@ -67,28 +67,4 @@ else
 	fi
 fi
 
-if [ -f setup.py -a ! -f Makefile ]; then
-	exec "$PYTHON" ./setup.py build "$@"
-fi
-
-if [ -f Makefile.PL ]; then
-	perl Makefile.PL "$@"
-fi
-
-if [ -f Build.PL ]; then
-	perl Build.PL "$@"
-	exec ./Build
-fi
-
-if [ -f extconf.rb ]; then
-	ruby extconf.rb "$@"
-fi
-
-if [ -f /usr/bin/scons -a -f SConstruct -a ! -f Makefile ]; then
-	exec scons \
-		PREFIX=/usr \
-		LIBDIR=/usr/lib \
-		"$@"
-fi
-
 exec ub_make

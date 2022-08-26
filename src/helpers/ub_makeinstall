@@ -70,11 +70,7 @@ for i in "${argv[@]}"; do
 done
 
 # be verbose :)
-if [ -f Makefile.PL ]; then
-	target="install" #could be "install_vendor", but it is buggy sometimes
-else
-	target="install"
-fi
+target="install"
 echo "make"
 for i in "$@" "${argv2[@]}"; do
 	echo -e "\t$i"

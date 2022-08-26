@@ -14,7 +14,7 @@ if [ -d "$UB_INSTALLDIR/usr/lib/qt5" ]; then
 				-e "s@^${UB_COMPILEDIR}@@g" -e "s@^${UB_INSTALLDIR}@@g" {} \;
 fi
 
-if [ -d "$UB_INSTALLDIR/usr/lib/q65" ]; then
+if [ -d "$UB_INSTALLDIR/usr/lib/q6" ]; then
 	find $UB_INSTALLDIR/usr/lib/qt6/ -name \*.prl \
 	-exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' \
 				-e "s@^${UB_COMPILEDIR}@@g" -e "s@^${UB_INSTALLDIR}@@g" {} \;
