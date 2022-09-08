@@ -306,7 +306,7 @@ for pkg in $UB_PACKAGES; do
 			# ... a másik pedig a Requires sorban megemlített további .pc fájlok,
 			# ezeket kézzel kell kibányászni, mivel a pkg-config nem tudja kiírni
 			# őket szépen, de szerencsére rekurzióra nincs szükség.
-			reqs="$(egrep '^Requires(\.private)?:' "$file" | cut -d: -f2- | tr ',\n' '  ')"
+			reqs="$(grep -E '^Requires(\.private)?:' "$file" | cut -d: -f2- | tr ',\n' '  ')"
 			# változók behelyettesítése
 			while [ "$reqs" != "${reqs%%\$\{*\}*}" ]; do
 				part1="${reqs%%\$\{*}"

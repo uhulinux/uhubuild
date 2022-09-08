@@ -24,7 +24,7 @@ language_to_charset() {
 	local locales
 	local reply
 	local charset
-	locales="$(locale -a | egrep "^$lang(_|\$)" | grep -F -v . | grep -F -v @ | cat)"
+	locales="$(locale -a | grep -E "^$lang(_|\$)" | grep -F -v . | grep -F -v @ | cat)"
 	reply="unknown"
 	for locale in $locales; do
 		charset="$(LC_ALL="$locale" locale charmap)"
