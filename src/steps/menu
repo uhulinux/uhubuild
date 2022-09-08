@@ -23,7 +23,7 @@ for pkg in $UB_PACKAGES; do
 			  || true
 			[ $(grep -c ^Categories= "$f") -le 1 ] \
 			  || error "$f: egynél több Categories sort tartalmaz!"
-			fgrep -q '${' "$f" \
+			grep -F -q '${' "$f" \
 			  && error "$f: maradt benne '\${', szar a configure vagy a Makefile!" \
 			  || true
 			desktop-file-validate "$f" | grep 'error:' \
