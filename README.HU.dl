@@ -1,0 +1,64 @@
+A program a paraméterként megadott fájlokat, vagy ha nincs ilyen akkor
+a standard inputot dolgozza fel.
+
+Bemenetként egy "bekezdésekre" tagolt fájlt vár el, új bekezdést egy 0 behúzású
+nem-comment sor kezd.
+
+Egy bekezdés felépítése a következő:
+<fájlnév> [mit [:hova]]
+	[url1]
+	[url2]
+	...
+
+A fájlnév kötelező. Ha van ilyen file az "archivedir"-ben, akkor azzal
+dolgozik a továbbiakban, ha nincs, akkor megpróbálja letölteni rendre az
+url1, url2, ... urlN címekről. Ha egy url "/" jelre végződik, akkor hozzáfűzi
+a fájlnevet, és az így kapott fájlt próbálja meg letölteni (az esetek nagyon
+nagy részében ugyanolyan nevet akarunk a letöltött állománynak adni mint ami az
+eredetinek volt, igy _erősen_ ajánlottak a "/" jelre végződő url-ek, de néha
+szükségünk lehet más névre).
+
+A letoltott fileokat alapbol nem tartja meg, erre a "-s" kapcsolo veszi ra,
+ekkor az archivedir-be menti le oket.
+
+Az archivedirt a "-a" kapcsoloval lehet megadni, ha nincs megadva akkor az
+aktualis konyvtar lesz az (ebbol kovetkezik az a fontos teny, hogy ilyenkor
+-s eseten ide ment, illetve itt keresi hogy le van-e mar toltve az adott
+allomany, illetve csak kibontas (-u) eseten is az itt talalhato fileokat
+akarja kibontani)
+
+-d kapcsolo eseten csak letolt (az archivdir-be)
+
+-u kapcsolo eseten csak kibont (az archivdir-ben talalhato fileokat). ha nincs
+meg mind, akkor hibaval elszall (de nem rogton, hanem csak akkor amikor eljut
+az adott file kibontasahoz).
+
+-x kapcsoloval lehet megadni, hogy hova bontsa ki a letoltt fileokat, ez is
+alapbol a "."
+
+Az uhubuild tipikusan a "-u -a sources -x build" kapcsokkal hivja meg az
+acquire filet.
+
+A bekezdesek elejen talalhato "mit" segitsegevel adhato meg, hogy ha nincs
+szuksegunk az archivum teljes tartalmara, csak egy reszhalmazara.
+Fontos, hogy kulon jeleznunk kell hogy ez egy konyvtar-e, a vegere biggyesztett
+"/" jel segitsegevel.
+A "mit" ertelemszeruen kotelezo ha meg van adva "hova".
+(FIXME: lehet hogy szukseg lenne ra, hogy mukodjon a mit="." is, ez most nem
+mukodik.)
+"valami-verzio.tar.gz" eseten a "mit" tipikusan "valami-verzio/"
+
+A "hova" ertelemszeruen megadja, hogy a"mit" ki akarunk bontani, azt hova is
+tegye. Ha a vegen "/" van, akkor automatikusan hozzafuzi a "mit"-et (a
+vegen "/" nelkul).
+
+Megjegyzesek:
+- Ha a progi elszall, akkor hagy maga utan egy konyvtarat a /tmp alatt.
+  Nem tudom ez mennyire gaz. Meg lehet oldani hogy ne legyen igy, de neha
+  epp ez jon jol.
+- Ha egy tar file olyan "erdekes", hogy a benne tarolt filenevek pl
+  ../akarmi alakuak akkor azzal ki tudja mi lesz.
+- A gzip-1.2.4 csomagban a vms/Readme.vms file jogai 444, igy userkent a tar
+  nem tudja felulirni -> elszall ha 2x akarja az ember ledlezni ugyanoda.
+- A dl az urlek letolteset a "get" nevu progira bizza, semmit nem torodik azok
+  tartalmaval (marmint az url szintaxisaval).

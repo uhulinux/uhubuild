@@ -1,0 +1,260 @@
+#!/bin/bash
+
+# dl. "The downloader" :)
+
+# Pozsar Balazs <pozsy@uhulinux.hu>
+# 2002.09.18 - 2002.10.23 - 2003.02.25 - 2003.06.26
+
+. /usr/lib/uhubuild/common
+
+# -----------------------------------------------------------------------------
+function usage() {
+	die "usage: dl [-o <logfile>] [-a <archive dir>] [-d] [-u] [-h] [src1 [src2 ...]]"
+}
+
+function unpack() {
+	local file="$1"
+	shift
+
+	[ -f "$file" ] || die "unpack: need filename argument"
+
+	case "$file" in
+		*.[tT][aA][rR])
+			tar -x -v --force-local -h -f "$file" -- "$@"
+			;;
+		*.[tT][aA][rR].[gG][zZ]|*.[tT][gG][zZ]|*.[tT][aA][rR].[zZ])
+			tar --use-compress-program=gzip -x -v --force-local -h -f "$file" -- "$@"
+			;;
+		*.[tT][aA][rR].[bB][zZ]2|*.[tT][bB][zZ]2|*.[tT][bB][zZ])
+			tar --use-compress-program=bzip2 -x -v --force-local -h -f "$file" -- "$@"
+			;;
+		*.[tT][aA][rR].[lL][zZ][mM][aA])
+			tar --use-compress-program=lzmadec -x -v --force-local -h -f "$file" -- "$@"
+			;;
+		*.[tT][aA][rR].[lL][zZ])
+			tar --use-compress-program=lzip -x -v --force-local -h -f "$file" -- "$@"
+			;;
+		*.[tT][aA][rR].[xX][zZ])
+			tar --use-compress-program=xzdec -x -v --force-local -h -f "$file" -- "$@"
+			;;
+		*.[cC][pP][iI][oO])
+			cpio -iumdv --force-local -F "$file" -- "$@"
+			;;
+		*.[rR][pP][mM])
+			rpm2cpio "$file" | cpio -iumdv -- "$@"
+			;;
+		*.[dD][eE][bB]|*.[uU][hH][uU])
+			dpkg-deb -x -- "$file" .
+			;;
+		*.[zZ][iI][pP]|*.[jJ][aA][rR]|*.[xX][pP][iI])
+			unzip -o "$file"
+			;;
+		*.[aA][rR][jJ])
+			unarj x "$file"
+			;;
+		*.[rR][aA][rR])
+			unrar x "$file"
+			;;
+		*.[eE][xX][eE]|*.[cC][aA][bB])
+			cabextract -fL "$file"
+			;;
+		*.[gG][zZ]|*.[zZ])
+			zcat "$file" >"$(basename "${file%.*}")"
+			;;
+		*.[bB][zZ]2)
+			bzcat "$file" >"$(basename "${file%.*}")"
+			;;
+		*)
+			die "unknown extension: $file"
+			;;
+	esac
+}
+
+# -----------------------------------------------------------------------------
+archivedir="."
+do_download="yes"
+do_unpack="yes"
+unset do_save_into_archivedir
+unset files
+origdir="."
+while [ "$#" -gt 0 -a "$1" != "--" ]; do
+	case "$1" in
+		-o) #output logfile
+			shift
+			[ "$#" -gt 0 ] || usage
+			[ "$1" != "--" ] || usage
+			exec 1>>"$1"
+			exec 2>&1
+			;;
+		-a) #archivedir
+			shift
+			[ "$#" -gt 0 ] || usage
+			[ "$1" != "--" ] || usage
+			archivedir="$1"
+#			do_save_into_archivedir="yes"
+			;;
+		-d)	#download only
+			do_download="yes"
+			do_save_into_archivedir="yes"
+			unset do_unpack
+			;;
+		-u) #unpack only
+			unset do_download
+			do_unpack="yes"
+			;;
+		-s)
+			do_save_into_archivedir="yes"
+			;;
+		-x) #workdir
+			shift
+			[ "$#" -gt 0 ] || usage
+			[ "$1" != "--" ] || usage
+			origdir="$1"
+			;;
+		-h) #help
+			usage
+			;;
+		-*) #unknown argument
+			error "unknown arg: $1"
+			usage
+			;;
+		*)  #file argument
+			files[${#files[@]}]="$1"
+			;;
+	esac
+	shift
+done
+
+# origdir
+mkdir -p "$origdir" || die "Nem lehet létrehozni a könyvtárat: [$origdir]"
+origdir="$(readlink -f "$origdir")" # ez lehetne pwd is, de igy viccessebb :)
+[ "$origdir" ] || die "nincs origdir??" # elborult corner-case
+
+# archivedir
+[ "$archivedir" ] || die "Nincs megadva a forrásfájlok könyvtára! (archivedir)"
+[ "$archivedir" ] && mkdir -p "$archivedir" || die "Nem lehet létrehozni az archivedir könyvtárat! [$archivedir]"
+[ "$archivedir" ] && archivedir="$(readlink -f $archivedir)"
+
+# Kezdodjek a moka...
+while read filename chain; do
+	if [ "$filename" ]; then
+		eval filename="\"$filename\""
+
+		unset sources
+		read source
+		while [ "$source" ]; do
+#			debug "source=[$source]"
+			sources[${#sources[@]}]="$source"
+			read source
+		done
+
+		# ha meg van adva hogy hol keresse a letoltott fileokat,
+		# es ott is van, akkor onnan veszi.
+		# ha nincs ott, es online modban vagyunk akkor letolti,
+		# kulonben anyazik.
+		# ha nincs megadva hol keresse a letoltott fileokat, akkor
+		# ertelemszeruen letolti oket.
+		unset archive
+		if [ "$archivedir" -a -f "$archivedir/$filename" ]; then
+			#ide igazabol nem kell realpath, csak a biztonsag kedveert
+			archive="$archivedir/$filename"
+		else
+			if [ "$do_download" ]; then
+				[ "${#sources[@]}" != 0 ] || die "Nincs megadva forrás!"
+				i=0
+				if [ "$do_save_into_archivedir" ]; then
+					cd "$archivedir" || die "nem lehet belelépni: $archivedir"
+				else
+					tmpdir tmpdir
+					cd "$(tmpdir)"
+				fi
+				while [ ! -f "$filename" -a "$i" -lt "${#sources[@]}" ]; do
+					url="${sources[$i]}"
+					# hozzafuzzuk a vegere a filenevet ha /-re vegzodik
+					[ "$url" != "${url%/}" ] && url="$url$filename"
+					# behelyettesitunk
+					eval url="\"$url\""
+					# leszedjuk
+					get "$url" &&
+						[ "$(basename "$url")" != "$filename" ] &&
+						mv "$(basename "$url")" "$filename"
+					i=$(($i+1))
+				done
+				[ -f "$filename" ] || die "Nem sikerült a letöltés sehonnan!"
+				archive="$filename"
+			fi
+		fi
+		[ "$archive" ] || die "Nincs meg a kibontandó fájl: [$filename]"
+		archive="$(readlink -f "$archive")"
+		[ -f "$archive" ] || die "Nem fájl: [$filename]" # ez valoszinu lehetetlen
+		[ -r "$archive" ] || die "Nem olvasható a fájl: [$filename]"
+
+		if [ "$do_unpack" ]; then
+			eval _where="\"$(echo "$chain" | cut -s -d: -f2)\""
+			eval chain="\"$(echo "$chain" | cut -d: -f1)\""
+
+			# defaultbol az aktualis konyvtarba pakolunk ki
+			[ "$_where" ] || _where="."
+
+			if [ "$chain" ]; then
+				set $chain
+
+				# letrehozunk egy tmp konyvtarat
+				tmpdir _tmpdir
+
+				while [ "$#" -gt 0 ]; do
+					what="$1"
+					currentwd="${_tmpdir}/$#"
+					mkdir -p "$currentwd"
+					cd "$currentwd"
+					shift
+					if [ "$#" -gt 0 ]; then
+						where="$currentwd/unpacked/"
+						mkdir -p "$where"
+					else
+						where="$origdir/${_where}"
+					fi
+
+					# symlink(ek) elokeszitese a megfelelo kibontashoz az unpackdir alatt
+					# ha a where /-re vegzodik, akkor hozzafuzzuk a what-ot
+					[ "${where%/}" != "$where" ] && where="$where/$(basename "$what")"
+					# ha a what vegen / volt, akkor most a where vegen is az van,
+					# igy azt levagjuk
+					[ "${where%/}" != "$where" ] && where="${where%/}"
+
+#					debug "what=[$what] where=[$where]"
+
+					if [ "$what" == "." ]; then
+						mkdir -p "$where" || die "Nem tudtam létrehozni a könyvtárat: $where"
+						ln -s "$where" "unpackdir" || die "Nem tudtam symlinket csinálni"
+						cd unpackdir && unpack "$archive" || die "Nem sikerült a kibontás."
+					else
+						if [ "${what%/}" != "$what" ]; then
+							# ez egy konyvtar
+							mkdir -p "$where" || die "Nem tudom letréhozni: [$where]"
+							what="${what%/}"
+							mkdir -p "$(dirname "unpackdir/$what")" || die "Nem tudom letréhozni: [$(dirname "unpackdir/$what")]"
+							ln -s "$where" "unpackdir/$what" || die "Nem tudtam symlinket csinálni"
+							cd unpackdir && unpack "$archive" "$what" || die "Nem sikerült a kibontás."
+						else
+							# ez egy file
+							mkdir -p "$(dirname "$where")" || die "Nem tudom létrehozni: [$(dirname "$where")]"
+							mkdir -p "$(dirname "unpackdir/$what")" || die "Nem tudom létrehozni: [$(dirname "unpackdir/$what")]"
+							cd unpackdir && unpack "$archive" "$what" || die "Nem sikerült a kibontás."
+							mv "$what" "$where" || die "Nem sikerült az átmozgatás"
+							ln -s "$where" "$what" || die "Nem sikerült a symlink létrehozása"
+						fi
+					fi
+					archive="$(readlink -f "$what")"
+				done # while [ "$#" -gt 0 ]
+				# kis takaritas magunk utan
+				cd "$origdir"
+			else # [ "$chain" ]
+				if [ "$(readlink -f "$origdir/${_where}")" != "$archive" -a "$(readlink -f "$origdir/${_where}/$(basename "$archive")")" != "$archive" ]; then
+					cp -av "$archive" "$origdir/${_where}" || die "Nem sikerült a másolás"
+				fi
+			fi # [ "$chain" ]
+		fi #do_unpack
+	fi # [ "$filename" ]
+done < <(grep -v "^#" "${files[@]}" | sed 's,\(\${[^}]*\)~,\1\\\\~,g')
+# sed above: ~ has to be escaped inside ${} since bash 3.0

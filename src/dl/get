@@ -1,0 +1,394 @@
+#!/bin/bash
+
+. /usr/lib/uhubuild/common
+
+GET_CACHEDIR="${GET_CACHEDIR:-/var/cache/get}"
+
+if [ "$#" != "1" ]; then
+	die "usage: get <url>"
+fi
+
+unset faillist
+
+function _get() {
+	local url
+	for i in "${faillist[@]}"; do
+		[ "$i" != "$1" ] || return
+	done
+	faillist[${#faillist[@]}]="$1"
+
+	cachedir="$(dirname "${GET_CACHEDIR:+$GET_CACHEDIR/$1}")"
+	name="$(basename "$1")"
+
+	if [ -f "$cachedir/$name" ]; then
+		cp -af "$cachedir/$name" "$origdir"/
+		return
+	fi
+
+	echo "$1"
+	local filename="$(basename "$1")"
+	case "$1" in
+	  ftp://*)
+		tmpfile tmpfile
+		case "$1" in
+		  *@*)
+			user="${1%%@*}"
+			user="${user#ftp://}"
+			url="ftp://${1#*@}"
+			;;
+		  *)
+			user="anonymous:download@foo.bar"
+			url="$1"
+			;;
+		esac
+		if [ -n "${GET_BWLIMIT:-}" ]; then
+			limit=(--limit-rate "${GET_BWLIMIT}k")
+		else
+			limit=()
+		fi
+		if [ -n "${GET_CONNECTTIMEOUT:-}" ]; then
+			connecttimeout=(--connect-timeout "${GET_CONNECTTIMEOUT}")
+		else
+			connecttimeout=()
+		fi
+		if [ -n "${GET_MAXTIME:-}" ]; then
+			maxtime=(--max-time "${GET_MAXTIME}")
+		else
+			maxtime=()
+		fi
+		if [ -n "${GET_SPEEDLIMIT:-}" ]; then
+			speedlimit=(--speed-limit "${GET_SPEEDLIMIT}")
+		else
+			speedlimit=()
+		fi
+		if [ -n "${GET_SPEEDTIME:-}" ]; then
+			speedtime=(--speed-time "${GET_SPEEDTIME}")
+		else
+			speedtime=()
+		fi
+
+		if [ -z "$http_proxy" ]; then
+			curl -qfLNk --max-redir 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
+		else
+			if [ -z "$http_proxy_user" ]; then
+				curl -qfLNk --proxy "$http_proxy" --max-redir 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
+			else
+				curl -qfLNk --proxy "$http_proxy" --proxy-user "$http_proxy_user" --max-redir 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
+			fi
+		fi
+
+		mv "$tmpfile" "$filename" || return
+		;;
+	  http://*|https://*)
+		tmpfile tmpfile
+		if [ -n "${GET_BWLIMIT:-}" ]; then
+			limit=(--limit-rate "${GET_BWLIMIT}k")
+		else
+			limit=()
+		fi
+		if [ -n "${GET_CONNECTTIMEOUT:-}" ]; then
+			connecttimeout=(--connect-timeout "${GET_CONNECTTIMEOUT}")
+		else
+			connecttimeout=()
+		fi
+		if [ -n "${GET_MAXTIME:-}" ]; then
+			maxtime=(--max-time "${GET_MAXTIME}")
+		else
+			maxtime=()
+		fi
+		if [ -n "${GET_SPEEDLIMIT:-}" ]; then
+			speedlimit=(--speed-limit "${GET_SPEEDLIMIT}")
+		else
+			speedlimit=()
+		fi
+		if [ -n "${GET_SPEEDTIME:-}" ]; then
+			speedtime=(--speed-time "${GET_SPEEDTIME}")
+		else
+			speedtime=()
+		fi
+
+		if [ -z "$http_proxy" ]; then
+			curl -qfLNk --max-redir 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
+		else
+			if [ -z "$http_proxy_user" ]; then
+				curl -qfLNk --proxy "$http_proxy" --max-redir 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
+			else
+				curl -qfLNk --proxy "$http_proxy" --proxy-user "$http_proxy_user" --max-redir 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
+			fi
+		fi
+
+		case "$1" in
+			*.gz)  file "$tmpfile" | grep -q ": gzip compressed data" || return;;
+			*.bz2) file "$tmpfile" | grep -q ": bzip2 compressed data" || return;;
+			*.tar) file "$tmpfile" | grep -q ": POSIX tar archive" || return;;
+		esac
+		mv "$tmpfile" "$filename" || return
+		;;
+	  rsync://*)
+		if [ -n "${GET_BWLIMIT:-}" ]; then
+			limit=(--bwlimit "${GET_BWLIMIT}")
+		else
+			limit=()
+		fi
+		rsync -avP "${limit[@]}" "$1" "$filename" || return
+		;;
+	  svn://*)
+		local url
+		local rev
+		url="${1#svn://}"
+		url="${url%@*}"
+		rev="${1##*@}"
+		svnargs="--trust-server-cert --non-interactive"
+		svn co $svnargs -r "${rev//.//}" svn://"$url" || svn co $svnargs -r "${rev//.//}" http://"$url" || svn co $svnargs -r "${rev//.//}" https://"$url" || return
+		case "$rev" in
+		  "{"*"}")
+		  	rev="${rev/{/}"
+			rev="${rev/\}/}"
+			;;
+		  *)
+		  	rev="r$rev"
+			;;
+		esac
+		mv "$(basename "$url")" "$(basename "$url")-$rev" || return
+		tar -zcv --force-local -f "$filename" "$(basename "$url")-$rev" || return
+		;;
+	  git://*)
+		local url
+		local rev
+		url="${1#git://}"
+		url="${url%@*}"
+		rev="${1##*@}"
+
+		tmpdir=`mktemp -d`
+		local tmpsub
+
+		ifs="$IFS"
+		IFS=':'
+		revarray=($rev)
+		IFS="$ifs"
+
+		if [[ "${revarray[0]}" = "tag" ]]; then  ## tag:tagname
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[1]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git init
+			git pull "git://$url" "refs/tags/${revarray[1]}"
+
+			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		elif [[ "${revarray[0]}" = "head" ]]; then  ## head:headname
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[1]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git init
+			git pull "git://$url" "refs/heads/${revarray[1]}"
+
+			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		elif [[ "${revarray[0]}" = "branch" ]]; then  ## branch:branchname
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[1]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git clone "git://$url" "$tmpsub"
+			cd "$tmpsub"
+			git checkout "${revarray[1]}"
+
+ 			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		else ## commit
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[0]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git clone "git://$url" "$tmpsub"
+			cd "$tmpsub"
+			git checkout "${revarray[0]}"
+
+			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		fi
+		;;
+	  git+https://*)
+		local url
+		local rev
+		url="${1#git+https://}"
+		url="${url%@*}"
+		rev="${1##*@}"
+
+		tmpdir=`mktemp -d`
+		local tmpsub
+
+		ifs="$IFS"
+		IFS=':'
+		revarray=($rev)
+		IFS="$ifs"
+
+		if [[ "${revarray[0]}" = "tag" ]]; then  ## tag:tagname
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[1]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git init
+			git pull "https://$url" "refs/tags/${revarray[1]}"
+
+			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		elif [[ "${revarray[0]}" = "head" ]]; then  ## head:headname
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[1]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git init
+			git pull "https://$url" "refs/heads/${revarray[1]}"
+
+			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		elif [[ "${revarray[0]}" = "branch" ]]; then  ## branch:branchname
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[1]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git clone "https://$url" "$tmpsub"
+			cd "$tmpsub"
+			git checkout "${revarray[1]}"
+
+ 			cd ..
+ 			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		else ## commit
+			tmpsub="$(basename "$url")"
+			tmpsub=${tmpsub/.git/}
+			tmpsub=${tmpsub}"-"${revarray[0]}
+			mkdir -p "$tmpdir/$tmpsub"
+			cd "$tmpdir/$tmpsub"
+
+			git clone "https://$url" "$tmpsub"
+			cd "$tmpsub"
+			git checkout "${revarray[0]}"
+
+			cd ..
+			tar -zcv --force-local -f "$filename" "$tmpsub" || return
+		fi
+		;;
+	  hg://*)
+	  # mercurial
+	  # hg://$url@$rev -> hg clone -r $rev $url
+	  # hg://$url@$rev:$branch -> hg clone -b $branch -r $rev $url
+		local url
+		local rev
+		local revpart
+		local revarray
+		local branch
+		local ifs
+		url="${1#hg://}"
+		url="${url%%@*}"
+		revpart="${1#*@}"
+		ifs="$IFS"
+		IFS=':'
+		revarray=($revpart)
+		rev=${revarray[0]}
+		branch=${revarray[1]}
+		if [ -z $branch ]; then
+			hg clone -r $rev "https://$url" "$(basename "$url")-$revpart" || hg clone -r $rev "http://$url" "$(basename "$url")-$revpart"
+		else
+			hg clone -b $branch -r $rev "https://$url" "$(basename "$url")-$revpart" || hg clone -b $branch -r $rev "http://$url" "$(basename "$url")-$revpart"
+		fi
+		IFS="$ifs"
+		tar -zcv --force-local -f "$filename" "$(basename "$url")-$revpart" || return
+		;;
+	  bzr://*)
+	  # bazaar
+	  # bzr://$url@$rev -> bzr branch -r $rev $url
+	  # bzr://$url@$rev:$co -> bzr co -r $rev $url
+	  #  $co bármi lehet, csak azt jelzi, hogy 'bzr co' kell 'bzr branch' helyett
+		local url
+		local rev
+		local revarray
+		local branch
+		local ifs
+		url="${1#bzr://}"
+		url="${url%@*}"
+		rev="${1##*@}"
+		ifs="$IFS"
+		IFS=':'
+		revarray=($rev)
+		rev=${revarray[0]}
+		co=${revarray[1]}
+		IFS="$ifs"
+		if [ -z $co ]; then
+			bzr branch -r "${rev//.//}" http://"$url" || bzr branch -r "${rev//.//}" https://"$url" || bzr branch -r "${rev//.//}" bzr://"$url" || return
+		else
+			bzr co -r "${rev//.//}" http://"$url" || bzr co -r "${rev//.//}" https://"$url" || bzr co -r "${rev//.//}" bzr://"$url" || return
+		fi
+		mv "$(basename "$url")" "$(basename "$url")-$rev" || return
+		tar -zcv --force-local -f "$filename" "$(basename "$url")-$rev" || return
+		;;
+	  lp://*)
+	  # launchpad bazaar, lp://$url@$rev -> bzr branch -r $rev lp:$url
+	  # $rev opcionális
+		local url
+		local rev
+		url="${1#lp://}"
+		url="${url%@*}"
+		rev="${1##*@}"
+		if [ -z $rev ]; then
+			bzr branch lp:"$url" || return
+		else
+			bzr branch -r "${rev//.//}" lp:"$url" || return
+		fi
+		mv "$(basename "$url")" "$(basename "$url")-$rev" || return
+		tar -zcv --force-local -f "$filename" "$(basename "$url")-$rev" || return
+		;;
+	  *)
+	  	echo "unsupported URL scheme: $url" >&2
+		return 1
+		;;
+	esac
+
+	# umask szerinti jogok
+	m=$(printf %d 0$(umask))
+	a=$(printf %d 00666)
+	c=$((a&~m))
+	chmod 0$(printf %03o $c) -- "$filename"
+
+	if [ ! -d "$GET_CACHEDIR" ]; then
+		mkdir -p "$GET_CACHEDIR"
+	fi
+	
+	if [ -n "$cachedir" -a -w "$GET_CACHEDIR" ]; then
+		mkdir -p "$cachedir" && cp -af "$name" "$cachedir"/
+	fi
+
+	mv -f "$name" "$origdir"/
+}
+
+url="$1"
+
+origdir="$PWD"
+tmpdir tmpdir
+cd "$tmpdir"
+unset failed
+
+_get "$url" || {
+	failed="download failed."
+	}
+
+if [ -n "$failed" ]; then
+	die "$failed"
+fi
