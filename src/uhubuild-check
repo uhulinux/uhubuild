@@ -817,9 +817,11 @@ for pkg in packages/*; do
 				System/Tools | \
 				System/X | \
 				UHU | \
-				CINNAMON | \
+				BUDGIE | \
+				ENLIGHTENMENT | \
 				GNOME | \
 				KDE | \
+				LUMINA | \
 				LXDE | \
 				LXQT | \
 				MATE | \
