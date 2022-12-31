@@ -7,6 +7,7 @@ export DISABLE_CCACHE=1
 export LDFLAGS='-Wl,--as-needed -Wl,-dynamic-linker,/usr/lib/ld-linux-x86-64.so.2'
 
 if [ -f meson.build ]; then
+    builddir="build"
 	argv=()
 	argx=(
 		--prefix="/usr"             \
@@ -22,16 +23,19 @@ if [ -f meson.build ]; then
 		argv[${#argv[@]}]="$i"
 	done
 	# be verbose :)
-	echo "meson build"
+	echo "meson setup ${builddir}"
 	for i in "$@" "${argv[@]}"; do
 		echo -e "\t$i"
 	done
 	
-	meson build \
+	meson setup ${builddir} \
 		"$@" "${argv[@]}"
+	meson compile \
+		-C ${builddir}
 fi
 
 if [ -f CMakeLists.txt ]; then
+    builddir="build"
 	argv=()
 	argx=(
         -GNinja \
@@ -47,8 +51,8 @@ if [ -f CMakeLists.txt ]; then
 		echo -e "\t$i"
 	done
 
-	mkdir -p build
-	cd build
+	mkdir -p ${builddir}
+	cd ${builddir}
 	cmake \
 		"$@" "${argv[@]}" \
 		..

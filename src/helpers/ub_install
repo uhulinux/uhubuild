@@ -1,11 +1,12 @@
 #!/bin/bash -eu
 
+builddir="build"
 if [ -f meson.build -a -f build/build.ninja ]; then
-	DESTDIR="$UB_INSTALLDIR" ninja -C build install
+	DESTDIR="$UB_INSTALLDIR" ninja -C ${builddir} install
 elif [ -f CMakeLists.txt -a -f build/build.ninja ]; then
-	DESTDIR="$UB_INSTALLDIR" ninja -C build install
+	DESTDIR="$UB_INSTALLDIR" ninja -C ${builddir} install
 elif [ -f CMakeLists.txt -a -f build/Makefile ]; then
-	cd build; ub_makeinstall "$@"
+	cd ${builddir}; ub_makeinstall "$@"
 elif [ -f Build.PL ]; then
 	exec ./Build install destdir="$UB_INSTALLDIR"
 else
