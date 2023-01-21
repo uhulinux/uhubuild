@@ -4,8 +4,6 @@
 # pl. webkit2gtk nem találja a pthread.h-t
 export DISABLE_CCACHE=1
 
-export LDFLAGS='-Wl,--as-needed -Wl,-dynamic-linker,/usr/lib/ld-linux-x86-64.so.2'
-
 if [ -f meson.build ]; then
     builddir="build"
 	argv=()
