@@ -412,7 +412,8 @@ uhubuild-check "$i" || exit 1
 
 	# Siker.
 
-	rm -f "$UHUBUILD_PATH"/misc-${UHUBUILD_DISTR}/failed/${UB_ARCH}/"$i"
+	rm -f "$UHUBUILD_PATH"/misc-${UHUBUILD_DISTR}/failed/${UB_ARCH}/${i}
+	rm -f "$UHUBUILD_PATH"/misc-${UHUBUILD_DISTR}/extrarelease/${UB_ARCH}/${i%%_*}_*
 	echo $extrarel > "$UHUBUILD_PATH"/misc-${UHUBUILD_DISTR}/extrarelease/${UB_ARCH}/${i}_${ver}-${rel}
 
 	# A kész csomagokat a packages-${UHUBUILD_DISTR}/ alá másoljuk,
