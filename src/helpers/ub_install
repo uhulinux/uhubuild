@@ -9,6 +9,8 @@ elif [ -f CMakeLists.txt -a -f build/Makefile ]; then
 	cd ${builddir}; ub_makeinstall "$@"
 elif [ -f Build.PL ]; then
 	exec ./Build install destdir="$UB_INSTALLDIR"
+elif [ -f pyproject.toml ]; then
+	python3 -m installer --destdir="$UB_INSTALLDIR" dist/*.whl
 else
 	ub_makeinstall "$@"
 fi
