@@ -1,12 +1,11 @@
 #!/bin/bash -eu
 
-builddir="build"
 if [ -f meson.build -a -f build/build.ninja ]; then
-	DESTDIR="$UB_INSTALLDIR" ninja -C ${builddir} install
+	DESTDIR="$UB_INSTALLDIR" ninja -C build install
 elif [ -f CMakeLists.txt -a -f build/build.ninja ]; then
-	DESTDIR="$UB_INSTALLDIR" ninja -C ${builddir} install
+	DESTDIR="$UB_INSTALLDIR" ninja -C build install
 elif [ -f CMakeLists.txt -a -f build/Makefile ]; then
-	cd ${builddir}; ub_makeinstall "$@"
+	cd build; ub_makeinstall "$@"
 elif [ -f Build.PL ]; then
 	exec ./Build install destdir="$UB_INSTALLDIR"
 elif [ -f pyproject.toml ]; then

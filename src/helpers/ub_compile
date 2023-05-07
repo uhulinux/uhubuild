@@ -5,7 +5,6 @@
 export DISABLE_CCACHE=1
 
 if [ -f meson.build ]; then
-    builddir="build"
 	argv=()
 	argx=(
 		--prefix="/usr"             \
@@ -21,19 +20,18 @@ if [ -f meson.build ]; then
 		argv[${#argv[@]}]="$i"
 	done
 	# be verbose :)
-	echo "meson setup ${builddir}"
+	echo "meson setup build"
 	for i in "$@" "${argv[@]}"; do
 		echo -e "\t$i"
 	done
 	
-	meson setup ${builddir} \
+	meson setup build \
 		"$@" "${argv[@]}"
 	meson compile \
-		-C ${builddir}
+		-C build
 fi
 
 if [ -f CMakeLists.txt ]; then
-    builddir="build"
 	argv=()
 	argx=(
         -GNinja \
@@ -49,8 +47,8 @@ if [ -f CMakeLists.txt ]; then
 		echo -e "\t$i"
 	done
 
-	mkdir -p ${builddir}
-	cd ${builddir}
+	mkdir -p build
+	cd build
 	cmake \
 		"$@" "${argv[@]}" \
 		..
@@ -71,6 +69,7 @@ fi
 
 if [ -f pyproject.toml ]; then
     python3 -m build --wheel --no-isolation
+    exit 0
 fi
 
 if [ -f Makefile.PL ]; then
