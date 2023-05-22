@@ -805,6 +805,8 @@ for pkg in packages/*; do
 				Libraries | \
 				Libraries/Static | \
 				Meta | \
+				Perl | \
+				Python | \
 				Servers | \
 				System/Base | \
 				System/Boot | \
