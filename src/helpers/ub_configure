@@ -66,9 +66,3 @@ for i in "$@" "${argv[@]}"; do
 	echo -e "\t$i"
 done
 "$configure" "$@" "${argv[@]}"
-
-if [ -n "${UB_UPDATELIBTOOL:-}" ]; then
-	find . -name libtool -type f -print0 | while read -d $'\0' -r f; do
-		cp -fv /usr/bin/libtool "$f"
-	done
-fi

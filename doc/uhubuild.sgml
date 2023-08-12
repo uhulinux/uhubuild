@@ -1781,14 +1781,6 @@ ub_compile<szóköz>\
 <tab>--with-installed-zlib
 </verb>
 
-Ha a fordítás elszáll libtool-ra utaló, vagy egyéb extrém hibaüzenettel (ez
-régi programoknál könnyen elképzelhető), megoldás lehet a libtool frissítése
-a configure szkript futtatása során. Ehhez állítsuk be az UB_UPDATELIBTOOL
-környezeti változót:
-<verb>
-UB_UPDATELIBTOOL=yes ub_compile
-</verb>
-
 
 <sect1>Telepítés (install)<p>
 
