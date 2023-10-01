@@ -504,7 +504,7 @@ for pkg in $UB_PACKAGES; do
 	fi # skip-autodepend
 
 # python: nem mindig van #!/usr/bin/python* a .py fájlok elején...
-    for pv in 3.10 3.9 3.8 3.7; do
+    for pv in 3.12 3.11 3.10 3.9 3.8 3.7; do
         if [ -d ./usr/lib/python$pv ]; then
             echo "python3" >> "$UB_TMPDIR/pkg-noversion"
         fi
