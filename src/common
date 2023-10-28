@@ -1,8 +1,6 @@
 
 _myname="$(basename "$0")"
 
-UHUBUILD_BASH="$(echo ${BASH_VERSION%%[^0-9.]*} | cut -d. -f-2 | sed -e 's/\.//g')"
-
 shopt -s nullglob
 
 # színek ----------------------------------------------------------------------
