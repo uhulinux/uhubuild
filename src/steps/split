@@ -145,7 +145,7 @@ for pkg in $UB_PACKAGES; do
 	# Az alábbi listát tartsd szinkronban az install szkriptben lévővel!
 	pretendroot \
 	  rmdir -p --ignore-fail-on-non-empty \
-	    bin etc/{pam.d,sysconfig} lib sbin \
+	    etc/{pam.d,sysconfig} \
 	    usr/{bin,include,lib,libexec,sbin} \
 	    usr/share/{applications,doc,info,locale,pixmaps} \
 	    usr/share/man/man{1,2,3,4,5,6,7,8,9,n} \

@@ -86,6 +86,16 @@ for pkg in $UB_PACKAGES; do
 			error "$dir könyvtár? Ejnye! Ilyet nem szabad!"
 		fi
 	done
+	# Ezek csak szimlinkek, nem valós könyvtárak
+	for dir in \
+	  /bin \
+	  /lib \
+	  /lib64 \
+	  /sbin; do
+		if [ -d "$pkg/$dir" ]; then
+			error "$dir csak egy szimlink, nem valós könyvtár!"
+		fi
+	done
 	while read file; do
 		error "${file#$pkg/}? Ejnye! Ilyet nem szabad!"
 	done < <(find "$pkg" -mindepth 1 -maxdepth 1 -type f)

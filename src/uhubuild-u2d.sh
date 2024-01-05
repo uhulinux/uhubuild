@@ -175,7 +175,6 @@ function u2dxfce {
     urllist https://archive.xfce.org/src/$subdir/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
 }
 
-
 # script for perl modules
 function u2dcpan() {
 	ver="$(curl -m 10 -s http://cpanmetadb.plackperl.org/v1.0/package/$1)"
