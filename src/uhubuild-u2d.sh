@@ -136,13 +136,16 @@ function sflistd() {
 # script for gnome projects
 function u2dgnome {
 	project="$1"
-	unstable="$2"
-	reg="02468";
-	if [ -n "${unstable:-}" ]; then
+	ver="$2"
+	verhossz=${#ver}
+	if [ "$verhossz" -le 1 ];then
+	ver="$(urllist "https://download.gnome.org/sources/$project/" | grep -E '^[0-9.]+['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
+    fi
+	if [ "$parhossz" == "1" ]; then
 		u2dsubdir "https://download.gnome.org/sources/$project/"
+	else
+		u2d "https://download.gnome.org/sources/$project/$ver/"
 	fi
-    ver="$(urllist "https://download.gnome.org/sources/$project/" | grep -E '^[0-9.]+['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
-	u2d "https://download.gnome.org/sources/$project/$ver/"
 }
 
 # script for mate projects
@@ -174,6 +177,7 @@ function u2dxfce {
     ver="$(urllist https://archive.xfce.org/src/$subdir/$project | grep -E '^[0-9]+\.[0-9]*['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
     urllist https://archive.xfce.org/src/$subdir/$project/"$ver/" | splitver '^'$project'-([0-9.]+).tar.(gz|bz2|xz)$' | sort -V | tail -n 1
 }
+
 
 # script for perl modules
 function u2dcpan() {
