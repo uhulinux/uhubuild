@@ -137,11 +137,12 @@ function sflistd() {
 function u2dgnome {
 	project="$1"
 	ver="$2"
+	reg="02468";
 	verhossz=${#ver}
 	if [ "$verhossz" -le 1 ];then
 	ver="$(urllist "https://download.gnome.org/sources/$project/" | grep -E '^[0-9.]+['$reg'](\.[0-9.])?$' | sort -V | tail -n 1)"
     fi
-	if [ "$parhossz" == "1" ]; then
+	if [ "$verhossz" == "1" ]; then
 		u2dsubdir "https://download.gnome.org/sources/$project/"
 	else
 		u2d "https://download.gnome.org/sources/$project/$ver/"
