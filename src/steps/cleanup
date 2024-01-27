@@ -1,7 +1,8 @@
 #!/bin/bash -eu
 
 # python
-find "$UB_INSTALLDIR" \( -name \*.pyc -o -name \*.pyo -o -name __pycache__ \) -delete
+find "$UB_INSTALLDIR" -name __pycache__ -type d -exec rm -r {} +
+find "$UB_INSTALLDIR" \( -name \*.pyc -o -name \*.pyo \) -delete
 
 # perl
 if [ -d "$UB_INSTALLDIR/usr/lib/perl5" ]; then
@@ -11,7 +12,7 @@ fi
 # gtk-doc
 if [ ! -f "$UB_INSTALLDIR/usr/bin/gtkdocize" ] ; then
 if [ -d "$UB_INSTALLDIR/usr/share/gtk-doc" ]; then
-	rm -Rf "$UB_INSTALLDIR/usr/share/gtk-doc"
+	rm -rf "$UB_INSTALLDIR/usr/share/gtk-doc"
 fi
 fi
 
