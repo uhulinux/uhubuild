@@ -485,6 +485,18 @@ for pkg in $UB_PACKAGES; do
 		fi
 	done
 
+# python: nem mindig van #!/usr/bin/python* a .py fájlok elején...
+    for pv in 3.12 3.11 3.10 3.9 3.8 3.7; do
+        if [ -d ./usr/lib/python$pv ]; then
+            echo "python3" >> "$UB_TMPDIR/pkg-noversion"
+        fi
+    done
+
+# perl
+    if [ -d ./usr/lib/perl5 ]; then
+        echo "perl" >> "$UB_TMPDIR/pkg-noversion"
+    fi
+
 # Most a file-* fájlokban fájlnevek vannak. Ebből kell csinálni csomagneveket.
 
 	sort -u < "$UB_TMPDIR/file-atleast" > "$UB_TMPDIR/file-atleast.tmp"
@@ -502,18 +514,6 @@ for pkg in $UB_PACKAGES; do
 		touch "$UB_TMPDIR/pkg-atleast" "$UB_TMPDIR/pkg-noversion"
 		echo " $pkg: automatikus dependencia keresés fázis kihagyva"
 	fi # skip-autodepend
-
-# python: nem mindig van #!/usr/bin/python* a .py fájlok elején...
-    for pv in 3.12 3.11 3.10 3.9 3.8 3.7; do
-        if [ -d ./usr/lib/python$pv ]; then
-            echo "python3" >> "$UB_TMPDIR/pkg-noversion"
-        fi
-    done
-
-# perl
-    if [ -d ./usr/lib/perl5 ]; then
-        echo "perl" >> "$UB_TMPDIR/pkg-noversion"
-    fi
 
 # Az uhu-pkg majnem mindenkinek kell a postinst szkript miatt.
 	if ! grep -qx skip-postinst "$UB_SRCDIR/packages/$pkg/options" || \

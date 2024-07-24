@@ -68,12 +68,12 @@ function _get() {
 		fi
 
 		if [ -z "$http_proxy" ]; then
-			curl -qfLNk --max-redir 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
+			curl -qfLNk --max-redirs 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
 		else
 			if [ -z "$http_proxy_user" ]; then
-				curl -qfLNk --proxy "$http_proxy" --max-redir 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
+				curl -qfLNk --proxy "$http_proxy" --max-redirs 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
 			else
-				curl -qfLNk --proxy "$http_proxy" --proxy-user "$http_proxy_user" --max-redir 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
+				curl -qfLNk --proxy "$http_proxy" --proxy-user "$http_proxy_user" --max-redirs 8 --user "$user" --disable-epsv "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$url" >"$tmpfile" || return
 			fi
 		fi
 
@@ -108,12 +108,12 @@ function _get() {
 		fi
 
 		if [ -z "$http_proxy" ]; then
-			curl -qfLNk --max-redir 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
+			curl -qfLNk --max-redirs 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
 		else
 			if [ -z "$http_proxy_user" ]; then
-				curl -qfLNk --proxy "$http_proxy" --max-redir 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
+				curl -qfLNk --proxy "$http_proxy" --max-redirs 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
 			else
-				curl -qfLNk --proxy "$http_proxy" --proxy-user "$http_proxy_user" --max-redir 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
+				curl -qfLNk --proxy "$http_proxy" --proxy-user "$http_proxy_user" --max-redirs 8 "${limit[@]}" "${connecttimeout[@]}" "${maxtime[@]}" "${speedlimit[@]}" "${speedtime[@]}" "$1" >"$tmpfile" || return
 			fi
 		fi
 
