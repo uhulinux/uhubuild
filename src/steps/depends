@@ -359,7 +359,57 @@ for pkg in $UB_PACKAGES; do
 			done
 			;;
 			# cmake fájl analízise
-			./usr/lib/cmake/*/*Config.cmake|./usr/lib/qt5/lib/cmake/*/*Config.cmake)
+			./usr/lib/cmake/*/*Config.cmake)
+			    found=0
+				for cmakedep in `grep ^find_dependency $file | sed 's/.*find_dependency[(]//g' | sed 's/[)]//g' | sed 's/\s.*//g'`; do
+				    # echo ${cmakedep}
+					cmakefile="${cmakedep}/${cmakedep}Config.cmake"               
+					if [ -f "/usr/lib/cmake/${cmakefile}" ]; then
+						echo "/usr/lib/cmake/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+					    found=1
+					fi
+					if [ -f "/usr/share/cmake/${cmakefile}" ]; then
+						echo "/usr/share/cmake/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+					    found=1
+					fi
+					if [ -f "/usr/share/ECM/${cmakefile}" ]; then
+						echo "/usr/share/ECM/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+					    found=1
+					fi
+					if [ -f "/usr/share/${cmakefile}" ]; then
+						echo "/usr/share/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+					    found=1
+					fi
+					# extra-cmake-modules path: /usr/share/ECM/cmake
+					if [ -f "/usr/share/ECM/cmake/${cmakedep}Config.cmake" ]; then
+						echo "/usr/share/ECM/cmake/${cmakedep}Config.cmake" >> "$UB_TMPDIR/file-noversion"
+					    found=1
+					fi
+					for p in $UB_PACKAGES; do
+					    if [ -f "$UB_PACKAGEDIR/$p/usr/lib/cmake/${cmakefile}" ]; then
+						    echo "/usr/lib/cmake/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+						    found=1
+						fi
+					    if [ -f "$UB_PACKAGEDIR/$p/usr/share/cmake/${cmakefile}" ]; then
+						    echo "/usr/share/cmake/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+						    found=1
+						fi
+					    if [ -f "$UB_PACKAGEDIR/$p//usr/share/${cmakefile}" ]; then
+						    echo "/usr/share/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+						    found=1
+						fi
+					    if [ -f "$UB_PACKAGEDIR/$p/usr/share/ECM/cmake/${cmakedep}Config.cmake" ]; then
+						    echo "/usr/share/ECM/cmake/${cmakedep}Config.cmake" >> "$UB_TMPDIR/file-noversion"
+						    found=1
+						fi
+					done
+					if [ $found = 0 ]; then
+						error "/usr/lib/cmake/${cmakefile} or /usr/share/cmake/${cmakefile} or /usr/share/${cmakefile} is required by $file but not found"
+					fi
+				done
+			;;
+			# cmake fájl analízise: qt6, qt5
+			./usr/lib/qt6/lib/cmake/*/*Config.cmake|./usr/lib/qt5/lib/cmake/*/*Config.cmake)
 			    found=0
 				for cmakedep in `grep ^find_dependency $file | sed 's/.*find_dependency[(]//g' | sed 's/[)]//g' | sed 's/\s.*//g'`; do
 					cmakefile="lib/cmake/${cmakedep}/${cmakedep}Config.cmake"               
@@ -371,30 +421,6 @@ for pkg in $UB_PACKAGES; do
 						echo "/usr/lib/qt5/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
 						found=1
 					fi
-					for p in $UB_PACKAGES; do
-					    if [ -f "$UB_PACKAGEDIR/$p/usr/${cmakefile}" ]; then
-						    echo "/usr/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
-						    found=1
-						fi
-					    if [ -f "$UB_PACKAGEDIR/$p/usr/lib/qt5/${cmakefile}" ]; then
-						    echo "/usr/lib/qt5/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
-						    found=1
-						fi
-					done
-					if [ $found = 0 ]; then
-						error "/usr/${cmakefile} or /usr/lib/qt5/${cmakefile} is required by $file but not found"
-					fi
-				done
-			;;
-			# cmake fájl analízise: qt6
-			./usr/lib/qt6/lib/cmake/*/*Config.cmake)
-			    found=0
-				for cmakedep in `grep ^find_dependency $file | sed 's/.*find_dependency[(]//g' | sed 's/[)]//g' | sed 's/\s.*//g'`; do
-					cmakefile="lib/cmake/${cmakedep}/${cmakedep}Config.cmake"               
-					if [ -f "/usr/${cmakefile}" ]; then
-						echo "/usr/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
-					    found=1
-					fi
 					if [ -f "/usr/lib/qt6/${cmakefile}" ]; then
 						echo "/usr/lib/qt6/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
 						found=1
@@ -402,6 +428,10 @@ for pkg in $UB_PACKAGES; do
 					for p in $UB_PACKAGES; do
 					    if [ -f "$UB_PACKAGEDIR/$p/usr/${cmakefile}" ]; then
 						    echo "/usr/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
+						    found=1
+						fi
+					    if [ -f "$UB_PACKAGEDIR/$p/usr/lib/qt5/${cmakefile}" ]; then
+						    echo "/usr/lib/qt5/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
 						    found=1
 						fi
 					    if [ -f "$UB_PACKAGEDIR/$p/usr/lib/qt6/${cmakefile}" ]; then
