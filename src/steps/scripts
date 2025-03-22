@@ -27,19 +27,22 @@ for pkg in $UB_PACKAGES; do
 	done
 
 	if ! grep -qx skip-postinst $UB_SRCDIR/packages/$pkg/options; then
-		echo "#!/bin/sh" > "$pkg/DEBIAN/postinst"
+		echo "#!/bin/bash" > "$pkg/DEBIAN/postinst"
+		echo "" > "$pkg/DEBIAN/postinst"
 		echo "exec /usr/sbin/uhu-pkg postinst $pkg \"\$@\"" >> "$pkg/DEBIAN/postinst"
 		chmod 755 "$pkg/DEBIAN/postinst"
 	fi
 
 	if ! grep -qx skip-postrm $UB_SRCDIR/packages/$pkg/options; then
-		echo "#!/bin/sh" > "$pkg/DEBIAN/postrm"
+		echo "#!/bin/bash" > "$pkg/DEBIAN/postrm"
+		echo "" > "$pkg/DEBIAN/postrm"
 		echo "exec /usr/sbin/uhu-pkg postrm $pkg \"\$@\"" >> "$pkg/DEBIAN/postrm"
 		chmod 755 "$pkg/DEBIAN/postrm"
 	fi
 
 	if ! grep -qx skip-prerm $UB_SRCDIR/packages/$pkg/options; then
-		echo "#!/bin/sh" > "$pkg/DEBIAN/prerm"
+		echo "#!/bin/bash" > "$pkg/DEBIAN/prerm"
+		echo "" > "$pkg/DEBIAN/prerm"
 		echo "exec /usr/sbin/uhu-pkg prerm $pkg \"\$@\"" >> "$pkg/DEBIAN/prerm"
 		chmod 755 "$pkg/DEBIAN/prerm"
 	fi
