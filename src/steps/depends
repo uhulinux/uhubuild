@@ -186,7 +186,7 @@ for pkg in $UB_PACKAGES; do
 						args="${args# }"
 					done
 					if [ "${intp:0:1}" != "/" ]; then
-						warn "a $file interpretere nem / jellel kezdődik!"
+						warn "$file interpretere nem / jellel kezdődik!"
 						continue
 					fi
 					# Ha az interpreter a /usr/bin/env, akkor megnezzuk

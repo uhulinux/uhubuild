@@ -5,11 +5,9 @@ Ha létezik az /etc/apt/trusted.gpg, töröljük.
 
 root-ként:
 gpg --keyserver hkp://keys.gnupg.net --recv-keys 12A3276B
+wget http://ubk.hu/gpg/ubk-secret.asc
 gpg --import ubk-secret.asc
 gpg --export 12A3276B > ubk.gpg
-mv ubk.gpg /etc/apt/trusted.gpg.d/ubk.gpg
-  VAGY
-wget http://ubk.hu/gpg/ubk.gpg
 mv ubk.gpg /etc/apt/trusted.gpg.d/ubk.gpg
 
 saját új kulccsal:

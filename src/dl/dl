@@ -47,7 +47,7 @@ function unpack() {
 			dpkg-deb -x -- "$file" .
 			;;
 		*.[zZ][iI][pP]|*.[jJ][aA][rR]|*.[xX][pP][iI])
-			unzip -o "$file"
+			gunzip -f "$file"
 			;;
 		*.[aA][rR][jJ])
 			unarj x "$file"
