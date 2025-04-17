@@ -37,9 +37,6 @@ function unpack() {
 		*.[tT][aA][rR].[xX][zZ])
 			tar --use-compress-program=xzdec -x -v --force-local -h -f "$file" -- "$@"
 			;;
-		*.[cC][pP][iI][oO])
-			cpio -iumdv --force-local -F "$file" -- "$@"
-			;;
 		*.[rR][pP][mM])
 			rpm2cpio "$file" | cpio -iumdv -- "$@"
 			;;
@@ -47,16 +44,7 @@ function unpack() {
 			dpkg-deb -x -- "$file" .
 			;;
 		*.[zZ][iI][pP]|*.[jJ][aA][rR]|*.[xX][pP][iI])
-			gunzip -f "$file"
-			;;
-		*.[aA][rR][jJ])
-			unarj x "$file"
-			;;
-		*.[rR][aA][rR])
-			unrar x "$file"
-			;;
-		*.[eE][xX][eE]|*.[cC][aA][bB])
-			cabextract -fL "$file"
+			unzip -o "$file"
 			;;
 		*.[gG][zZ]|*.[zZ])
 			zcat "$file" >"$(basename "${file%.*}")"
@@ -231,9 +219,9 @@ while read filename chain; do
 					else
 						if [ "${what%/}" != "$what" ]; then
 							# ez egy konyvtar
-							mkdir -p "$where" || die "Nem tudom letréhozni: [$where]"
+							mkdir -p "$where" || die "Nem tudom létrehozni: [$where]"
 							what="${what%/}"
-							mkdir -p "$(dirname "unpackdir/$what")" || die "Nem tudom letréhozni: [$(dirname "unpackdir/$what")]"
+							mkdir -p "$(dirname "unpackdir/$what")" || die "Nem tudom létrehozni: [$(dirname "unpackdir/$what")]"
 							ln -s "$where" "unpackdir/$what" || die "Nem tudtam symlinket csinálni"
 							cd unpackdir && unpack "$archive" "$what" || die "Nem sikerült a kibontás."
 						else
