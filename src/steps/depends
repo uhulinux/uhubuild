@@ -83,7 +83,7 @@ for pkg in $UB_PACKAGES; do
 	LP=""
 	PCP=""
 	for p in $UB_PACKAGES; do
-		for dir in /lib /usr/lib $(cat $UB_SRCDIR/packages/$pkg/libpath); do
+		for dir in /usr/lib $(cat $UB_SRCDIR/packages/$pkg/libpath); do
 			if [ -d "$UB_PACKAGEDIR/$p/$dir" ]; then
 				realpath="$(readlink -f "$UB_PACKAGEDIR/$p/$dir")"
 				LP="$LP $realpath"
@@ -91,7 +91,7 @@ for pkg in $UB_PACKAGES; do
 		done
 		PCP="$PCP:$UB_PACKAGEDIR/$p/usr/lib/pkgconfig:$UB_PACKAGEDIR/$p/usr/share/pkgconfig"
 	done
-	for dir in /lib /usr/lib /lib64 /usr/lib64 $(cat $UB_SRCDIR/packages/$pkg/libpath); do
+	for dir in /usr/lib /usr/lib64 $(cat $UB_SRCDIR/packages/$pkg/libpath); do
 		if [ -d "$dir" ]; then
 			realpath="$(readlink -f "$dir")"
 			LP="$LP $realpath"
@@ -240,13 +240,13 @@ for pkg in $UB_PACKAGES; do
 		fi
 
 		case "$file" in
-		  ./lib/pkgconfig/*.pc|./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
+		  ./usr/lib/pkgconfig/*.pc|./usr/share/pkgconfig/*.pc)
 			# .pc fájlok:
 			# Kétféle függőséget is figyelünk. Az egyik a Libs sorban lévő,
 			# ezt szépen kiírja a pkg-config, először a -L kapcsolókat, ami
 			# alapján majd megtudjuk, hogy mely könyvtárakban kell utána a
 			# -l kapcsolók libjeit keresni, ...
-			libpath="/lib /usr/lib /lib64 /usr/lib64"
+			libpath="/usr/lib /usr/lib64"
 			for L in $(PKG_CONFIG_PATH="$PCP" pkg-config --libs-only-L "$file"; PKG_CONFIG_PATH="$PCP" pkg-config --static --libs-only-L "$file"); do
 				if [ "$L" = "${L#-L/}" ]; then
 					error "$file: invalid pkg-config output"
@@ -328,10 +328,6 @@ for pkg in $UB_PACKAGES; do
 				fi
 				found=0
 				for p in $UB_PACKAGES; do
-					if [ -f "$UB_PACKAGEDIR/$p/lib/pkgconfig/$req.pc" ]; then
-						echo "/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
-						found=1
-					fi
 					if [ -f "$UB_PACKAGEDIR/$p/usr/lib/pkgconfig/$req.pc" ]; then
 						echo "/usr/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
 						found=1
@@ -341,10 +337,6 @@ for pkg in $UB_PACKAGES; do
 						found=1
 					fi
 				done
-				if [ -f "/lib/pkgconfig/$req.pc" ]; then
-					echo "/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
-					found=1
-				fi
 				if [ -f "/usr/lib/pkgconfig/$req.pc" ]; then
 					echo "/usr/lib/pkgconfig/$req.pc" >> "$UB_TMPDIR/file-noversion"
 					found=1
@@ -380,6 +372,14 @@ for pkg in $UB_PACKAGES; do
 						echo "/usr/share/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
 					    found=1
 					fi
+    				if [ -f "/usr/lib/pkgconfig/${cmakedep,,}.pc" ]; then
+    					echo "/usr/lib/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
+    					found=1
+    				fi
+    				if [ -f "/usr/share/pkgconfig/${cmakedep,,}.pc" ]; then
+	    				echo "/usr/share/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
+	    				found=1
+    				fi
 					# extra-cmake-modules path: /usr/share/ECM/cmake
 					if [ -f "/usr/share/ECM/cmake/${cmakedep}Config.cmake" ]; then
 						echo "/usr/share/ECM/cmake/${cmakedep}Config.cmake" >> "$UB_TMPDIR/file-noversion"
@@ -402,9 +402,17 @@ for pkg in $UB_PACKAGES; do
 						    echo "/usr/share/ECM/cmake/${cmakedep}Config.cmake" >> "$UB_TMPDIR/file-noversion"
 						    found=1
 						fi
+    					if [ -f "$UB_PACKAGEDIR/$p/usr/lib/pkgconfig/${cmakedep}.pc" ]; then
+	    					echo "/usr/lib/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
+	    					found=1
+	    				fi
+	    				if [ -f "$UB_PACKAGEDIR/$p/usr/share/pkgconfig/${cmakedep}.pc" ]; then
+	    					echo "/usr/share/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
+	    					found=1
+	    				fi
 					done
 					if [ $found = 0 ]; then
-						error "/usr/lib/cmake/${cmakefile} or /usr/share/cmake/${cmakefile} or /usr/share/${cmakefile} is required by $file but not found"
+						error "/usr/lib/cmake/${cmakefile} or /usr/share/cmake/${cmakefile} is required by $file but not found"
 					fi
 				done
 			;;
