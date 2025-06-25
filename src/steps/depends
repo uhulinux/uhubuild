@@ -372,6 +372,14 @@ for pkg in $UB_PACKAGES; do
 						echo "/usr/share/${cmakefile}" >> "$UB_TMPDIR/file-noversion"
 					    found=1
 					fi
+    				if [ -f "/usr/lib/pkgconfig/${cmakedep}.pc" ]; then
+    					echo "/usr/lib/pkgconfig/${cmakedep}.pc" >> "$UB_TMPDIR/file-noversion"
+    					found=1
+    				fi
+    				if [ -f "/usr/share/pkgconfig/${cmakedep}.pc" ]; then
+	    				echo "/usr/share/pkgconfig/${cmakedep}.pc" >> "$UB_TMPDIR/file-noversion"
+	    				found=1
+    				fi
     				if [ -f "/usr/lib/pkgconfig/${cmakedep,,}.pc" ]; then
     					echo "/usr/lib/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
     					found=1
@@ -402,11 +410,19 @@ for pkg in $UB_PACKAGES; do
 						    echo "/usr/share/ECM/cmake/${cmakedep}Config.cmake" >> "$UB_TMPDIR/file-noversion"
 						    found=1
 						fi
-    					if [ -f "$UB_PACKAGEDIR/$p/usr/lib/pkgconfig/${cmakedep}.pc" ]; then
+        				if [ -f "$UB_PACKAGEDIR/$p/usr/lib/pkgconfig/${cmakedep}.pc" ]; then
+        					echo "/usr/lib/pkgconfig/${cmakedep}.pc" >> "$UB_TMPDIR/file-noversion"
+        					found=1
+        				fi
+        				if [ -f "$UB_PACKAGEDIR/$p/usr/share/pkgconfig/${cmakedep}.pc" ]; then
+	        				echo "/usr/share/pkgconfig/${cmakedep}.pc" >> "$UB_TMPDIR/file-noversion"
+	        				found=1
+        				fi
+    					if [ -f "$UB_PACKAGEDIR/$p/usr/lib/pkgconfig/${cmakedep,,}.pc" ]; then
 	    					echo "/usr/lib/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
 	    					found=1
 	    				fi
-	    				if [ -f "$UB_PACKAGEDIR/$p/usr/share/pkgconfig/${cmakedep}.pc" ]; then
+	    				if [ -f "$UB_PACKAGEDIR/$p/usr/share/pkgconfig/${cmakedep,,}.pc" ]; then
 	    					echo "/usr/share/pkgconfig/${cmakedep,,}.pc" >> "$UB_TMPDIR/file-noversion"
 	    					found=1
 	    				fi
